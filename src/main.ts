@@ -1,3 +1,4 @@
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import './style.css'
 import * as THREE from 'three'
 
@@ -15,10 +16,18 @@ const temp = {
 };
 
 const camera = new THREE.PerspectiveCamera(75, temp.width / temp.height);
+camera.position.z = 4;
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(temp.width, temp.height);
 document.body.appendChild(renderer.domElement);
 
-camera.position.z = 4;
-renderer.render(scene, camera);
+const debugOrbitControls = new OrbitControls(camera, renderer.domElement);
+
+function tick() {
+  debugOrbitControls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+
+tick()
