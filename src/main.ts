@@ -4,11 +4,25 @@ import * as THREE from 'three'
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material =new THREE.MeshBasicMaterial({color: 0x00ff00});
+const material =new THREE.MeshStandardMaterial({color: 0x00ff00});
 
 const mesh = new THREE.Mesh(geometry, material);
 
 scene.add(mesh);
+
+const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.5 );
+scene.add( light );
+
+const textureLoader = new THREE.TextureLoader();
+let skyTexture = textureLoader.load(
+  'assets/industrial_sunset_puresky.jpg',
+  () => {
+
+      skyTexture.mapping = THREE.EquirectangularReflectionMapping;
+      skyTexture.colorSpace = THREE.SRGBColorSpace;
+      scene.background = skyTexture;
+  }  
+);
 
 const temp = {
   width: 1024,
