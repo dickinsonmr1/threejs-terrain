@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { HeightMapArray } from './heightMapArray';
 import { QuadtreeTerrainSystem } from './quadtreeTerrainSystem';
 import { Water } from 'three/examples/jsm/objects/Water.js';
+import GUI from 'lil-gui';
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 5, 5);
@@ -71,8 +72,8 @@ await array.generate('assets/mountain_circle_512x512.png').then((heightmap) => {
 });
 
 const temp = {
-  width: 1024,
-  height: 720
+  width: 1920,
+  height: 1080
 };
 
 const camera = new THREE.PerspectiveCamera(75, temp.width / temp.height);
@@ -83,6 +84,45 @@ renderer.setSize(temp.width, temp.height);
 document.body.appendChild(renderer.domElement);
 
 const debugOrbitControls = new OrbitControls(camera, renderer.domElement);
+
+// https://lil-gui.georgealways.com/
+const gui = new GUI();
+
+gui.add( document, 'title' );
+/*
+let obj = {
+	myBoolean: true,
+	myString: 'lil-gui',
+	myNumber: 1,
+	myFunction: function() { alert( 'hi' ) }
+};
+
+gui.add( obj, 'myBoolean' ); 	// checkbox
+gui.add( obj, 'myString' ); 	// text field
+gui.add( obj, 'myNumber' ); 	// number field
+gui.add( obj, 'myFunction' ); 	// button
+
+let obj2 = { hasMin: 1, hasMax: 99, hasStep: 50 };
+
+gui.add( obj2, 'hasMin' ).min( 0 );
+gui.add( obj2, 'hasMax' ).max( 100 );
+gui.add( obj2, 'hasStep' ).step( 10 );
+
+let obj3 = { size: 'Medium', speed: 1 };
+
+gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
+gui.add( obj3, 'speed', { Slow: 0.1, Normal: 1, Fast: 5 } );
+*/
+
+const cameraFolder = gui.addFolder('Camera Position');
+
+// Add camera position controls
+cameraFolder.add(camera.position, 'x', -100, 100).name('X Position');
+cameraFolder.add(camera.position, 'y', -100, 100).name('Y Position');
+cameraFolder.add(camera.position, 'z', -100, 100).name('Z Position');
+
+// Open the folder by default (optional)
+cameraFolder.open();
 
 function tick() {
   debugOrbitControls.update();
