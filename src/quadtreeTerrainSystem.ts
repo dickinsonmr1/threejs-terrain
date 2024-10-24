@@ -6,6 +6,7 @@ export class QuadtreeTerrainSystem {
     root: QuadtreeNode;
     scene: THREE.Scene;
     maxLevel: number;
+    heightScale: number;
 
     totalTerrainSize: number;
 
@@ -19,6 +20,7 @@ export class QuadtreeTerrainSystem {
         this.scene = scene;
 
         this.totalTerrainSize = size;
+        this.heightScale = heightScale;
 
         let isWireframe = true;
         this.createMaterials(isWireframe);
@@ -94,7 +96,7 @@ export class QuadtreeTerrainSystem {
 
     // Calculate distance from the camera to the center of the node
     getCameraDistanceToNode(camera: THREE.Camera, node: QuadtreeNode): number {
-        const nodeCenter = new THREE.Vector3(node.x + node.size / 2, 0, node.y + node.size / 2);
+        const nodeCenter = new THREE.Vector3(node.x + node.size / 2, this.heightScale / 2, node.y + node.size / 2);
         return camera.position.distanceTo(nodeCenter);
     }
 
