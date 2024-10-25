@@ -107,25 +107,31 @@ let obj2 = { hasMin: 1, hasMax: 99, hasStep: 50 };
 gui.add( obj2, 'hasMin' ).min( 0 );
 gui.add( obj2, 'hasMax' ).max( 100 );
 gui.add( obj2, 'hasStep' ).step( 10 );
-
-let obj3 = { size: 'Medium', speed: 1 };
-
-gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
-gui.add( obj3, 'speed', { Slow: 0.1, Normal: 1, Fast: 5 } );
 */
+
+let obj3 = { size: 'Small', terrainType: 3 };
+gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
+gui.add( obj3, 'terrainType', { Simple: 1, Splatted: 2, LOD: 3 } );
+
 
 const cameraFolder = gui.addFolder('Camera Position');
 
 // Add camera position controls
-cameraFolder.add(camera.position, 'x', -100, 100).name('X Position');
-cameraFolder.add(camera.position, 'y', -100, 100).name('Y Position');
-cameraFolder.add(camera.position, 'z', -100, 100).name('Z Position');
+cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
+cameraFolder.add(camera.position, 'y', -500, 500).name('Y Position').listen();
+cameraFolder.add(camera.position, 'z', -10000, 10000).name('Z Position').listen();
+
+cameraFolder.add(debugOrbitControls.position0, 'x', -100, 100).name('debug orbit controls X Position').listen();
+cameraFolder.add(debugOrbitControls.position0, 'y', -100, 100).name('debug orbit controls Y Position').listen();
+cameraFolder.add(debugOrbitControls.position0, 'z', -100, 100).name('debug orbit controls Z Position').listen();
+
 
 // Open the folder by default (optional)
 cameraFolder.open();
 
 function tick() {
   debugOrbitControls.update();
+  debugOrbitControls.getDistance
 
   //renderer.clear();
   renderer.render(scene, camera);

@@ -80,14 +80,17 @@ export class QuadtreeNode {
             const mesh = new THREE.Mesh(geometry, material);
             mesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
 
-            mesh.position.set(this.x + this.size / 2, 0, this.y + this.size / 2); // Center it
+            mesh.position.set(this.x, 0, this.y); // Center it
             
             let offset = new THREE.Vector3(0,0,0);//this.size, 0, this.size);
 
             //mesh.position.set(this.x + this.size / 2, 0, this.y + this.size / 2); // Center it
 
-            mesh.position.x -= this. totalTerrainSize / 2; //this.size / 2;
-            mesh.position.z -= this.totalTerrainSize  / 2;// this.size / 2;
+            //mesh.position.x -= this.totalTerrainSize / 2 - this.size / 2;
+            //mesh.position.z -= this.totalTerrainSize / 2 - this.size / 2;
+
+            //mesh.position.x -= this.totalTerrainSize / 2 - this.size / 2;
+            //mesh.position.z -= this.totalTerrainSize / 2 - this.size / 2;
 
             /*
             mesh.position.set(

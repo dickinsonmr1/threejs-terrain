@@ -97,6 +97,11 @@ export class QuadtreeTerrainSystem {
     // Calculate distance from the camera to the center of the node
     getCameraDistanceToNode(camera: THREE.Camera, node: QuadtreeNode): number {
         const nodeCenter = new THREE.Vector3(node.x + node.size / 2, this.heightScale / 2, node.y + node.size / 2);
+        /*const upperLeft = new THREE.Vector3(
+            node.x + this.totalTerrainSize / 2 + node.size / 2,
+            0,
+            node.y + this.totalTerrainSize / 2 + node.size / 2);
+        */
         return camera.position.distanceTo(nodeCenter);
     }
 
