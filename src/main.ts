@@ -7,13 +7,25 @@ import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
 
 const scene = new THREE.Scene();
-const geometry = new THREE.BoxGeometry(5, 5, 5);
+const geometry = new THREE.BoxGeometry(5, 20, 5);
 const material =new THREE.MeshStandardMaterial({color: 0x00ff00});
 
-const mesh = new THREE.Mesh(geometry, material);
-mesh.position.set(0, 5, 0);
+const mesh1 = new THREE.Mesh(geometry, material);
+mesh1.position.set(0, 10, 0);
+scene.add(mesh1);
 
-scene.add(mesh);
+const mesh2 = new THREE.Mesh(geometry, material);
+mesh2.position.set(512, 10, 0);
+scene.add(mesh2);
+
+const mesh3 = new THREE.Mesh(geometry, material);
+mesh3.position.set(0, 10, 512);
+scene.add(mesh3);
+
+const mesh4 = new THREE.Mesh(geometry, material);
+mesh4.position.set(512, 10, 512);
+scene.add(mesh4);
+
 
 const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.8 );
 scene.add( light );
@@ -77,8 +89,9 @@ const temp = {
 };
 
 const camera = new THREE.PerspectiveCamera(75, temp.width / temp.height);
-//camera.position.z = 4;
-camera.position.set(100, 100, 100);
+camera.far = 10000;
+camera.position.z = 4;
+//camera.position.set(256, 500, 256);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(temp.width, temp.height);

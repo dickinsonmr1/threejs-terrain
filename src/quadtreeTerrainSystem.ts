@@ -90,6 +90,7 @@ export class QuadtreeTerrainSystem {
                     child.mesh.visible = false;
                     child.cylinderMesh!.visible = false;
                 }
+                this.merge(child);
             });
             node.children = null;
         }

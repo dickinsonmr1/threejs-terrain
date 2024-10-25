@@ -84,14 +84,14 @@ export class QuadtreeNode {
             const mesh = new THREE.Mesh(geometry, material);
             mesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
 
-            this.x -= this.size / 2;
-            this.y -= this.size / 2;
+            //this.x -= this.size / 2;
+            //this.y -= this.size / 2;
 
-            mesh.position.set(this.x, 0, this.y); // Center it
+            //mesh.position.set(this.x, 0, this.y); // Center it
             
             let offset = new THREE.Vector3(0,0,0);//this.size, 0, this.size);
 
-            //mesh.position.set(this.x + this.size / 2, 0, this.y + this.size / 2); // Center it
+            mesh.position.set(this.x + this.size / 2, 0, this.y + this.size / 2); // Center it
 
             //mesh.position.x -= this.totalTerrainSize / 2 - this.size / 2;
             //mesh.position.z -= this.totalTerrainSize / 2 - this.size / 2;
@@ -112,9 +112,9 @@ export class QuadtreeNode {
             scene.add(mesh);
             
             this.cylinderMesh = new THREE.Mesh(
-                new THREE.CylinderGeometry(6 - this.level, 6 - this.level, 500, 16, 1, true),
+                new THREE.CylinderGeometry(0.5, 0.5, 500, 16, 1, true),
                 material);
-            this.cylinderMesh.position.set(this.x, 0, this.y);            
+            this.cylinderMesh.position.set(mesh.position.x, 0, mesh.position.z);            
             scene.add(this.cylinderMesh);
             
         }
