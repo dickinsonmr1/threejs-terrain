@@ -77,7 +77,8 @@ const temp = {
 };
 
 const camera = new THREE.PerspectiveCamera(75, temp.width / temp.height);
-camera.position.z = 4;
+//camera.position.z = 4;
+camera.position.set(100, 100, 100);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(temp.width, temp.height);
