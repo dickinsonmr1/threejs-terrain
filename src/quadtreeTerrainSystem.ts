@@ -88,6 +88,7 @@ export class QuadtreeTerrainSystem {
                     //this.scene.remove(child.mesh);
                     //child.mesh = null;
                     child.mesh.visible = false;
+                    child.cylinderMesh!.visible = false;
                 }
             });
             node.children = null;

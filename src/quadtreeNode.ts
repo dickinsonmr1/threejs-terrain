@@ -5,6 +5,9 @@ export class QuadtreeNode {
     children: QuadtreeNode[] | null = null;
     
     mesh: THREE.Mesh | null = null;
+    cylinderMesh: THREE.Mesh | null = null;
+    basicSemitransparentMaterial: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial( { color: 0xFFFF00, transparent: true, opacity: 0.5 });
+
     heightmapChunk: number[][]; // The heightmap data for this chunk
 
     totalTerrainSize: number;
@@ -57,6 +60,7 @@ export class QuadtreeNode {
             //scene.remove(this.mesh);
             //this.mesh = null;
             this.mesh.visible = false;
+            this.cylinderMesh!.visible = false;
         }
     }
 
@@ -89,8 +93,8 @@ export class QuadtreeNode {
             //mesh.position.x -= this.totalTerrainSize / 2 - this.size / 2;
             //mesh.position.z -= this.totalTerrainSize / 2 - this.size / 2;
 
-            //mesh.position.x -= this.totalTerrainSize / 2 - this.size / 2;
-            //mesh.position.z -= this.totalTerrainSize / 2 - this.size / 2;
+            mesh.position.x += this.size / 2;
+            mesh.position.z += this.size / 2;
 
             /*
             mesh.position.set(
@@ -103,9 +107,17 @@ export class QuadtreeNode {
 
             this.mesh = mesh;
             scene.add(mesh);
+            
+            this.cylinderMesh = new THREE.Mesh(
+                new THREE.CylinderGeometry(6 - this.level, 6 - this.level, 500, 16, 1, true),
+                material);
+            this.cylinderMesh.position.set(this.x, 0, this.y);            
+            scene.add(this.cylinderMesh);
+            
         }
         else {
             this.mesh.visible = true;
+            this.cylinderMesh!.visible = true;
         }
     }
 
