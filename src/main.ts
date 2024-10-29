@@ -7,6 +7,7 @@ import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { SkyType } from './skyType';
+import { PerlinGeneratedTerrain } from './perlinGeneratedTerrain';
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 20, 5);
@@ -103,6 +104,9 @@ await array.generateRandom(256).then((heightmap) => {
 .catch((error) => {
     console.error('Error loading heightmap:', error);
 });
+
+const perlinGeneratedTerrain = new PerlinGeneratedTerrain(scene, 256, 10);
+perlinGeneratedTerrain.mesh.position.set(-128, 0, -128);
 
 const temp = {
   width: 1920,
