@@ -5,6 +5,8 @@ import { HeightMapArray } from './heightMapArray';
 import { QuadtreeTerrainSystem } from './quadtreeTerrainSystem';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { SkyType } from './skyType';
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 20, 5);
@@ -30,6 +32,7 @@ scene.add(mesh4);
 const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.8 );
 scene.add( light );
 
+
 const textureLoader = new THREE.TextureLoader();
 let skyTexture = textureLoader.load(
   'assets/industrial_sunset_puresky.jpg',
@@ -40,6 +43,21 @@ let skyTexture = textureLoader.load(
       scene.background = skyTexture;
   }  
 );
+
+const sky = new Sky();
+sky.scale.setScalar( 450000 );
+
+const phi = THREE.MathUtils.degToRad( 90 );
+const theta = THREE.MathUtils.degToRad( 180 );
+const sunPosition = new THREE.Vector3().setFromSphericalCoords( 1, phi, theta );
+
+sky.material.uniforms.sunPosition.value = sunPosition;
+
+scene.add( sky );
+
+const settings = {
+  skyType: SkyType.Skybox,
+};
 
 const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
 let water = new Water(
@@ -110,6 +128,8 @@ let obj3 = { size: 'Small', terrainType: 3 };
 gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
 gui.add( obj3, 'terrainType', { Simple: 1, Splatted: 2, LOD: 3 } );
 
+gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
+
 
 const cameraFolder = gui.addFolder('Camera Position');
 
@@ -129,6 +149,20 @@ cameraFolder.open();
 const terrainFolder = gui.addFolder('TerrainFolder');
 // todo: add items
 
+function switchSky(skyType: SkyType) {
+
+  if(skyType == SkyType.Shader) {
+    sky.visible = true;
+    scene.background = null;
+  
+  }
+  else {
+    sky.visible = false;
+    scene.background = skyTexture;
+  }
+  
+}
+
 function tick() {
   debugOrbitControls.update();
   debugOrbitControls.getDistance
@@ -138,7 +172,7 @@ function tick() {
 
   requestAnimationFrame(tick);
 
-  if(quadtreeTerrainSystem !== null)
+  if(quadtreeTerrainSystem != null)
     quadtreeTerrainSystem.update(camera);
 
   if(water !== null)    
