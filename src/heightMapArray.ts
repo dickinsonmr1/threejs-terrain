@@ -8,7 +8,25 @@ export class HeightMapArray {
     private height!: number;
     private assetName!: string;
     
-    async generate(asset: string): Promise<number[][]> {
+    async generateRandom(size: number): Promise<number[][]> {
+        
+        this.numbers2DArray = [];        
+        this.width = size;
+        this.height = size;
+
+        for (let y = 0; y < size; y++) {
+            const row: number[] = [];
+            for (let x = 0; x < size; x++) {
+                const heightValue = Math.random();
+                row.push(heightValue);
+            }        
+            this.numbers2DArray.push(row);
+        }
+
+        return this.numbers2DArray;
+    }
+
+    async generateFromAsset(asset: string): Promise<number[][]> {
         return new Promise((resolve, reject) => {
             const loader = new THREE.TextureLoader();
     

@@ -66,15 +66,18 @@ scene.add( water );
 let quadtreeTerrainSystem: any;
 
 const maxLODLevel = 5;        
+const heightScale = 1;
 var array = new HeightMapArray();
-await array.generate('assets/mountain_circle_512x512.png').then((heightmap) => {
+
+await array.generateRandom(256).then((heightmap) => {
+//await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
     // Heightmap is fully loaded and ready to use
     console.log('Heightmap loaded successfully:', heightmap);
     
     // You can now safely use the heightmap for further processing
     // For example: generate terrain, visualize it, etc.
             
-    var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, 150);
+    var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, heightScale);
     terrain.buildFullQuadtree(terrain.root, maxLODLevel);
 
     quadtreeTerrainSystem = terrain;
@@ -103,26 +106,6 @@ const debugOrbitControls = new OrbitControls(camera, renderer.domElement);
 const gui = new GUI();
 
 gui.add( document, 'title' );
-/*
-let obj = {
-	myBoolean: true,
-	myString: 'lil-gui',
-	myNumber: 1,
-	myFunction: function() { alert( 'hi' ) }
-};
-
-gui.add( obj, 'myBoolean' ); 	// checkbox
-gui.add( obj, 'myString' ); 	// text field
-gui.add( obj, 'myNumber' ); 	// number field
-gui.add( obj, 'myFunction' ); 	// button
-
-let obj2 = { hasMin: 1, hasMax: 99, hasStep: 50 };
-
-gui.add( obj2, 'hasMin' ).min( 0 );
-gui.add( obj2, 'hasMax' ).max( 100 );
-gui.add( obj2, 'hasStep' ).step( 10 );
-*/
-
 let obj3 = { size: 'Small', terrainType: 3 };
 gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
 gui.add( obj3, 'terrainType', { Simple: 1, Splatted: 2, LOD: 3 } );
@@ -139,9 +122,12 @@ cameraFolder.add(debugOrbitControls.position0, 'x', -100, 100).name('debug orbit
 cameraFolder.add(debugOrbitControls.position0, 'y', -100, 100).name('debug orbit controls Y Position').listen();
 cameraFolder.add(debugOrbitControls.position0, 'z', -100, 100).name('debug orbit controls Z Position').listen();
 
-
 // Open the folder by default (optional)
 cameraFolder.open();
+
+
+const terrainFolder = gui.addFolder('TerrainFolder');
+// todo: add items
 
 function tick() {
   debugOrbitControls.update();

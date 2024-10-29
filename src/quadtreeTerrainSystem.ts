@@ -15,14 +15,13 @@ export class QuadtreeTerrainSystem {
 
     materials: THREE.Material[] = [];
 
-    constructor(scene: THREE.Scene, size: number, maxLevel: number, dataArray2D: number[][], heightScale: number) {
-    //constructor(scene: THREE.Scene, size: number, maxLevel: number, dataArray2D: number[][], world: CANNON.World, heightScale: number) {
+    constructor(scene: THREE.Scene, size: number, maxLevel: number, dataArray2D: number[][], heightScale: number) { //world: CANNON.World
         this.scene = scene;
 
         this.totalTerrainSize = size;
         this.heightScale = heightScale;
 
-        let isWireframe = true;
+        let isWireframe = false;
         this.createMaterials(isWireframe);
 
         this.maxLevel = maxLevel;
@@ -30,11 +29,9 @@ export class QuadtreeTerrainSystem {
         let offset = new THREE.Vector3(0,0,0);
         
         // Create the root node of the quadtree
-        //this.root = new QuadtreeNode3(dataArray2D, 0, -size / 2, -size / 2, size);
         this.root = new QuadtreeNode(dataArray2D, 0, 0, size, 0, heightScale, this.totalTerrainSize);
         
-        // TODO: create meshes and subdivided meshes based on heightmap
-        this.root.createMesh(this.scene, this.materials[0]);//, dataArray2D);
+        this.root.createMesh(this.scene, this.materials[0]);
 
         //this.body = this.generateCannonHeightField(world, dataArray2D.length, dataArray2D.length, heightScale, dataArray2D, new THREE.Vector3(0, 0, -this.totalTerrainSize));            
     }
