@@ -7,7 +7,7 @@ import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { SkyType } from './skyType';
-import { PerlinGeneratedTerrain } from './perlinGeneratedTerrain';
+import { PerlinTerrainGenerator } from './perlinTerrainGenerator';
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 20, 5);
@@ -85,10 +85,10 @@ scene.add( water );
 let quadtreeTerrainSystem: any;
 
 const maxLODLevel = 5;        
-const heightScale = 1;
+const heightScale = 10;
 var array = new HeightMapArray();
 
-await array.generateRandom(256).then((heightmap) => {
+await array.generateRandom(512).then((heightmap) => {
 //await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
     // Heightmap is fully loaded and ready to use
     console.log('Heightmap loaded successfully:', heightmap);
@@ -105,8 +105,23 @@ await array.generateRandom(256).then((heightmap) => {
     console.error('Error loading heightmap:', error);
 });
 
-const perlinGeneratedTerrain = new PerlinGeneratedTerrain(scene, 256, 10);
-perlinGeneratedTerrain.mesh.position.set(-128, 0, -128);
+const isWireFrame = true;
+
+const perlinTerrainGenerator = new PerlinTerrainGenerator(scene);
+
+var simpleTerrainMesh = perlinTerrainGenerator.generateSimpleTerrain(scene, 256, 20);
+simpleTerrainMesh.position.set(256, 0, -256);
+//scene.add(simpleTerrainMesh);
+
+const baseHeightmap = perlinTerrainGenerator.generateHeightmap(256, heightScale); // full resolution
+const baseMesh = perlinTerrainGenerator.createMesh(baseHeightmap, 256, new THREE.Color('red'), isWireFrame);
+baseMesh.position.set(0, 0, -256);
+scene.add(baseMesh);
+
+const filteredHeightmap = perlinTerrainGenerator.createFilteredHeightmap(baseHeightmap, 64); // Lower resolution
+const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, 256, new THREE.Color('green'), isWireFrame);
+lodMesh.position.set(256, 0, -256);
+scene.add(lodMesh);
 
 const temp = {
   width: 1920,
