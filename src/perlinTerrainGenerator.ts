@@ -3,16 +3,12 @@ import perlinNoise from 'perlin-noise';
 
 export class PerlinTerrainGenerator {
 
-    scene: THREE.Scene;
     //mesh: THREE.Mesh;
 
-    constructor(scene: THREE.Scene) {
-        this.scene = scene;
+    constructor() {
     }
 
-    generateSimpleTerrain(scene: THREE.Scene, size: number, heightScale: number): THREE.Mesh {
-        this.scene = scene;
-
+    generateSimpleTerrain(size: number, heightScale: number): THREE.Mesh {
         const width = size; // width of the plane
         const height = size; // height of the plane
         const segmentSize = 1; // controls vertex density
@@ -57,7 +53,7 @@ export class PerlinTerrainGenerator {
     }
 
     // Create a lower-resolution heightmap using bilinear filtering
-    public createFilteredHeightmap(baseHeightmap: number[][], targetResolution: number): number[][] {
+    public createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap: number[][], targetResolution: number): number[][] {
         const scale = baseHeightmap.length / targetResolution;
         const filteredHeightmap: number[][] = [];
 
@@ -92,10 +88,8 @@ export class PerlinTerrainGenerator {
         return a * (1 - ty) + b * ty;
     }
 
-
-    public createMesh(heightmap: number[][], size: number, color: THREE.Color, isWireFrame: boolean): THREE.Mesh {
-        const lodMaterial = new THREE.MeshStandardMaterial({ color: color, wireframe: isWireFrame });
-        const mesh = new THREE.Mesh(this.createLODGeometry(heightmap, size), lodMaterial);
+    public createMesh(heightmap: number[][], size: number, material: THREE.Material): THREE.Mesh {
+        const mesh = new THREE.Mesh(this.createLODGeometry(heightmap, size), material);
         mesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
 
         return mesh;

@@ -15,24 +15,20 @@ export class QuadtreeTerrainSystem {
 
     materials: THREE.Material[] = [];
 
-    constructor(scene: THREE.Scene, size: number, maxLevel: number, dataArray2D: number[][], heightScale: number) { //world: CANNON.World
+    constructor(scene: THREE.Scene, size: number, maxLevel: number, dataArray2D: number[][], heightScale: number, isWireframe: boolean) { //world: CANNON.World
         this.scene = scene;
 
         this.totalTerrainSize = size;
         this.heightScale = heightScale;
 
-        let isWireframe = false;
         this.createMaterials(isWireframe);
 
         this.maxLevel = maxLevel;
 
-        let offset = new THREE.Vector3(0,0,0);
-        
         // Create the root node of the quadtree
-        this.root = new QuadtreeNode(dataArray2D, 0, 0, size, 0, heightScale, this.totalTerrainSize);
+        this.root = new QuadtreeNode(dataArray2D, 0, 0, size, 0, heightScale, this.totalTerrainSize, 4);
         
         this.root.createMesh(this.scene, this.materials[0]);
-
         //this.body = this.generateCannonHeightField(world, dataArray2D.length, dataArray2D.length, heightScale, dataArray2D, new THREE.Vector3(0, 0, -this.totalTerrainSize));            
     }
 
