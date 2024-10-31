@@ -119,19 +119,31 @@ export class QuadtreeNode {
         }
     }
 
+    getTotalNodes(): number {
+        
+        if(this.children == null || this.children?.length == 0)
+            return 1;
 
-  // Extract a sub-chunk of the heightmap from the current node
-  private getSubChunk(offsetX: number, offsetY: number, subSize: number): number[][] {
-    const subChunk: number[][] = [];
-
-    for (let i = 0; i < subSize; i++) {
-      const row: number[] = [];
-      for (let j = 0; j < subSize; j++) {
-        row.push(this.heightmapChunk[offsetY + i][offsetX + j]);
-      }
-      subChunk.push(row);
+        let count = 1;
+        for(const child of this.children)
+        {
+            count += child.getTotalNodes()
+        }
+        return count;
     }
 
-    return subChunk;
-  }
+    // Extract a sub-chunk of the heightmap from the current node
+    private getSubChunk(offsetX: number, offsetY: number, subSize: number): number[][] {
+        const subChunk: number[][] = [];
+
+        for (let i = 0; i < subSize; i++) {
+            const row: number[] = [];
+            for (let j = 0; j < subSize; j++) {
+            row.push(this.heightmapChunk[offsetY + i][offsetX + j]);
+            }
+            subChunk.push(row);
+        }
+
+        return subChunk;
+    }
 }

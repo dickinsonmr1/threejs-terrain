@@ -10,6 +10,8 @@ export class QuadtreeTerrainSystem {
 
     totalTerrainSize: number;
 
+    totalNodes: number = 0;
+
     //body?: CANNON.Body;
     //private heightfieldShape!: CANNON.Heightfield;
 
@@ -49,6 +51,9 @@ export class QuadtreeTerrainSystem {
     // Update quadtree based on camera position
     update(camera: THREE.Camera) {
         this.updateNode(this.root, camera);
+
+
+        this.totalNodes = this.getTotalNodes();
     }
 
     // Recursive function to update nodes
@@ -114,6 +119,11 @@ export class QuadtreeTerrainSystem {
         texture.needsUpdate = true;
 
         return texture;
+    }
+
+    getTotalNodes(): number {
+
+        return this.root.getTotalNodes();
     }
 
     /*

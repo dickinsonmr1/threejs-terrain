@@ -104,7 +104,7 @@ await array.generateFromAsset('assets/mountain_circle_512x512.png').then((height
     // For example: generate terrain, visualize it, etc.
             
     var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, heightScale, isWireFrame);
-    terrain.buildFullQuadtree(terrain.root, maxLODLevel);
+    //terrain.buildFullQuadtree(terrain.root, maxLODLevel);
 
     quadtreeTerrainSystem = terrain;
 })
@@ -120,16 +120,16 @@ simpleTerrainMesh.position.set(256, 0, -256);
 
 let terrainFullSize = 256;
 let terrainLodResolution = 64;
-
+let heightScale2 = 10;
 const material1 = new THREE.MeshStandardMaterial({ color: 'red', wireframe: isWireFrame });
-const baseHeightmap = await perlinTerrainGenerator.generateHeightmap(terrainFullSize, heightScale); // full resolution
-const baseMesh = perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, heightScale, material1);
+const baseHeightmap = await perlinTerrainGenerator.generateHeightmap(terrainFullSize, heightScale2); // full resolution
+const baseMesh = perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, material1);
 baseMesh.position.set(0, 0, -256);
 scene.add(baseMesh);
 
 const material2 = new THREE.MeshStandardMaterial({ color: 'green', wireframe: isWireFrame });
-const filteredHeightmap = await perlinTerrainGenerator.createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap, terrainLodResolution); // Lower resolution
-const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, terrainFullSize, heightScale, material2);
+const filteredHeightmap = perlinTerrainGenerator.createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap, terrainLodResolution); // Lower resolution
+const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, terrainFullSize, material2);
 lodMesh.position.set(256, 0, -256);
 scene.add(lodMesh);
 
@@ -176,6 +176,7 @@ cameraFolder.open();
 
 
 const terrainFolder = gui.addFolder('TerrainFolder');
+terrainFolder.add(quadtreeTerrainSystem, 'totalNodes').listen();
 // todo: add items
 
 function switchSky(skyType: SkyType) {
