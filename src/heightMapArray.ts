@@ -8,7 +8,7 @@ export class HeightMapArray {
     private height!: number;
     private assetName!: string;
     
-    async generateRandom(size: number): Promise<number[][]> {
+    async generateRandom(size: number, heightScale: number = 1): Promise<number[][]> {
         
         this.numbers2DArray = [];        
         this.width = size;
@@ -17,7 +17,7 @@ export class HeightMapArray {
         for (let y = 0; y < size; y++) {
             const row: number[] = [];
             for (let x = 0; x < size; x++) {
-                const heightValue = Math.random();
+                const heightValue = Math.random() * heightScale; 
                 row.push(heightValue);
             }        
             this.numbers2DArray.push(row);

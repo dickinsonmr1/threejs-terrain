@@ -40,7 +40,7 @@ export class PerlinTerrainGenerator {
         return mesh;
     }
     
-    public generateHeightmap(resolution: number, heightScale: number): number[][] {
+    public async generateHeightmap(resolution: number, heightScale: number): Promise<number[][]> {
         const noise = perlinNoise.generatePerlinNoise(resolution, resolution);
         const heightmap: number[][] = [];
         for (let i = 0; i < resolution; i++) {
@@ -88,20 +88,20 @@ export class PerlinTerrainGenerator {
         return a * (1 - ty) + b * ty;
     }
 
-    public createMesh(heightmap: number[][], size: number, material: THREE.Material): THREE.Mesh {
-        const mesh = new THREE.Mesh(this.createLODGeometry(heightmap, size), material);
+    public createMesh(heightmap: number[][], size: number, material: THREE.Material, heightScale: number = 1): THREE.Mesh {
+        const mesh = new THREE.Mesh(this.createLODGeometry(heightmap, size, heightScale), material);
         mesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
 
         return mesh;
     }
 
-    private createLODGeometry(heightmap: number[][], size: number): THREE.PlaneGeometry {
+    private createLODGeometry(heightmap: number[][], size: number, heightScale: number): THREE.PlaneGeometry {
         const geometry = new THREE.PlaneGeometry(size, size, heightmap.length - 1, heightmap.length - 1);
         const vertices = geometry.attributes.position.array;
     
         for (let i = 0, k = 0; i < heightmap.length; i++) {
             for (let j = 0; j < heightmap[i].length; j++, k += 3) {
-                vertices[k + 2] = heightmap[i][j]; // Set z position as height
+                vertices[k + 2] = heightmap[i][j] * heightScale; // Set z position as height
             }
         }
     

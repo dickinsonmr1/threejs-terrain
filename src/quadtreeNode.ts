@@ -69,7 +69,7 @@ export class QuadtreeNode {
             //scene.remove(this.mesh);
             //this.mesh = null;
             this.mesh.visible = false;
-            this.cylinderMesh!.visible = false;
+            //this.cylinderMesh!.visible = false;
         }
     }
 
@@ -79,7 +79,7 @@ export class QuadtreeNode {
 
 
             let perlinTerrainGenerator = new PerlinTerrainGenerator();
-            let mesh = perlinTerrainGenerator.createMesh(this.lodHeightmapChunk, this.size, material);
+            let mesh = perlinTerrainGenerator.createMesh(this.lodHeightmapChunk, this.size, material, this.heightScale);
 
             /*
             const geometry = new THREE.PlaneGeometry(this.size, this.size, this.size - 1, this.size - 1);
@@ -104,16 +104,18 @@ export class QuadtreeNode {
             this.mesh = mesh;
             scene.add(mesh);
             
+            /*
             this.cylinderMesh = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.5, 0.5, 500, 16, 1, true),
                 material);
             this.cylinderMesh.position.set(mesh.position.x, 0, mesh.position.z);            
             scene.add(this.cylinderMesh);
+            */
             
         }
         else {
             this.mesh.visible = true;
-            this.cylinderMesh!.visible = true;
+            //this.cylinderMesh!.visible = true;
         }
     }
 

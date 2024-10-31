@@ -8,6 +8,7 @@ import GUI from 'lil-gui';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { SkyType } from './skyType';
 import { PerlinTerrainGenerator } from './perlinTerrainGenerator';
+import Stats from 'three/addons/libs/stats.module.js';
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 20, 5);
@@ -33,6 +34,8 @@ scene.add(mesh4);
 const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.8 );
 scene.add( light );
 
+const stats = new Stats();
+document.body.appendChild(stats.dom)
 
 const textureLoader = new THREE.TextureLoader();
 let skyTexture = textureLoader.load(
@@ -87,11 +90,13 @@ let quadtreeTerrainSystem: any;
 const isWireFrame = true;
 
 const maxLODLevel = 4;        
-const heightScale = 10;
+const heightScale = 50;
 var array = new HeightMapArray();
 
-await array.generateRandom(256).then((heightmap) => {
-//await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
+var perlin1 = new PerlinTerrainGenerator();
+//await perlin1.generateHeightmap(256, 10).then((heightmap: number[][]) => {
+//await array.generateRandom(512, heightScale).then((heightmap) => {
+await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
     // Heightmap is fully loaded and ready to use
     console.log('Heightmap loaded successfully:', heightmap);
     
@@ -117,14 +122,14 @@ let terrainFullSize = 256;
 let terrainLodResolution = 64;
 
 const material1 = new THREE.MeshStandardMaterial({ color: 'red', wireframe: isWireFrame });
-const baseHeightmap = perlinTerrainGenerator.generateHeightmap(terrainFullSize, heightScale); // full resolution
-const baseMesh = perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, material1);
+const baseHeightmap = await perlinTerrainGenerator.generateHeightmap(terrainFullSize, heightScale); // full resolution
+const baseMesh = perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, heightScale, material1);
 baseMesh.position.set(0, 0, -256);
 scene.add(baseMesh);
 
 const material2 = new THREE.MeshStandardMaterial({ color: 'green', wireframe: isWireFrame });
-const filteredHeightmap = perlinTerrainGenerator.createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap, terrainLodResolution); // Lower resolution
-const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, terrainFullSize, material2);
+const filteredHeightmap = await perlinTerrainGenerator.createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap, terrainLodResolution); // Lower resolution
+const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, terrainFullSize, heightScale, material2);
 lodMesh.position.set(256, 0, -256);
 scene.add(lodMesh);
 
@@ -194,6 +199,7 @@ function tick() {
   //renderer.clear();
   renderer.render(scene, camera);
 
+  stats.update();
   requestAnimationFrame(tick);
 
   if(quadtreeTerrainSystem != null)

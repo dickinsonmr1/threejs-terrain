@@ -26,7 +26,7 @@ export class QuadtreeTerrainSystem {
         this.maxLevel = maxLevel;
 
         // Create the root node of the quadtree
-        this.root = new QuadtreeNode(dataArray2D, 0, 0, size, 0, heightScale, this.totalTerrainSize, 4);
+        this.root = new QuadtreeNode(dataArray2D, 0, 0, size, 0, heightScale, this.totalTerrainSize, 8);
         
         this.root.createMesh(this.scene, this.materials[0]);
         //this.body = this.generateCannonHeightField(world, dataArray2D.length, dataArray2D.length, heightScale, dataArray2D, new THREE.Vector3(0, 0, -this.totalTerrainSize));            
@@ -56,7 +56,7 @@ export class QuadtreeTerrainSystem {
         const distance = this.getCameraDistanceToNode(camera, node);
 
         // Subdivide or merge based on distance
-        if (distance < node.size * 2 && node.level < this.maxLevel) {
+        if (distance < node.size && node.level < this.maxLevel) {
             if (!node.isSubdivided()) {
                 node.subdivide();
             }
@@ -81,7 +81,7 @@ export class QuadtreeTerrainSystem {
                     //this.scene.remove(child.mesh);
                     //child.mesh = null;
                     child.mesh.visible = false;
-                    child.cylinderMesh!.visible = false;
+                    //child.cylinderMesh!.visible = false;
                 }
                 this.merge(child);
             });
