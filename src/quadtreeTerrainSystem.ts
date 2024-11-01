@@ -34,24 +34,26 @@ export class QuadtreeTerrainSystem {
         //this.body = this.generateCannonHeightField(world, dataArray2D.length, dataArray2D.length, heightScale, dataArray2D, new THREE.Vector3(0, 0, -this.totalTerrainSize));            
     }
 
-    // Recursively subdivide the entire quadtree initially (pass root tostart)
-    buildFullQuadtree(node: QuadtreeNode, maxLOD: number): void {
+    // Recursively subdivide the entire quadtree initially (pass root node to start)
+    buildFullQuadtree(node: QuadtreeNode): void {
         //const { size } = node.size;
-        if (node.level > maxLOD) return; // Stop subdividing at the maximum level of detail
+        if (node.level > this.maxLevel) return; // Stop subdividing at the maximum level of detail
 
         node.subdivide();
 
         // Recursively subdivide the children
-        if (node.children![0] != null) this.buildFullQuadtree(node.children![0], maxLOD);
-        if (node.children![1]) this.buildFullQuadtree(node.children![1], maxLOD);
-        if (node.children![2]) this.buildFullQuadtree(node.children![2], maxLOD);
-        if (node.children![3]) this.buildFullQuadtree(node.children![3], maxLOD);
+        if (node.children![0] != null) this.buildFullQuadtree(node.children![0]);
+        if (node.children![1]) this.buildFullQuadtree(node.children![1]);
+        if (node.children![2]) this.buildFullQuadtree(node.children![2]);
+        if (node.children![3]) this.buildFullQuadtree(node.children![3]);
     }
 
     // Update quadtree based on camera position
     update(camera: THREE.Camera) {
-        this.updateNode(this.root, camera);
-
+        this.updateNode(this.root, camera);        
+        
+        // TODO: attempt to move this within node
+        //this.root.updateNode(this.scene, camera, this.materials[0]);
 
         this.totalNodes = this.getTotalNodes();
     }
@@ -71,13 +73,15 @@ export class QuadtreeTerrainSystem {
                 node.children.forEach(child => this.updateNode(child, camera));
             }
         } else if (node.isSubdivided()) {
-            this.merge(node);
+            //this.merge(node);
+            node.merge();
         } else {
             // Create mesh if not subdivided
             node.createMesh(this.scene, this.materials[node.level]);
         }
     }
 
+    /*
     // Merge node back into a single tile (removing children)
     merge(node: QuadtreeNode) {
         if (node.children) {
@@ -93,6 +97,7 @@ export class QuadtreeTerrainSystem {
             node.children = null;
         }
     }
+    */
 
     // Calculate distance from the camera to the center of the node
     getCameraDistanceToNode(camera: THREE.Camera, node: QuadtreeNode): number {
