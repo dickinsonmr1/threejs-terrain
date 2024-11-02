@@ -87,14 +87,15 @@ scene.add( water );
 
 let quadtreeTerrainSystem: any;
 
-const isWireFrame = true;
+const isWireFrame = false;
 
 const maxLODLevel = 4;        
-const heightScale = 50;
+const heightScale = 25;
 var array = new HeightMapArray();
+let initialVertexCount = 8;
 
-var perlin1 = new PerlinTerrainGenerator();
-//await perlin1.generateHeightmap(256, 10).then((heightmap: number[][]) => {
+//var perlin1 = new PerlinTerrainGenerator();
+//await perlin1.generateHeightmap(1024, 1).then((heightmap: number[][]) => {
 //await array.generateRandom(512, heightScale).then((heightmap) => {
 await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
     // Heightmap is fully loaded and ready to use
@@ -103,7 +104,7 @@ await array.generateFromAsset('assets/mountain_circle_512x512.png').then((height
     // You can now safely use the heightmap for further processing
     // For example: generate terrain, visualize it, etc.
             
-    var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, heightScale, isWireFrame);
+    var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, heightScale, initialVertexCount, isWireFrame);
     //terrain.buildFullQuadtree(terrain.root, maxLODLevel);
 
     quadtreeTerrainSystem = terrain;

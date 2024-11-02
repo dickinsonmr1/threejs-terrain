@@ -17,7 +17,10 @@ export class QuadtreeTerrainSystem {
 
     materials: THREE.Material[] = [];
 
-    constructor(scene: THREE.Scene, size: number, maxLevel: number, dataArray2D: number[][], heightScale: number, isWireframe: boolean) { //world: CANNON.World
+    constructor(scene: THREE.Scene, size: number, maxLevel: number,
+        dataArray2D: number[][], heightScale: number,
+        initialVertexCount: number, isWireframe: boolean) { //world: CANNON.World
+
         this.scene = scene;
 
         this.totalTerrainSize = size;
@@ -28,7 +31,7 @@ export class QuadtreeTerrainSystem {
         this.maxLevel = maxLevel;
 
         // Create the root node of the quadtree
-        this.root = new QuadtreeNode(dataArray2D, 0, 0, size, 0, heightScale, this.totalTerrainSize, 8);
+        this.root = new QuadtreeNode(dataArray2D, 0, 0, size, 0, heightScale, this.totalTerrainSize, initialVertexCount);
         
         this.root.createMesh(this.scene, this.materials[0]);
         //this.body = this.generateCannonHeightField(world, dataArray2D.length, dataArray2D.length, heightScale, dataArray2D, new THREE.Vector3(0, 0, -this.totalTerrainSize));            
@@ -78,7 +81,24 @@ export class QuadtreeTerrainSystem {
         } else {
             // Create mesh if not subdivided
             node.createMesh(this.scene, this.materials[node.level]);
+            /*
+            if(node.children != null) { 
+                for (const child of node.children) {
+                    //this.addNodesToScene(child, scene);
+                    this.matchEdges(node, child);
+                }
+            }
+            */
         }
+
+        /*
+        if(node.children != null) { 
+            for (const child of node.children) {
+                //this.addNodesToScene(child, scene);
+                this.matchEdges(node, child);
+            }
+        }
+        */
     }
 
     /*
@@ -131,6 +151,26 @@ export class QuadtreeTerrainSystem {
         return this.root.getTotalNodes();
     }
 
+    matchEdges(node: QuadtreeNode, neighbor: QuadtreeNode): void {
+        if (!neighbor) return;
+        
+        const nodeVertices = node.mesh!.geometry.attributes.position;
+        const neighborVertices = neighbor.mesh!.geometry.attributes.position;
+    
+        // Example: Align the top edge of `node` with the bottom edge of `neighbor`
+        const segments = Math.sqrt(nodeVertices.count);
+        for (let i = 0; i < segments; i++) {
+          const nodeIndex = i + (segments - 1) * segments; // Top edge
+          const neighborIndex = i; // Bottom edge on neighbor
+    
+          const z = (nodeVertices.getZ(nodeIndex) + neighborVertices.getZ(neighborIndex)) / 2;
+          nodeVertices.setZ(nodeIndex, z);
+          neighborVertices.setZ(neighborIndex, z);
+        }
+        nodeVertices.needsUpdate = true;
+        neighborVertices.needsUpdate = true;
+      }
+
     /*
     generateCannonHeightField(world: CANNON.World, sizeX: number, sizeZ: number, heightFactor: number, dataArray2D: number[][] = [], offset: THREE.Vector3): CANNON.Body {           
 
@@ -181,12 +221,12 @@ export class QuadtreeTerrainSystem {
 
         const loader = new THREE.TextureLoader();
 
-        let textureLOD0 = this.loadAndConfigureTexture(loader, "assets/stone 3.png", 1);
-        let textureLOD1 = this.loadAndConfigureTexture(loader, "assets/stone 3.png", 2);
-        let textureLOD2 = this.loadAndConfigureTexture(loader, "assets/stone 3.png", 4);
-        let textureLOD3 = this.loadAndConfigureTexture(loader, "assets/stone 3.png", 8);
-        let textureLOD4 = this.loadAndConfigureTexture(loader, "assets/stone 3.png", 16);
-        let textureLOD5 = this.loadAndConfigureTexture(loader, "assets/stone 3.png", 32);
+        let textureLOD0 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 1);
+        let textureLOD1 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 2);
+        let textureLOD2 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 4);
+        let textureLOD3 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 8);
+        let textureLOD4 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 16);
+        let textureLOD5 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 32);
 
         let displacementScale = 50;
         // lowest level of detail
