@@ -95,7 +95,7 @@ var array = new HeightMapArray();
 let initialVertexCount = 8;
 
 //var perlin1 = new PerlinTerrainGenerator();
-//await perlin1.generateHeightmap(1024, 1).then((heightmap: number[][]) => {
+//await perlin1.generateHeightmap(1024, heightScale).then((heightmap: number[][]) => {
 //await array.generateRandom(512, heightScale).then((heightmap) => {
 await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
     // Heightmap is fully loaded and ready to use

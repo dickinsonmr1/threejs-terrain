@@ -69,7 +69,6 @@ export class QuadtreeNode {
             //scene.remove(this.mesh);
             //this.mesh = null;
             this.mesh.visible = false;
-            //this.cylinderMesh!.visible = false;
         }
     }
 
@@ -80,7 +79,6 @@ export class QuadtreeNode {
                     //this.scene.remove(child.mesh);
                     //child.mesh = null;
                     child.mesh.visible = false;
-                    //child.cylinderMesh!.visible = false;
                 }
                 child.merge();
             });
@@ -113,55 +111,28 @@ export class QuadtreeNode {
     }
     */
 
+    /*
     private getCameraDistanceToNode(camera: THREE.Camera): number {
         const nodeCenter = new THREE.Vector3(this.x + this.size / 2, 0, this.y + this.size / 2);
         let temp = new THREE.Vector3(camera.position.x, 0, camera.position.z);
         return temp.distanceTo(nodeCenter);
     }
+    */
 
     // Create mesh for this tile (if not subdivided)
     createMesh(scene: THREE.Scene, material: THREE.Material) { //}, dataArray2D: number[][]) {
         if (!this.mesh) {
 
-
             let perlinTerrainGenerator = new PerlinTerrainGenerator();
             let mesh = perlinTerrainGenerator.createMesh(this.lodHeightmapChunk, this.size, material, this.heightScale);
-
-            /*
-            const geometry = new THREE.PlaneGeometry(this.size, this.size, this.size - 1, this.size - 1);
-
-            // Set the z-values (height) for each vertex based on the heightmap chunk
-            for (let i = 0; i < this.size; i++) {
-                for (let j = 0; j < this.size; j++) {
-                    const index = i * this.size + j;
-                    const heightValue = this.heightmapChunk[i][j] * this.heightScale;
-                    geometry.attributes.position.setZ(index, heightValue);
-                }
-            }
-
-            geometry.computeVertexNormals(); // Recompute normals for smooth shading
-
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
-            */
-
-            mesh.position.set(this.x + this.size / 2, 0, this.y + this.size / 2); // Center it
-            
+          
+            mesh.position.set(this.x + this.size / 2, 0, this.y + this.size / 2); // Center it            
+ 
             this.mesh = mesh;
-            scene.add(mesh);
-            
-            /*
-            this.cylinderMesh = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.5, 0.5, 500, 16, 1, true),
-                material);
-            this.cylinderMesh.position.set(mesh.position.x, 0, mesh.position.z);            
-            scene.add(this.cylinderMesh);
-            */
-            
+            scene.add(mesh);            
         }
         else {
             this.mesh.visible = true;
-            //this.cylinderMesh!.visible = true;
         }
     }
 
@@ -180,12 +151,13 @@ export class QuadtreeNode {
 
     // Extract a sub-chunk of the heightmap from the current node
     private getSubChunk(offsetX: number, offsetY: number, subSize: number): number[][] {
+        
         const subChunk: number[][] = [];
-
         for (let i = 0; i < subSize; i++) {
+
             const row: number[] = [];
             for (let j = 0; j < subSize; j++) {
-            row.push(this.heightmapChunk[offsetY + i][offsetX + j]);
+                row.push(this.heightmapChunk[offsetY + i][offsetX + j]);
             }
             subChunk.push(row);
         }
