@@ -2,13 +2,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import './style.css'
 import * as THREE from 'three'
 import { HeightMapArray } from './heightMapArray';
-import { QuadtreeTerrainSystem } from './quadtreeTerrainSystem';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { SkyType } from './skyType';
 import { PerlinTerrainGenerator } from './perlinTerrainGenerator';
 import Stats from 'three/addons/libs/stats.module.js';
+import { QuadtreeTerrainSystem } from './quadtree/quadtreeTerrainSystem';
+import { TerrainChunkManager } from './chunk/terrainChunkManager';
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 20, 5);
@@ -87,24 +88,26 @@ scene.add( water );
 
 let quadtreeTerrainSystem: any;
 
-const isWireFrame = false;
+const isWireFrame = true;
 
 const maxLODLevel = 4;        
 const heightScale = 25;
 var array = new HeightMapArray();
 let initialVertexCount = 8;
 
-//var perlin1 = new PerlinTerrainGenerator();
-//await perlin1.generateHeightmap(1024, heightScale).then((heightmap: number[][]) => {
+// quadtree
+/*
+var perlin1 = new PerlinTerrainGenerator();
+await perlin1.generateHeightmap(1024, 5).then((heightmap: number[][]) => {
 //await array.generateRandom(512, heightScale).then((heightmap) => {
-await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
+//await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
     // Heightmap is fully loaded and ready to use
     console.log('Heightmap loaded successfully:', heightmap);
     
     // You can now safely use the heightmap for further processing
     // For example: generate terrain, visualize it, etc.
             
-    var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, heightScale, initialVertexCount, isWireFrame);
+    var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, 1, initialVertexCount, isWireFrame);
     //terrain.buildFullQuadtree(terrain.root, maxLODLevel);
 
     quadtreeTerrainSystem = terrain;
@@ -112,7 +115,9 @@ await array.generateFromAsset('assets/mountain_circle_512x512.png').then((height
 .catch((error) => {
     console.error('Error loading heightmap:', error);
 });
+*/
 
+/*
 const perlinTerrainGenerator = new PerlinTerrainGenerator();
 
 var simpleTerrainMesh = perlinTerrainGenerator.generateSimpleTerrain(256, 20);
@@ -125,14 +130,19 @@ let heightScale2 = 10;
 const material1 = new THREE.MeshStandardMaterial({ color: 'red', wireframe: isWireFrame });
 const baseHeightmap = await perlinTerrainGenerator.generateHeightmap(terrainFullSize, heightScale2); // full resolution
 const baseMesh = perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, material1);
-baseMesh.position.set(0, 0, -256);
+baseMesh.position.set(0, 0, 0);
 scene.add(baseMesh);
 
+// LOD test
 const material2 = new THREE.MeshStandardMaterial({ color: 'green', wireframe: isWireFrame });
 const filteredHeightmap = perlinTerrainGenerator.createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap, terrainLodResolution); // Lower resolution
 const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, terrainFullSize, material2);
-lodMesh.position.set(256, 0, -256);
+lodMesh.position.set(0, 0, -256);
 scene.add(lodMesh);
+*/
+
+let terrainChunkManager = new TerrainChunkManager(scene);
+terrainChunkManager.generate(4, 64);
 
 const temp = {
   width: 1920,
@@ -177,7 +187,7 @@ cameraFolder.open();
 
 
 const terrainFolder = gui.addFolder('TerrainFolder');
-terrainFolder.add(quadtreeTerrainSystem, 'totalNodes').listen();
+//terrainFolder.add(quadtreeTerrainSystem, 'totalNodes').listen();
 // todo: add items
 
 function switchSky(skyType: SkyType) {

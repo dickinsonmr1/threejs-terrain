@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { PerlinTerrainGenerator } from "./perlinTerrainGenerator";
+import { PerlinTerrainGenerator } from "../perlinTerrainGenerator";
 //import * as CANNON from 'cannon-es'
 
 export class QuadtreeNode {
