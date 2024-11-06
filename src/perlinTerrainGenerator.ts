@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import perlinNoise from 'perlin-noise';
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
+import { TerrainGeneratorParams } from './chunk/terrainChunkManager';
 
 export class PerlinTerrainGenerator {
 
@@ -41,7 +42,7 @@ export class PerlinTerrainGenerator {
         return mesh;
     }
     
-    public async generateHeightmap(resolution: number, heightScale: number): Promise<number[][]> {
+    public async generateHeightmap(resolution: number, heightScale: number, params: TerrainGeneratorParams): Promise<number[][]> {
         const noise = perlinNoise.generatePerlinNoise(resolution, resolution);
         const heightmap: number[][] = [];
         for (let i = 0; i < resolution; i++) {
@@ -53,7 +54,7 @@ export class PerlinTerrainGenerator {
         return heightmap;
     }
 
-    public async generateHeightmapWithSimplexNoise(resolution: number, heightScale: number): Promise<number[][]> {
+    public async generateHeightmapWithSimplexNoise(resolution: number, heightScale: number, params: TerrainGeneratorParams): Promise<number[][]> {
         const noise2D = createNoise2D();
         const heightmap: number[][] = [];
         for (let i = 0; i < resolution; i++) {
@@ -61,35 +62,34 @@ export class PerlinTerrainGenerator {
             for (let j = 0; j < resolution; j++) {
 
                 //heightmap[i][j] = noise2D(i * resolution, j*resolution) * heightScale; // Adjust amplitude                
-                heightmap[i][j] = this.getHeight(i * resolution, j*resolution, 1024, 6, 2, 1, 5, 0.5, noise2D);
+                heightmap[i][j] = this.getHeight(i * resolution, j*resolution, params, noise2D);
                 //heightmap[i][j] = this.generateSmoothHeight(i * resolution, j*resolution, 100, heightScale, noise2D);
             }
         }
         return heightmap;
     }
-
+    
     getHeight(x: number, y: number,
-        scale: number, octaves: number, lacunarity: number,
-        exponentiation: number, height: number, persistence: number,
+        params: TerrainGeneratorParams,
         noise2D: NoiseFunction2D) {
 
-        const xs = x / scale;
-        const ys = y / scale;
-        const G = 2.0 ** (-persistence);
+        const xs = x / params.scale;
+        const ys = y / params.scale;
+        const G = 2.0 ** (-params.persistence);
         let amplitude = 1.0;
         let frequency = 1.0;
         let normalization = 0;
         let total = 0;
-        for (let o = 0; o < octaves; o++) {
+        for (let o = 0; o < params.octaves; o++) {
           const noiseValue = noise2D(
               xs * frequency, ys * frequency) * 0.5 + 0.5;
           total += noiseValue * amplitude;
           normalization += amplitude;
           amplitude *= G;
-          frequency *= lacunarity;
+          frequency *= params.lacunarity;
         }
         total /= normalization;
-        return Math.pow(total, exponentiation) * height;
+        return Math.pow(total, params.exponentiation) * params.height;
     }
 
     generateSmoothHeight(x: number, y: number, noiseScale: number, heightMultiplier: number, noise2D: NoiseFunction2D): number {
@@ -176,6 +176,7 @@ export class PerlinTerrainGenerator {
             }
         }
         
+        geometry.computeVertexNormals();
         return geometry;
     }
     

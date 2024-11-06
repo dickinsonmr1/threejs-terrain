@@ -9,7 +9,7 @@ import { SkyType } from './skyType';
 import { PerlinTerrainGenerator } from './perlinTerrainGenerator';
 import Stats from 'three/addons/libs/stats.module.js';
 import { QuadtreeTerrainSystem } from './quadtree/quadtreeTerrainSystem';
-import { TerrainChunkManager } from './chunk/terrainChunkManager';
+import { TerrainChunkManager, TerrainGeneratorParams } from './chunk/terrainChunkManager';
 
 const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 20, 5);
@@ -32,8 +32,8 @@ mesh4.position.set(512, 10, 512);
 scene.add(mesh4);
 
 
-const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.8 );
-scene.add( light );
+//const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.8 );
+//scene.add( light );
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
@@ -88,7 +88,7 @@ scene.add( water );
 
 let quadtreeTerrainSystem: any;
 
-const isWireFrame = true;
+const isWireFrame = false;
 
 const maxLODLevel = 4;        
 const heightScale = 25;
@@ -141,8 +141,21 @@ lodMesh.position.set(0, 0, -256);
 scene.add(lodMesh);
 */
 
-let terrainChunkManager = new TerrainChunkManager(scene);
-terrainChunkManager.generate(16, 64, 3);
+let terrainGeneratorParams = new TerrainGeneratorParams(1024, 10, 2, 1, 5, 0.5);
+let terrainChunkManager = new TerrainChunkManager(scene, isWireFrame);
+terrainChunkManager.generate(16, 64, 3, terrainGeneratorParams);
+
+let light2 = new THREE.DirectionalLight(0x808080, 0.8);
+light2.position.set(-100, 100, -100);
+light2.target.position.set(0, 0, 0);
+light2.castShadow = true;
+scene.add(light2);
+
+let light3 = new THREE.DirectionalLight(0x404040, 0.8);
+light3.position.set(100, 100, -100);
+light3.target.position.set(0, 0, 0);
+light3.castShadow = true;
+scene.add(light3);
 
 const temp = {
   width: 1920,
@@ -187,8 +200,18 @@ cameraFolder.open();
 
 
 const terrainFolder = gui.addFolder('TerrainFolder');
+terrainFolder.add(terrainGeneratorParams, 'scale', 1, 10768).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'octaves', 1, 100).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'lacunarity', 1, 100).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'exponentiation', 1, 100).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'height', 1, 100).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'persistence', 1, 100).onChange(rebuild);
 //terrainFolder.add(quadtreeTerrainSystem, 'totalNodes').listen();
 // todo: add items
+
+function rebuild() {
+  terrainChunkManager.regenerate(16, 64, 3, terrainGeneratorParams);
+}
 
 function switchSky(skyType: SkyType) {
 
