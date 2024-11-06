@@ -142,7 +142,7 @@ scene.add(lodMesh);
 */
 
 let terrainChunkManager = new TerrainChunkManager(scene);
-terrainChunkManager.generate(4, 64);
+terrainChunkManager.generate(16, 64, 3);
 
 const temp = {
   width: 1920,

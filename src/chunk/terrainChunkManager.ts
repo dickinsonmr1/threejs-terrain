@@ -16,26 +16,25 @@ export class TerrainChunkManager {
         this.perlinTerrainGenerator = new PerlinTerrainGenerator();
     }
 
-    async generate(gridDimension: number, verticesPerSide: number) {
+    async generate(gridDimension: number, verticesPerSide: number, heightScale: number) {
 
         for(let i = 0; i < gridDimension; i++) {
             for(let j = 0; j < gridDimension; j++) {
 
-               let chunk = await this.generateChunk(i, j, verticesPerSide);
+               let chunk = await this.generateChunk(i, j, verticesPerSide, heightScale);
                this.chunks.push(chunk);
                this.scene.add(chunk);
             }
         }
     }
 
-    async generateChunk(x: number, y: number, verticesPerSide: number): Promise<THREE.Mesh> {
+    async generateChunk(x: number, y: number, verticesPerSide: number, heightScale: number): Promise<THREE.Mesh> {
 
         let terrainFullSize = verticesPerSide;
         let terrainLodResolution = 64;
-        let heightScale2 = 10;
 
         const material1 = new THREE.MeshStandardMaterial({ color: 'green', wireframe: true });
-        const baseHeightmap = await this.perlinTerrainGenerator.generateHeightmap(terrainFullSize, heightScale2); // full resolution
+        const baseHeightmap = await this.perlinTerrainGenerator.generateHeightmapWithSimplexNoise(terrainFullSize, heightScale); // full resolution
         const baseMesh = this.perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, material1);
 
         baseMesh.position.set(x * terrainFullSize, 0, y * terrainFullSize);

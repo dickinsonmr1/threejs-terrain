@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import perlinNoise from 'perlin-noise';
+import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 
 export class PerlinTerrainGenerator {
 
@@ -51,6 +52,45 @@ export class PerlinTerrainGenerator {
         }
         return heightmap;
     }
+
+    public async generateHeightmapWithSimplexNoise(resolution: number, heightScale: number): Promise<number[][]> {
+        const noise2D = createNoise2D();
+        const heightmap: number[][] = [];
+        for (let i = 0; i < resolution; i++) {
+            heightmap[i] = [];
+            for (let j = 0; j < resolution; j++) {
+
+                heightmap[i][j] = noise2D(i * resolution, j*resolution) * heightScale; // Adjust amplitude                
+                //heightmap[i][j] = this.getHeight(i * resolution, j*resolution, 32, 1, 2, 1, 1, 0.5, noise2D);
+            }
+        }
+        return heightmap;
+    }
+
+    getHeight(x: number, y: number,
+        scale: number, octaves: number, lacunarity: number,
+        exponentiation: number, height: number, persistence: number,
+        noise2D: NoiseFunction2D) {
+
+        const xs = x / scale;
+        const ys = y / scale;
+        const G = 2.0 ** (-persistence);
+        let amplitude = 1.0;
+        let frequency = 1.0;
+        let normalization = 0;
+        let total = 0;
+        for (let o = 0; o < octaves; o++) {
+          const noiseValue = noise2D(
+              xs * frequency, ys * frequency) * 0.5 + 0.5;
+          total += noiseValue * amplitude;
+          normalization += amplitude;
+          amplitude *= G;
+          frequency *= lacunarity;
+        }
+        total /= normalization;
+        return Math.pow(total, exponentiation) * height;
+    }
+  
 
     // Create a lower-resolution heightmap using bilinear filtering
     public createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap: number[][], targetResolution: number): number[][] {
