@@ -60,8 +60,9 @@ export class PerlinTerrainGenerator {
             heightmap[i] = [];
             for (let j = 0; j < resolution; j++) {
 
-                heightmap[i][j] = noise2D(i * resolution, j*resolution) * heightScale; // Adjust amplitude                
-                //heightmap[i][j] = this.getHeight(i * resolution, j*resolution, 32, 1, 2, 1, 1, 0.5, noise2D);
+                //heightmap[i][j] = noise2D(i * resolution, j*resolution) * heightScale; // Adjust amplitude                
+                heightmap[i][j] = this.getHeight(i * resolution, j*resolution, 1024, 6, 2, 1, 5, 0.5, noise2D);
+                //heightmap[i][j] = this.generateSmoothHeight(i * resolution, j*resolution, 100, heightScale, noise2D);
             }
         }
         return heightmap;
@@ -89,6 +90,20 @@ export class PerlinTerrainGenerator {
         }
         total /= normalization;
         return Math.pow(total, exponentiation) * height;
+    }
+
+    generateSmoothHeight(x: number, y: number, noiseScale: number, heightMultiplier: number, noise2D: NoiseFunction2D): number {
+        const nx = x * noiseScale;
+        const ny = y * noiseScale;
+        
+        // Add multiple octaves
+        const octaves = [
+            1.0 * noise2D(nx, ny),
+            0.5 * noise2D(nx * 2, ny * 2),
+            0.25 * noise2D(nx * 4, ny * 4),
+        ];
+    
+        return octaves.reduce((acc, val) => acc + val, 0) * heightMultiplier;
     }
   
 

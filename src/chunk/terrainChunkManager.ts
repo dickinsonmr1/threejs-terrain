@@ -28,12 +28,13 @@ export class TerrainChunkManager {
         }
     }
 
-    async generateChunk(x: number, y: number, verticesPerSide: number, heightScale: number): Promise<THREE.Mesh> {
+    private async generateChunk(x: number, y: number, verticesPerSide: number, heightScale: number): Promise<THREE.Mesh> {
 
         let terrainFullSize = verticesPerSide;
         let terrainLodResolution = 64;
 
-        const material1 = new THREE.MeshStandardMaterial({ color: 'green', wireframe: true });
+        const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+        const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: true });
         const baseHeightmap = await this.perlinTerrainGenerator.generateHeightmapWithSimplexNoise(terrainFullSize, heightScale); // full resolution
         const baseMesh = this.perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, material1);
 
