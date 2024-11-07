@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { PerlinTerrainGenerator } from "../perlinTerrainGenerator";
+import { TerrainChunk } from './terrainChunk';
 
 export class TerrainGeneratorParams
 {
@@ -28,7 +29,7 @@ export class TerrainChunkManager {
 
     perlinTerrainGenerator: PerlinTerrainGenerator;
 
-    chunks: THREE.Mesh[] = [];
+    chunks: TerrainChunk[] = [];
 
     sectors: THREE.Vector2[] = [];
 
@@ -43,26 +44,29 @@ export class TerrainChunkManager {
         for(let i = 0; i < gridDimension; i++) {
             for(let j = 0; j < gridDimension; j++) {
 
-               let chunk = await this.generateChunk(i, j, verticesPerSide, heightScale, params);
+               let mesh = await this.generateChunk(i, j, verticesPerSide, heightScale, params);
+
+               let chunk = new TerrainChunk(mesh);
                this.chunks.push(chunk);
-               this.scene.add(chunk);
+
+               this.scene.add(chunk.mesh);
             }
         }
     }
     async regenerate(gridDimension: number, verticesPerSide: number, heightScale: number, params: TerrainGeneratorParams) {
 
-        this.chunks.forEach(mesh => {
+        this.chunks.forEach(chunk => {
             // Remove the mesh from the scene (if needed)
-            this.scene.remove(mesh);
+            this.scene.remove(chunk.mesh);
             
             // Dispose of the geometry and material associated with the mesh
-            if (mesh.geometry) mesh.geometry.dispose();
-            if (mesh.material) {
+            if (chunk.mesh.geometry) chunk.mesh.geometry.dispose();
+            if (chunk.mesh.material) {
                 // If the material is an array (e.g., for MultiMaterial), dispose each one
-                if (Array.isArray(mesh.material)) {
-                    mesh.material.forEach(material => material.dispose());
+                if (Array.isArray(chunk.mesh.material)) {
+                    chunk.mesh.material.forEach(material => material.dispose());
                 } else {
-                    mesh.material.dispose();
+                    chunk.mesh.material.dispose();
                 }
             }
         });
