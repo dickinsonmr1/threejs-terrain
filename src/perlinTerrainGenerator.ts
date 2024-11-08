@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import perlinNoise from 'perlin-noise';
-import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
+import { NoiseFunction2D } from 'simplex-noise';
 import { TerrainGeneratorParams } from './chunk/terrainChunkManager';
 
 export class PerlinTerrainGenerator {
@@ -54,40 +54,41 @@ export class PerlinTerrainGenerator {
         return heightmap;
     }
 
-    public async generateHeightmapWithSimplexNoise(resolution: number, heightScale: number, params: TerrainGeneratorParams): Promise<number[][]> {
-        const noise2D = createNoise2D();
+    public async generateHeightmapWithSimplexNoise(resolution: number, heightScale: number, params: TerrainGeneratorParams, noise2D: any): Promise<number[][]> {
+        //const simplex = new SimplexNoise(); // Create a new Simplex noise instance
+       
         const heightmap: number[][] = [];
         for (let i = 0; i < resolution; i++) {
             heightmap[i] = [];
             for (let j = 0; j < resolution; j++) {
 
                 //heightmap[i][j] = noise2D(i * resolution, j*resolution) * heightScale; // Adjust amplitude                
-                heightmap[i][j] = this.getHeight(i * resolution, j*resolution, params, noise2D);
+                heightmap[i][j] = this.getHeight(i * resolution, j * resolution, params, noise2D);
                 //heightmap[i][j] = this.generateSmoothHeight(i * resolution, j*resolution, 100, heightScale, noise2D);
             }
         }
         return heightmap;
     }
     
-    getHeight(x: number, y: number,
-        params: TerrainGeneratorParams,
-        noise2D: NoiseFunction2D) {
+    getHeight(x: number, y: number, params: TerrainGeneratorParams, noise2D: NoiseFunction2D) {
 
         const xs = x / params.scale;
         const ys = y / params.scale;
         const G = 2.0 ** (-params.persistence);
+
         let amplitude = 1.0;
         let frequency = 1.0;
         let normalization = 0;
         let total = 0;
+
         for (let o = 0; o < params.octaves; o++) {
-          const noiseValue = noise2D(
-              xs * frequency, ys * frequency) * 0.5 + 0.5;
-          total += noiseValue * amplitude;
-          normalization += amplitude;
-          amplitude *= G;
-          frequency *= params.lacunarity;
+            const noiseValue = noise2D(xs * frequency, ys * frequency) * 0.5 + 0.5;
+            total += noiseValue * amplitude;
+            normalization += amplitude;
+            amplitude *= G;
+            frequency *= params.lacunarity;
         }
+
         total /= normalization;
         return Math.pow(total, params.exponentiation) * params.height;
     }

@@ -143,7 +143,7 @@ scene.add(lodMesh);
 
 let terrainGeneratorParams = new TerrainGeneratorParams(1024, 10, 2, 1, 5, 0.5);
 let terrainChunkManager = new TerrainChunkManager(scene, isWireFrame);
-terrainChunkManager.generate(16, 64, 3, terrainGeneratorParams);
+terrainChunkManager.generate(2, 64, 3, terrainGeneratorParams);
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
 light2.position.set(-100, 100, -100);
