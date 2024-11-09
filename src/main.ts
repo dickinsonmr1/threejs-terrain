@@ -15,6 +15,7 @@ const scene = new THREE.Scene();
 const geometry = new THREE.BoxGeometry(5, 20, 5);
 const material =new THREE.MeshStandardMaterial({color: 0x00ff00});
 
+/*
 const mesh1 = new THREE.Mesh(geometry, material);
 mesh1.position.set(0, 10, 0);
 scene.add(mesh1);
@@ -30,7 +31,7 @@ scene.add(mesh3);
 const mesh4 = new THREE.Mesh(geometry, material);
 mesh4.position.set(512, 10, 512);
 scene.add(mesh4);
-
+*/
 
 //const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.8 );
 //scene.add( light );
@@ -143,7 +144,7 @@ scene.add(lodMesh);
 
 let terrainGeneratorParams = new TerrainGeneratorParams(1024, 10, 2, 1, 5, 0.5);
 let terrainChunkManager = new TerrainChunkManager(scene, isWireFrame);
-terrainChunkManager.generate(2, 64, 3, terrainGeneratorParams);
+terrainChunkManager.generate(2, 2, 3, terrainGeneratorParams);
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
 light2.position.set(-100, 100, -100);
@@ -210,7 +211,7 @@ terrainFolder.add(terrainGeneratorParams, 'persistence', 1, 100).onChange(rebuil
 // todo: add items
 
 function rebuild() {
-  terrainChunkManager.regenerate(16, 64, 3, terrainGeneratorParams);
+  terrainChunkManager.regenerate(2, 2, 3, terrainGeneratorParams);
 }
 
 function switchSky(skyType: SkyType) {

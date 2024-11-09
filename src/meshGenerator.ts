@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-
 export class MeshGenerator {
     constructor(){
         
@@ -8,6 +7,7 @@ export class MeshGenerator {
     public createMesh(heightmap: number[][], size: number, material: THREE.Material, heightScale: number = 1): THREE.Mesh {
         const mesh = new THREE.Mesh(this.createLODGeometry(heightmap, size, heightScale), material);
         mesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
+        mesh.rotation.z = Math.PI / 2; // Rotate to lie flat
 
         return mesh;
     }
@@ -33,12 +33,13 @@ export class MeshGenerator {
           for (let i = 0; i < heightmap.length; i++) {
             for (let j = 0; j < heightmap[i].length; j++) {
                 const index = i * heightmap.length + j;
-                const heightValue = heightmap[i][j] * heightScale;
+                const heightValue = heightmap[i][j] * heightScale;                
+                console.log(`setting vertex @ (${geometry.attributes.position.getX(index)}, ${geometry.attributes.position.getY(index)}): ${heightValue}`);
                 geometry.attributes.position.setZ(index, heightValue);
             }
-        }
-        
+        }        
         geometry.computeVertexNormals();
+
         return geometry;
     }
 }
