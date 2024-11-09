@@ -4,10 +4,11 @@ export class MeshGenerator {
         
     }
 
-    public createMesh(heightmap: number[][], size: number, material: THREE.Material, heightScale: number = 1): THREE.Mesh {
+    public createMesh(heightmap: number[][], size: number, material: THREE.Material, meshRotation: number, heightScale: number = 1): THREE.Mesh {
         const mesh = new THREE.Mesh(this.createLODGeometry(heightmap, size, heightScale), material);
+        mesh.rotation.z = meshRotation;
         mesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
-        mesh.rotation.z = Math.PI / 2; // Rotate to lie flat
+        
 
         return mesh;
     }
@@ -34,7 +35,7 @@ export class MeshGenerator {
             for (let j = 0; j < heightmap[i].length; j++) {
                 const index = i * heightmap.length + j;
                 const heightValue = heightmap[i][j] * heightScale;                
-                console.log(`setting vertex @ (${geometry.attributes.position.getX(index)}, ${geometry.attributes.position.getY(index)}): ${heightValue}`);
+                console.log(`setting vertex height @ (${geometry.attributes.position.getX(index)}, ${geometry.attributes.position.getY(index)}): ${heightValue}`);
                 geometry.attributes.position.setZ(index, heightValue);
             }
         }        

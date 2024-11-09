@@ -23,6 +23,22 @@ export class TerrainGeneratorParams
     persistence: number;
 }
 
+export class TerrainGridParams
+{
+    constructor(chunksPerSideOfGrid: number, verticesPerSide: number, heightScale: number, meshRotation: number) {
+      this.chunksPerSideOfGrid = chunksPerSideOfGrid;
+      this.verticesPerSide = verticesPerSide;      
+      this.heightScale = heightScale;
+      this.meshRotation = meshRotation;
+    }
+
+    chunksPerSideOfGrid: number;
+    verticesPerSide: number;
+    heightScale: number;
+    meshRotation: number;
+}
+
+
 export class TerrainChunkManager {
 
     scene: THREE.Scene;
@@ -41,19 +57,21 @@ export class TerrainChunkManager {
         this.meshGenerator = new MeshGenerator();
     }
 
-    async generate(chunksPerSideOfGrid: number, verticesPerSide: number, heightScale: number, params: TerrainGeneratorParams) {
+    async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         //const noise2D = createNoise2D();
         const noise2D = createNoise2D();
 
-        for(let i = 0; i < chunksPerSideOfGrid; i++) {
-            for(let j = 0; j < chunksPerSideOfGrid; j++) {
+        for(let i = 0; i < terrainGridParams.chunksPerSideOfGrid; i++) {
+            for(let j = 0; j < terrainGridParams.chunksPerSideOfGrid; j++) {
 
-               let offsetX = i * verticesPerSide;
-               let offsetZ = j * verticesPerSide;
+               let offsetX = i * terrainGridParams.verticesPerSide;
+               let offsetZ = j * terrainGridParams.verticesPerSide;
 
-               console.log(` -------- Offset (${offsetX * verticesPerSide}, ${offsetZ * verticesPerSide})`);
-               let mesh = await this.generateChunk(i, j, offsetX * verticesPerSide, offsetZ * verticesPerSide, verticesPerSide, heightScale, params, noise2D);
+               console.log(` -------- Offset (${offsetX * terrainGridParams.verticesPerSide}, ${offsetZ * terrainGridParams.verticesPerSide})`);
+               let mesh = await this.generateChunk(i, j, offsetX * terrainGridParams.verticesPerSide, offsetZ * terrainGridParams.verticesPerSide,
+                  terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
+                  terrainGridParams, params, noise2D);
                
                let chunk = new TerrainChunk(mesh);
                this.chunks.push(chunk);
@@ -62,7 +80,7 @@ export class TerrainChunkManager {
             }
         }
     }
-    async regenerate(gridDimension: number, verticesPerSide: number, heightScale: number, params: TerrainGeneratorParams) {
+    async regenerate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         this.chunks.forEach(chunk => {
             // Remove the mesh from the scene (if needed)
@@ -83,13 +101,14 @@ export class TerrainChunkManager {
         // Clear the array after disposing
         this.chunks.length = 0;
         
-        this.generate(gridDimension, verticesPerSide, heightScale, params);
+        this.generate(terrainGridParams, params);
     }
 
     private async generateChunk(gridX: number, gridY: number,
       offsetX: number,
       offsetZ: number,
       verticesPerSide: number, heightScale: number,
+      terrainGridParams: TerrainGridParams,
       params: TerrainGeneratorParams, noise2D: NoiseFunction2D): Promise<THREE.Mesh> {
 
         let terrainFullSize = verticesPerSide;
@@ -100,9 +119,9 @@ export class TerrainChunkManager {
         const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
 
-        const baseMesh = this.meshGenerator.createMesh(baseHeightmap, terrainFullSize, material1);
+        const baseMesh = this.meshGenerator.createMesh(baseHeightmap, terrainFullSize, material1, terrainGridParams.meshRotation);
         baseMesh.receiveShadow = true;
-        baseMesh.position.set(gridX * terrainFullSize, 0, -gridY* terrainFullSize);
+        baseMesh.position.set(-gridX * terrainFullSize, 0, gridY* terrainFullSize);
 
         return baseMesh;
     }
@@ -121,8 +140,8 @@ export class TerrainChunkManager {
             for (let j = 0; j < resolution; j++) {
                 // TODO: ensure offset is correct for noise function
 
-                let x = resolution * offsetX * i;
-                let z = resolution * offsetZ * j;                
+                let x = resolution * i + offsetX;
+                let z = resolution * j + offsetZ;                
                 heightmap[i][j] =  this.getHeight(x, z, params, noise2D);
                 //heightmap[i][j] = noise2D(x, z);
                 console.log(`using noise @ (${x}, ${z}): ${heightmap[i][j]}`);
