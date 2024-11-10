@@ -45,6 +45,7 @@ export class TerrainChunkManager {
     isWireFrame: boolean;
 
     chunks: TerrainChunk[] = [];
+    colors: THREE.Color[] = [];
 
     sectors: THREE.Vector2[] = [];
 
@@ -60,7 +61,9 @@ export class TerrainChunkManager {
     async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         //const noise2D = createNoise2D();
-        const noise2D = createNoise2D();
+        const noise2D = createNoise2D();        
+
+        console.log(`**GENERATE: ${terrainGridParams.chunksPerSideOfGrid} x ${terrainGridParams.chunksPerSideOfGrid} grid, ${terrainGridParams.verticesPerSide} vertices per side of chunk`);
 
         for(let i = 0; i < terrainGridParams.chunksPerSideOfGrid; i++) {
             for(let j = 0; j < terrainGridParams.chunksPerSideOfGrid; j++) {
@@ -68,13 +71,20 @@ export class TerrainChunkManager {
                let offsetX = i * terrainGridParams.verticesPerSide;
                let offsetZ = j * terrainGridParams.verticesPerSide;
 
-               console.log(` -------- Offset (${offsetX * terrainGridParams.verticesPerSide}, ${offsetZ * terrainGridParams.verticesPerSide})`);
-               let mesh = await this.generateChunk(i, j, offsetX * terrainGridParams.verticesPerSide, offsetZ * terrainGridParams.verticesPerSide,
+                              
+              const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+              if(this.colors.length <= this.chunks.length) {
+                this.colors.push(randomColor);
+               }
+
+               console.log(` -------- Chunk Offset (${offsetX}, ${offsetZ})`);
+               let mesh = await this.generateChunkMesh(i, j, offsetX, offsetZ,
                   terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
-                  terrainGridParams, params, noise2D);
+                  terrainGridParams, params, noise2D, randomColor);
                
                let chunk = new TerrainChunk(mesh);
                this.chunks.push(chunk);
+               
 
                this.scene.add(chunk.mesh);
             }
@@ -104,22 +114,21 @@ export class TerrainChunkManager {
         this.generate(terrainGridParams, params);
     }
 
-    private async generateChunk(gridX: number, gridY: number,
+    private async generateChunkMesh(gridX: number, gridY: number,
       offsetX: number,
       offsetZ: number,
       verticesPerSide: number, heightScale: number,
       terrainGridParams: TerrainGridParams,
-      params: TerrainGeneratorParams, noise2D: NoiseFunction2D): Promise<THREE.Mesh> {
+      params: TerrainGeneratorParams, noise2D: NoiseFunction2D, randomColor: THREE.Color): Promise<THREE.Mesh> {
 
         let terrainFullSize = verticesPerSide;
         //let terrainLodResolution = 64;
         
         const baseHeightmap = await this.generateHeightmap(offsetX, offsetZ, terrainFullSize, heightScale, params, noise2D); // full resolution
         
-        const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
 
-        const baseMesh = this.meshGenerator.createMesh(baseHeightmap, terrainFullSize, material1, terrainGridParams.meshRotation);
+        const baseMesh = this.meshGenerator.createPlaneMesh(baseHeightmap, terrainFullSize, material1, terrainGridParams.meshRotation);
         baseMesh.receiveShadow = true;
         baseMesh.position.set(-gridX * terrainFullSize, 0, gridY* terrainFullSize);
 
@@ -142,15 +151,15 @@ export class TerrainChunkManager {
 
                 let x = resolution * i + offsetX;
                 let z = resolution * j + offsetZ;                
-                heightmap[i][j] =  this.getHeight(x, z, params, noise2D);
+                heightmap[i][j] =  this.getHeightFromNoiseFunction(x, z, params, noise2D);
                 //heightmap[i][j] = noise2D(x, z);
-                console.log(`using noise @ (${x}, ${z}): ${heightmap[i][j]}`);
+                console.log(`using noise @ (${x}, ${z}): ${heightmap[i][j].toFixed(2)}`);
             }
         }
         return heightmap;
     }
 
-    private getHeight(x: number, y: number,
+    private getHeightFromNoiseFunction(x: number, y: number,
       params: TerrainGeneratorParams, noise2D: NoiseFunction2D) {
 
       const xs = x / params.scale;

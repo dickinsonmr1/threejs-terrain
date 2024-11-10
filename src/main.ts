@@ -145,7 +145,7 @@ scene.add(lodMesh);
 
 let terrainChunkManager = new TerrainChunkManager(scene, isWireFrame);
 
-let terrainGridParams = new TerrainGridParams(4, 2, 3, Math.PI);
+let terrainGridParams = new TerrainGridParams(2, 2, 5, Math.PI * 0);
 let terrainGeneratorParams = new TerrainGeneratorParams(1024, 10, 2, 1, 5, 0.5);
 
 terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);
@@ -205,8 +205,8 @@ cameraFolder.open();
 
 
 const terrainFolder = gui.addFolder('TerrainFolder');
-terrainFolder.add(terrainGridParams, 'chunksPerSideOfGrid', 1, 128, 1).onChange(rebuild);
-terrainFolder.add(terrainGridParams, 'verticesPerSide', 2, 64, 1).onChange(rebuild);
+terrainFolder.add(terrainGridParams, 'chunksPerSideOfGrid', 1, 16, 1).onChange(rebuild);
+terrainFolder.add(terrainGridParams, 'verticesPerSide', 2, 16, 1).onChange(rebuild);
 terrainFolder.add(terrainGridParams, 'heightScale', 1, 10, 1).onChange(rebuild);
 terrainFolder.add(terrainGridParams, 'meshRotation', 0, 2 * Math.PI, Math.PI / 2).onChange(rebuild);
 
