@@ -20,7 +20,7 @@ export class MeshGenerator {
         const vertices = geometry.attributes.position.array;
     
         for (let i = 0, k = 0; i < heightmap.length; i++) {
-            for (let j = 0; j < heightmap[i].length; j++, k += 3) {
+            for (let j = 0; j < heightmap[i].lengt//h; j++, k += 3) {
                 vertices[k + 2] = heightmap[i][j] * heightScale; // Set z position as height
             }
         }
@@ -35,7 +35,7 @@ export class MeshGenerator {
             for (let j = 0; j < heightmap[i].length; j++) {
                 const index = i * heightmap.length + j;
                 const heightValue = heightmap[i][j] * heightScale;                
-                console.log(`createLODGeometry:setting vertex height @ (${geometry.attributes.position.getX(index)}, ${geometry.attributes.position.getY(index)}): ${heightValue}`);
+                console.log(`createLODGeometry: setting vertex height @ (${geometry.attributes.position.getX(index)}, ${geometry.attributes.position.getY(index)}): ${heightValue}`);
                 geometry.attributes.position.setZ(index, heightValue);
             }
         }        
@@ -65,21 +65,22 @@ export class MeshGenerator {
     
         let k = 0;
         for (let i = 0; i < heightmap.length; i++) {
-            for (let j = 0; j < heightmap[i].length; j++) {
+            for (let j = 0; j < heightmap[i].length; j++) {                
                 vertices[k + 2] = heightmap[i][j]; // Set z position as height
                 console.log(`createPlaneMesh heightmap index (${i}, ${j})`);
                 console.log(`createPlaneMesh: setting vertex height @ (${vertices[k].toFixed(2)}, ${vertices[k+1].toFixed(2)}): ${heightmap[i][j].toFixed(2)}`);
 
-                k += 3;
+                k += 3;                
             }
         }            
     
         geometry.attributes.position.needsUpdate = true;
         geometry.computeVertexNormals();
 
-
         planeMesh.rotation.z = meshRotation;
         planeMesh.rotation.x = -Math.PI / 2; // Rotate to lie flat
+        
+        
         
         return planeMesh;
     }

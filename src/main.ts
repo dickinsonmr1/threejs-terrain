@@ -146,7 +146,7 @@ scene.add(lodMesh);
 let terrainChunkManager = new TerrainChunkManager(scene, isWireFrame);
 
 let terrainGridParams = new TerrainGridParams(2, 2, 5, Math.PI * 0);
-let terrainGeneratorParams = new TerrainGeneratorParams(1024, 10, 2, 1, 5, 0.5);
+let terrainGeneratorParams = new TerrainGeneratorParams(1024, 10, 37, 1, 5, 0.5);
 
 terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);
 
@@ -169,8 +169,8 @@ const temp = {
 
 const camera = new THREE.PerspectiveCamera(75, temp.width / temp.height);
 camera.far = 10000;
-camera.position.z = 4;
-//camera.position.set(256, 500, 256);
+//camera.position.z = 4;
+camera.position.set(16, 16, 16);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(temp.width, temp.height);
