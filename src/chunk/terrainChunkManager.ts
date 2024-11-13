@@ -47,6 +47,8 @@ export class TerrainChunkManager {
     chunks: TerrainChunk[] = [];
     colors: THREE.Color[] = [];
 
+    sphereMeshes: THREE.Mesh[] = [];
+
     sectors: THREE.Vector2[] = [];
 
     meshGenerator: MeshGenerator;
@@ -65,9 +67,12 @@ export class TerrainChunkManager {
 
         console.log(`**GENERATE: ${terrainGridParams.chunksPerSideOfGrid} x ${terrainGridParams.chunksPerSideOfGrid} grid, ${terrainGridParams.verticesPerSide} vertices per side of chunk`);
 
-        for(let i = 0; i < terrainGridParams.chunksPerSideOfGrid; i++) {
-            for(let j = 0; j < terrainGridParams.chunksPerSideOfGrid; j++) {
+        let rows = terrainGridParams.chunksPerSideOfGrid;
+        let columns = terrainGridParams.chunksPerSideOfGrid;
 
+        
+          for(let i = 0; i < columns; i++) {
+            for(let j = 0; j < rows; j++) {
                let offsetX = i * terrainGridParams.verticesPerSide;
                let offsetZ = j * terrainGridParams.verticesPerSide;
                               
@@ -77,7 +82,7 @@ export class TerrainChunkManager {
                }
 
                
-               if(i > 0) return; // for debugging purposes
+               //if(j > 0) return; // for debugging purposes
 
                console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
                await this.generateChunkMesh(i, j, offsetX, offsetZ,
@@ -113,7 +118,26 @@ export class TerrainChunkManager {
         
         // Clear the array after disposing
         this.chunks.length = 0;
+
+        this.sphereMeshes.forEach(sphere => {
+          // Remove the mesh from the scene (if needed)
+          this.scene.remove(sphere);
+          
+          // Dispose of the geometry and material associated with the mesh
+          if (sphere.geometry) sphere.geometry.dispose();
+          if (sphere.material) {
+              // If the material is an array (e.g., for MultiMaterial), dispose each one
+              if (Array.isArray(sphere.material)) {
+                sphere.material.forEach(material => material.dispose());
+              } else {
+                sphere.material.dispose();
+              }
+          }
+        });
         
+        // Clear the array after disposing
+        this.sphereMeshes.length = 0;
+          
         this.generate(terrainGridParams, params);
     }
 
@@ -125,28 +149,19 @@ export class TerrainChunkManager {
       params: TerrainGeneratorParams, noise2D: NoiseFunction2D, randomColor: THREE.Color): Promise<THREE.Mesh> {
 
         //let terrainFullSize = verticesPerSide;
-        //let terrainLodResolution = 64;
-        
-        const baseHeightmap = await this.generateHeightmap(offsetX, offsetZ, verticesPerSide, heightScale, params, noise2D); // full resolution
+        //let terrainLodResolution = 64;        
+        //const baseHeightmap = await this.generateHeightmap(offsetX, offsetZ, verticesPerSide, heightScale, params, noise2D); // full resolution
         
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
 
-        const baseMesh = this.meshGenerator.createPlaneMesh(baseHeightmap, verticesPerSide, material1, terrainGridParams.meshRotation);
-        baseMesh.receiveShadow = true;
-        baseMesh.position.setX(gridX * verticesPerSide);
-        baseMesh.position.setZ(gridZ * verticesPerSide);
+        //const planeMesh = this.meshGenerator.createPlaneMesh(baseHeightmap, verticesPerSide, material1, terrainGridParams.meshRotation);
+        const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, noise2D, verticesPerSide, material1, terrainGridParams.meshRotation, params);
+        planeMesh.receiveShadow = true;
+        planeMesh.position.setX(gridX * verticesPerSide);
+        planeMesh.position.setZ(-gridZ * verticesPerSide);
 
-        const geometry = new THREE.SphereGeometry(0.1);
-        const vertices = baseMesh.geometry.attributes.position.array;
-        const material =new THREE.MeshStandardMaterial({color: randomColor, wireframe: true});
-
-        for (let v = 0; v < vertices.length; v += 3) {
-            const sphereMesh = new THREE.Mesh(geometry, material);
-            sphereMesh.position.set(vertices[v] + offsetX, vertices[v+2], vertices[v+1] + offsetZ);
-            this.scene.add(sphereMesh);
-        }
-
-        return baseMesh;
+        this.generateVertexSpheres(planeMesh, randomColor, offsetX, offsetZ);
+        return planeMesh;
     }
 
     private async generateHeightmap(
@@ -196,6 +211,27 @@ export class TerrainChunkManager {
 
         total /= normalization;
         return Math.pow(total, params.exponentiation) * params.height;
+    }
+
+    private generateVertexSpheres(planeMesh: THREE.Mesh, randomColor: THREE.Color, offsetX: number, offsetZ: number) {
+      const sphereGeometry = new THREE.SphereGeometry(0.1);
+      const material = new THREE.MeshStandardMaterial({color: randomColor, wireframe: true});
+
+      for (let i = 0; i < planeMesh.geometry.attributes.position.count; i++) {
+        const vertex = new THREE.Vector3();
+        vertex.fromBufferAttribute(planeMesh.geometry.attributes.position, i);
+        
+        // Position the sphere at the vertex
+        const sphereMesh = new THREE.Mesh(sphereGeometry, material);
+        const transformedVertex = new THREE.Vector3(vertex.x + offsetX, vertex.z, vertex.y + offsetZ);
+        sphereMesh.position.copy(transformedVertex);
+
+        console.log(`sphere: (${transformedVertex.x.toFixed(2)}, ${transformedVertex.y.toFixed(2)}, ${transformedVertex.z.toFixed(2)})`);
+        
+        this.sphereMeshes.push(sphereMesh);            
+        this.scene.add(sphereMesh);
+      }
+
     }
 
     update(camera: THREE.Camera ) {
