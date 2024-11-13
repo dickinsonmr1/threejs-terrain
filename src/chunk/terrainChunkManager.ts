@@ -46,9 +46,6 @@ export class TerrainChunkManager {
 
     chunks: TerrainChunk[] = [];
     colors: THREE.Color[] = [];
-
-    sphereMeshes: THREE.Mesh[] = [];
-
     sectors: THREE.Vector2[] = [];
 
     meshGenerator: MeshGenerator;
@@ -60,7 +57,7 @@ export class TerrainChunkManager {
         this.meshGenerator = new MeshGenerator();
     }
 
-    async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
+    public async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         //const noise2D = createNoise2D();
         const noise2D = createNoise2D();        
@@ -73,19 +70,17 @@ export class TerrainChunkManager {
         
           for(let i = 0; i < columns; i++) {
             for(let j = 0; j < rows; j++) {
-               let offsetX = i * terrainGridParams.verticesPerSide;
-               let offsetZ = j * terrainGridParams.verticesPerSide;
                               
               const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
               if(this.colors.length <= this.chunks.length) {
                 this.colors.push(randomColor);
-               }
+              }
 
-               
-               //if(j > 0) return; // for debugging purposes
+              let offsetX = i * terrainGridParams.verticesPerSide;
+              let offsetZ = j * terrainGridParams.verticesPerSide;              
 
                console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
-               await this.generateChunkMesh(i, j, offsetX, offsetZ,
+               await this.generateMeshChunk(i, j, offsetX, offsetZ,
                   terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
                   terrainGridParams, params, noise2D, randomColor).then((mesh) => {
 
@@ -98,7 +93,7 @@ export class TerrainChunkManager {
             }
         }
     }
-    async regenerate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
+    public async regenerate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         this.chunks.forEach(chunk => {
             // Remove the mesh from the scene (if needed)
@@ -118,49 +113,24 @@ export class TerrainChunkManager {
         
         // Clear the array after disposing
         this.chunks.length = 0;
-
-        this.sphereMeshes.forEach(sphere => {
-          // Remove the mesh from the scene (if needed)
-          this.scene.remove(sphere);
-          
-          // Dispose of the geometry and material associated with the mesh
-          if (sphere.geometry) sphere.geometry.dispose();
-          if (sphere.material) {
-              // If the material is an array (e.g., for MultiMaterial), dispose each one
-              if (Array.isArray(sphere.material)) {
-                sphere.material.forEach(material => material.dispose());
-              } else {
-                sphere.material.dispose();
-              }
-          }
-        });
-        
-        // Clear the array after disposing
-        this.sphereMeshes.length = 0;
           
         this.generate(terrainGridParams, params);
     }
 
-    private async generateChunkMesh(gridX: number, gridZ: number,
+    private async generateMeshChunk(gridX: number, gridZ: number,
       offsetX: number,
       offsetZ: number,
       verticesPerSide: number, heightScale: number,
       terrainGridParams: TerrainGridParams,
       params: TerrainGeneratorParams, noise2D: NoiseFunction2D, randomColor: THREE.Color): Promise<THREE.Mesh> {
 
-        //let terrainFullSize = verticesPerSide;
-        //let terrainLodResolution = 64;        
-        //const baseHeightmap = await this.generateHeightmap(offsetX, offsetZ, verticesPerSide, heightScale, params, noise2D); // full resolution
-        
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
 
-        //const planeMesh = this.meshGenerator.createPlaneMesh(baseHeightmap, verticesPerSide, material1, terrainGridParams.meshRotation);
         const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, noise2D, verticesPerSide, material1, terrainGridParams.meshRotation, params);
         planeMesh.receiveShadow = true;
         planeMesh.position.setX(gridX * verticesPerSide);
         planeMesh.position.setZ(-gridZ * verticesPerSide);
 
-        this.generateVertexSpheres(planeMesh, randomColor, offsetX, offsetZ);
         return planeMesh;
     }
 
@@ -190,7 +160,7 @@ export class TerrainChunkManager {
     }
 
     private getHeightFromNoiseFunction(x: number, y: number,
-      params: TerrainGeneratorParams, noise2D: NoiseFunction2D) {
+      params: TerrainGeneratorParams, noise2D: NoiseFunction2D): number {
 
       const xs = x / params.scale;
         const ys = y / params.scale;
@@ -213,28 +183,7 @@ export class TerrainChunkManager {
         return Math.pow(total, params.exponentiation) * params.height;
     }
 
-    private generateVertexSpheres(planeMesh: THREE.Mesh, randomColor: THREE.Color, offsetX: number, offsetZ: number) {
-      const sphereGeometry = new THREE.SphereGeometry(0.1);
-      const material = new THREE.MeshStandardMaterial({color: randomColor, wireframe: true});
-
-      for (let i = 0; i < planeMesh.geometry.attributes.position.count; i++) {
-        const vertex = new THREE.Vector3();
-        vertex.fromBufferAttribute(planeMesh.geometry.attributes.position, i);
-        
-        // Position the sphere at the vertex
-        const sphereMesh = new THREE.Mesh(sphereGeometry, material);
-        const transformedVertex = new THREE.Vector3(vertex.x + offsetX, vertex.z, vertex.y + offsetZ);
-        sphereMesh.position.copy(transformedVertex);
-
-        console.log(`sphere: (${transformedVertex.x.toFixed(2)}, ${transformedVertex.y.toFixed(2)}, ${transformedVertex.z.toFixed(2)})`);
-        
-        this.sphereMeshes.push(sphereMesh);            
-        this.scene.add(sphereMesh);
-      }
-
-    }
-
-    update(camera: THREE.Camera ) {
+    public update(camera: THREE.Camera ) {
         // todo: regenerate chunks based on camera location
     }
     /*
