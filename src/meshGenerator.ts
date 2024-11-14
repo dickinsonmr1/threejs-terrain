@@ -12,14 +12,13 @@ export class MeshGenerator {
 
         const planeGeometry = new THREE.PlaneGeometry(size, size, size-1, size -1 );
 
-        // Apply heightmap deformation
         for (let i = 0; i < planeGeometry.attributes.position.count; i++) {
             const x = planeGeometry.attributes.position.getX(i);
             const y = planeGeometry.attributes.position.getY(i);
             
-//            const z = noise2D(x + offsetX, y + offsetY);
+            //const z = noise2D(x + offsetX, y + offsetY);
             const z = this.getHeightFromNoiseFunction(x + offsetX, y + offsetY, params, noise2D);
-            console.log(`createPlaneMeshFromNoise: noise(${(x + offsetX).toFixed(2)}, ${(y + offsetY).toFixed(2)}) = ${z.toFixed(2)}`);
+            //console.log(`createPlaneMeshFromNoise: noise(${(x + offsetX).toFixed(2)}, ${(y + offsetY).toFixed(2)}) = ${z.toFixed(2)}`);
             
             planeGeometry.attributes.position.setZ(i, z);
         }

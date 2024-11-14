@@ -12,29 +12,6 @@ import { QuadtreeTerrainSystem } from './quadtree/quadtreeTerrainSystem';
 import { TerrainChunkManager, TerrainGeneratorParams, TerrainGridParams } from './chunk/terrainChunkManager';
 
 const scene = new THREE.Scene();
-const geometry = new THREE.BoxGeometry(5, 20, 5);
-const material =new THREE.MeshStandardMaterial({color: 0x00ff00});
-
-/*
-const mesh1 = new THREE.Mesh(geometry, material);
-mesh1.position.set(0, 10, 0);
-scene.add(mesh1);
-
-const mesh2 = new THREE.Mesh(geometry, material);
-mesh2.position.set(512, 10, 0);
-scene.add(mesh2);
-
-const mesh3 = new THREE.Mesh(geometry, material);
-mesh3.position.set(0, 10, 512);
-scene.add(mesh3);
-
-const mesh4 = new THREE.Mesh(geometry, material);
-mesh4.position.set(512, 10, 512);
-scene.add(mesh4);
-*/
-
-//const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.8 );
-//scene.add( light );
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
@@ -61,8 +38,19 @@ sky.material.uniforms.sunPosition.value = sunPosition;
 
 scene.add( sky );
 
-const settings = {
+const settings = {  
   skyType: SkyType.Skybox,
+  sky: {
+    turbidity: 10.0,
+    rayleigh: 2,
+    mieCoefficient: 0.005,
+    mieDirectionalG: 0.8,
+    luminance: 1,
+  },
+  sun: {
+    inclination: 0.31,
+    azimuth: 0.25,
+  }
 };
 
 const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
@@ -89,7 +77,7 @@ scene.add( water );
 
 let quadtreeTerrainSystem: any;
 
-const isWireFrame = false;
+const isWireFrame = true;
 
 const maxLODLevel = 4;        
 const heightScale = 25;
@@ -145,8 +133,8 @@ scene.add(lodMesh);
 
 let terrainChunkManager = new TerrainChunkManager(scene, isWireFrame);
 
-let terrainGridParams = new TerrainGridParams(8, 16, 5, Math.PI * 0);
-let terrainGeneratorParams = new TerrainGeneratorParams(1024, 10, 37, 1, 5, 0.5);
+let terrainGridParams = new TerrainGridParams(16, 64, 5, Math.PI * 0);
+let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
 
 terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);
 
@@ -206,17 +194,56 @@ cameraFolder.open();
 
 const terrainFolder = gui.addFolder('TerrainFolder');
 terrainFolder.add(terrainGridParams, 'chunksPerSideOfGrid', 1, 128, 1).onChange(rebuild);
-terrainFolder.add(terrainGridParams, 'verticesPerSide', 2, 128, 1).onChange(rebuild);
+terrainFolder.add(terrainGridParams, 'verticesPerSide', 2, 256, 2).onChange(rebuild);
 terrainFolder.add(terrainGridParams, 'heightScale', 1, 10, 1).onChange(rebuild);
 terrainFolder.add(terrainGridParams, 'meshRotation', 0, 2 * Math.PI, Math.PI / 2).onChange(rebuild);
 //terrainFolder.add(terrainChunkManager, 'isWireframe', { False: 0, True: 1 }).onChange(rebuild);
 
-terrainFolder.add(terrainGeneratorParams, 'scale', 1, 128, 1).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'scale', 1, 10000, 100).onChange(rebuild);
 terrainFolder.add(terrainGeneratorParams, 'octaves', 1, 10, 0.25).onChange(rebuild);
 terrainFolder.add(terrainGeneratorParams, 'lacunarity', 1, 100, 1).onChange(rebuild);
-terrainFolder.add(terrainGeneratorParams, 'exponentiation', 1, 100, 1).onChange(rebuild);
-terrainFolder.add(terrainGeneratorParams, 'height', 1, 100, 1).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'exponentiation', 1, 10, 0.5).onChange(rebuild);
+terrainFolder.add(terrainGeneratorParams, 'height', 1, 500, 10).onChange(rebuild);
 terrainFolder.add(terrainGeneratorParams, 'persistence', 1, 5, 0.25).onChange(rebuild);
+
+
+const onShaderChange = () => {
+  for (let k in settings.sky) {
+    sky.material.uniforms["turbidity"].value = settings.sky.turbidity;
+    sky.material.uniforms["rayleigh"].value = settings.sky.rayleigh;
+    sky.material.uniforms["mieCoefficient"].value = settings.sky.mieCoefficient;
+    sky.material.uniforms["mieDirectionalG"].value = settings.sky.mieDirectionalG;
+    //sky.material.uniforms["luminance"].value = settings.sky.luminance;
+  }
+  //for (let k in settings) {
+  //    sky.material.uniforms[k].value = settings.[k];
+  //  }
+};
+
+const onSunChange = () => {
+  var theta = Math.PI * (settings.sun.inclination - 0.5);
+  var phi = 2 * Math.PI * (settings.sun.azimuth - 0.5);
+
+  const sunPosition = new THREE.Vector3();
+  sunPosition.x = Math.cos(phi);
+  sunPosition.y = Math.sin(phi) * Math.sin(theta);
+  sunPosition.z = Math.sin(phi) * Math.cos(theta);
+
+  sky.material.uniforms['sunPosition'].value.copy(sunPosition);
+  water.material.uniforms['sunDirection'].value.copy(sunPosition.normalize());
+};
+
+
+const skyFolder = gui.addFolder('Sky');
+skyFolder.add(settings.sky, "turbidity", 0.1, 30.0).onChange(onShaderChange);
+skyFolder.add(settings.sky, "rayleigh", 0.1, 4.0).onChange(onShaderChange);
+skyFolder.add(settings.sky, "mieCoefficient", 0.0001, 0.1).onChange(onShaderChange);
+skyFolder.add(settings.sky, "mieDirectionalG", 0.0, 1.0).onChange(onShaderChange);
+skyFolder.add(settings.sky, "luminance", 0.0, 1.0).onChange(onShaderChange);
+
+const sunFolder = gui.addFolder('Sun');
+sunFolder.add(settings.sun, "inclination", 0.0, 1.0).onChange(onSunChange);
+sunFolder.add(settings.sun, "azimuth", 0.0, 1.0).onChange(onSunChange);
 
 const otherFolder = gui.addFolder('Other');
 otherFolder.add(water.position, 'y', -10, 20, 0.5);

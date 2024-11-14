@@ -59,40 +59,38 @@ export class TerrainChunkManager {
 
     public async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
-        //const noise2D = createNoise2D();
         const noise2D = createNoise2D();        
-
         console.log(`**GENERATE: ${terrainGridParams.chunksPerSideOfGrid} x ${terrainGridParams.chunksPerSideOfGrid} grid, ${terrainGridParams.verticesPerSide} vertices per side of chunk`);
 
         let rows = terrainGridParams.chunksPerSideOfGrid;
         let columns = terrainGridParams.chunksPerSideOfGrid;
-
-        
-          for(let i = 0; i < columns; i++) {
-            for(let j = 0; j < rows; j++) {
-                              
-              const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
-              if(this.colors.length <= this.chunks.length) {
-                this.colors.push(randomColor);
-              }
-
-              let offsetX = i * terrainGridParams.verticesPerSide;
-              let offsetZ = j * terrainGridParams.verticesPerSide;              
-
-               console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
-               await this.generateMeshChunk(i, j, offsetX, offsetZ,
-                  terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
-                  terrainGridParams, params, noise2D, randomColor).then((mesh) => {
-
-                    let chunk = new TerrainChunk(mesh);
-                    this.chunks.push(chunk);
-               
-                    this.scene.add(chunk.mesh);
-                  });
-                             
+       
+        for(let i = 0; i < columns; i++) {
+          for(let j = 0; j < rows; j++) {
+                            
+            const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+            if(this.colors.length <= this.chunks.length) {
+              this.colors.push(randomColor);
             }
+
+            let offsetX = i * terrainGridParams.verticesPerSide;
+            let offsetZ = j * terrainGridParams.verticesPerSide;              
+
+              console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
+              await this.generateMeshChunk(i, j, offsetX, offsetZ,
+                terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
+                terrainGridParams, params, noise2D, randomColor).then((mesh) => {
+
+                  let chunk = new TerrainChunk(mesh);
+                  this.chunks.push(chunk);
+              
+                  this.scene.add(chunk.mesh);
+                });
+                            
+          }
         }
     }
+    
     public async regenerate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         this.chunks.forEach(chunk => {
@@ -153,7 +151,7 @@ export class TerrainChunkManager {
                 let x = verticesPerSide * j + offsetZ;                
                 heightmap[i][j] =  this.getHeightFromNoiseFunction(x, z, params, noise2D);
                 //heightmap[i][j] = noise2D(x, z);
-                console.log(`using noise @ (${x}, ${z}): ${heightmap[i][j].toFixed(2)}`);
+                //console.log(`using noise @ (${x}, ${z}): ${heightmap[i][j].toFixed(2)}`);
             }
         }
         return heightmap;
