@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { TerrainChunk } from './terrainChunk';
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { MeshGenerator } from '../meshGenerator';
-import { distance } from 'three/webgpu';
+import { distance, parabola } from 'three/webgpu';
 
 export class TerrainGeneratorParams
 {
@@ -51,18 +51,31 @@ export class TerrainChunkManager {
 
     meshGenerator: MeshGenerator;
 
-    constructor(scene: THREE.Scene, isWireFrame: boolean) {
+    noise2D: NoiseFunction2D;
+
+    constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, isWireFrame: boolean) {
         this.scene = scene;
         this.isWireFrame = isWireFrame;
 
         this.meshGenerator = new MeshGenerator();
+
+        this.noise2D = createNoise2D();  
+        
+        // add empty chunks for entire grid
+        for(var i = -100; i < 100; i++) {
+          for(var j = -100; j < 100; j++) {
+
+            let offsetX = i * terrainGridParams.verticesPerSide;
+            let offsetZ = j * terrainGridParams.verticesPerSide;      
+
+            this.chunks.push(new TerrainChunk(new THREE.Vector2(offsetX, offsetZ)));
+          }  
+        }
     }
 
     public async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
-        // todo: generate all chunks, but only generate meshes for nodes that are close to camera
-
-        const noise2D = createNoise2D();        
+        // todo: generate all chunks, but only generate meshes for nodes that are close to camera   
         console.log(`**GENERATE: ${terrainGridParams.chunksPerSideOfGrid} x ${terrainGridParams.chunksPerSideOfGrid} grid, ${terrainGridParams.verticesPerSide} vertices per side of chunk`);
 
         let rows = terrainGridParams.chunksPerSideOfGrid;
@@ -71,29 +84,38 @@ export class TerrainChunkManager {
         for(let i = -columns / 2; i < columns / 2; i++) {
           for(let j = -rows / 2; j < rows / 2; j++) {
                             
-            const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
-            if(this.colors.length <= this.chunks.length) {
-              this.colors.push(randomColor);
-            }
-
             let offsetX = i * terrainGridParams.verticesPerSide;
-            let offsetZ = j * terrainGridParams.verticesPerSide;              
-
-              console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
-              await this.generateMeshChunk(i, j, offsetX, offsetZ,
-                terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
-                terrainGridParams, params, noise2D, randomColor).then((mesh) => {
-
-                  let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ));
-                  chunk.setMesh(mesh);
-
-                  this.chunks.push(chunk);
-              
-                  this.scene.add(chunk.mesh);
-                });
-                            
+            let offsetZ = j * terrainGridParams.verticesPerSide;   
+            
+            await this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ);
           }
         }
+    }
+
+    private async generateChunk(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams, gridX: number, gridZ: number, offsetX: number, offsetZ: number) {
+      const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+      if(this.colors.length <= this.chunks.length) {
+        this.colors.push(randomColor);
+      }
+        //console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
+        await this.generateMeshChunk(gridX, gridZ, offsetX, offsetZ,
+          terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
+          terrainGridParams, params, this.noise2D, randomColor).then((mesh) => {
+
+            let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
+
+            if(existingChunk) {
+                existingChunk.setMesh(mesh);
+                this.scene.add(existingChunk.mesh);
+            }
+            else {
+                let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ));
+                chunk.setMesh(mesh);
+                this.chunks.push(chunk);
+            
+                this.scene.add(chunk.mesh);
+            }
+        });    
     }
 
     private isChunkAtPosition(position: THREE.Vector3, chunkSize: number): boolean {
@@ -195,8 +217,22 @@ export class TerrainChunkManager {
         return Math.pow(total, params.exponentiation) * params.height;
     }
 
-    public update(camera: THREE.Camera ) {
+    public update(camera: THREE.Camera, terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
         // todo: generate/remove meshes based on camera location
+
+        const column = Math.floor(camera.position.x / terrainGridParams.verticesPerSide);
+        const row = -Math.floor(camera.position.z / terrainGridParams.verticesPerSide);
+
+        const offsetX = column * terrainGridParams.verticesPerSide;
+        const offsetZ = row * terrainGridParams.verticesPerSide;
+
+        let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
+        if(!closestChunk?.mesh)
+          this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
+
+        //if(!this.isChunkAtPosition(camera.position, terrainGridParams.verticesPerSide)) {
+        //
+        //}
     }
 
     /*

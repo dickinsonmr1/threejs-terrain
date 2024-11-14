@@ -130,12 +130,9 @@ lodMesh.position.set(0, 0, -256);
 scene.add(lodMesh);
 */
 
-
-let terrainChunkManager = new TerrainChunkManager(scene, isWireFrame);
-
 let terrainGridParams = new TerrainGridParams(16, 64, 5, Math.PI * 0);
 let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
-
+let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, isWireFrame);
 terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
@@ -283,7 +280,7 @@ function tick() {
     quadtreeTerrainSystem.update(camera);
 
   if(terrainChunkManager != null)
-    terrainChunkManager.update(camera);
+    terrainChunkManager.update(camera, terrainGridParams, terrainGeneratorParams);
 
   if(water !== null)    
     water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
