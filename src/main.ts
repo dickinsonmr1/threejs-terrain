@@ -87,9 +87,9 @@ let initialVertexCount = 8;
 // quadtree
 /*
 var perlin1 = new PerlinTerrainGenerator();
-await perlin1.generateHeightmap(1024, 5).then((heightmap: number[][]) => {
+//await perlin1.generateHeightmap(1024, 5).then((heightmap: number[][]) => {
 //await array.generateRandom(512, heightScale).then((heightmap) => {
-//await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
+await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
     // Heightmap is fully loaded and ready to use
     console.log('Heightmap loaded successfully:', heightmap);
     
@@ -281,6 +281,9 @@ function tick() {
 
   if(quadtreeTerrainSystem != null)
     quadtreeTerrainSystem.update(camera);
+
+  if(terrainChunkManager != null)
+    terrainChunkManager.update(camera);
 
   if(water !== null)    
     water.material.uniforms[ 'time' ].value += 0.5 / 60.0;

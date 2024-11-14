@@ -2,14 +2,39 @@ import * as THREE from 'three'
 
 export class TerrainChunk {
 
-    mesh: THREE.Mesh;
+    mesh!: THREE.Mesh;
     neighborTop!: TerrainChunk;
     neighborBottom!: TerrainChunk;
     neighborLeft!: TerrainChunk;
     neighborRight!: TerrainChunk;
 
-    constructor(mesh: THREE.Mesh) {
-        this.mesh = mesh;
+    offset: THREE.Vector2;
+
+    constructor(offset: THREE.Vector2) {
+        this.offset = offset;
+    }
+    
+    setMesh(mesh: THREE.Mesh) {
+        if(!this.mesh) {
+            this.mesh = mesh;
+        }
+    }
+
+    removeMesh(scene: THREE.Scene) {
+        if(this.mesh != null) {
+            scene.remove(this.mesh);
+            
+            // Dispose of the geometry and material associated with the mesh
+            if (this.mesh.geometry) this.mesh.geometry.dispose();
+            if (this.mesh.material) {
+                // If the material is an array (e.g., for MultiMaterial), dispose each one
+                if (Array.isArray(this.mesh.material)) {
+                    this.mesh.material.forEach(material => material.dispose());
+                } else {
+                    this.mesh.material.dispose();
+                }
+            }
+        }
     }
 
     setNeighborTop(neighborChunk: TerrainChunk) {

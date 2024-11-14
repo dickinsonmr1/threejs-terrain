@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { TerrainChunk } from './terrainChunk';
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { MeshGenerator } from '../meshGenerator';
+import { distance } from 'three/webgpu';
 
 export class TerrainGeneratorParams
 {
@@ -59,14 +60,16 @@ export class TerrainChunkManager {
 
     public async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
+        // todo: generate all chunks, but only generate meshes for nodes that are close to camera
+
         const noise2D = createNoise2D();        
         console.log(`**GENERATE: ${terrainGridParams.chunksPerSideOfGrid} x ${terrainGridParams.chunksPerSideOfGrid} grid, ${terrainGridParams.verticesPerSide} vertices per side of chunk`);
 
         let rows = terrainGridParams.chunksPerSideOfGrid;
         let columns = terrainGridParams.chunksPerSideOfGrid;
        
-        for(let i = 0; i < columns; i++) {
-          for(let j = 0; j < rows; j++) {
+        for(let i = -columns / 2; i < columns / 2; i++) {
+          for(let j = -rows / 2; j < rows / 2; j++) {
                             
             const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
             if(this.colors.length <= this.chunks.length) {
@@ -81,7 +84,9 @@ export class TerrainChunkManager {
                 terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
                 terrainGridParams, params, noise2D, randomColor).then((mesh) => {
 
-                  let chunk = new TerrainChunk(mesh);
+                  let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ));
+                  chunk.setMesh(mesh);
+
                   this.chunks.push(chunk);
               
                   this.scene.add(chunk.mesh);
@@ -89,6 +94,15 @@ export class TerrainChunkManager {
                             
           }
         }
+    }
+
+    private isChunkAtPosition(position: THREE.Vector3, chunkSize: number): boolean {
+
+      this.chunks.forEach(chunk => {
+         if(position.distanceTo(new THREE.Vector3(chunk.offset.x + chunkSize / 2, 0, chunk.offset.y + chunkSize / 2)) < chunkSize)
+            return true;
+      })
+      return false;      
     }
     
     public async regenerate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
@@ -182,8 +196,9 @@ export class TerrainChunkManager {
     }
 
     public update(camera: THREE.Camera ) {
-        // todo: regenerate chunks based on camera location
+        // todo: generate/remove meshes based on camera location
     }
+
     /*
     stitchChunks(chunk: TerrainChunk) {
         // Check each edge to see if stitching is needed with a lower-LOD neighbor
