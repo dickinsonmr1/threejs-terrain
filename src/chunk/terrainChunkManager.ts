@@ -2,43 +2,8 @@ import * as THREE from 'three'
 import { TerrainChunk } from './terrainChunk';
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { MeshGenerator } from '../meshGenerator';
-import { distance, parabola } from 'three/webgpu';
-
-export class TerrainGeneratorParams
-{
-    constructor(scale: number, octaves: number, lacunarity: number,
-        exponentiation: number, height: number, persistence: number) {
-            this.scale = scale;
-            this.octaves = octaves;
-            this.lacunarity = lacunarity;
-            this.exponentiation = exponentiation;
-            this.height = height;
-            this.persistence = persistence;
-    }
-
-    scale: number;
-    octaves: number;
-    lacunarity: number;
-    exponentiation: number;
-    height: number;
-    persistence: number;
-}
-
-export class TerrainGridParams
-{
-    constructor(chunksPerSideOfGrid: number, verticesPerSide: number, heightScale: number, meshRotation: number) {
-      this.chunksPerSideOfGrid = chunksPerSideOfGrid;
-      this.verticesPerSide = verticesPerSide;      
-      this.heightScale = heightScale;
-      this.meshRotation = meshRotation;
-    }
-
-    chunksPerSideOfGrid: number;
-    verticesPerSide: number;
-    heightScale: number;
-    meshRotation: number;
-}
-
+import { TerrainGeneratorParams } from './terrainGeneratorParams';
+import { TerrainGridParams } from './terrainGridParams';
 
 export class TerrainChunkManager {
 
@@ -292,3 +257,5 @@ export class TerrainChunkManager {
     }
     */
 }
+
+export { TerrainGridParams };

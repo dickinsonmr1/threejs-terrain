@@ -9,7 +9,8 @@ import { SkyType } from './skyType';
 import { PerlinTerrainGenerator } from './perlinTerrainGenerator';
 import Stats from 'three/addons/libs/stats.module.js';
 import { QuadtreeTerrainSystem } from './quadtree/quadtreeTerrainSystem';
-import { TerrainChunkManager, TerrainGeneratorParams, TerrainGridParams } from './chunk/terrainChunkManager';
+import { TerrainChunkManager, TerrainGridParams } from './chunk/terrainChunkManager';
+import { TerrainGeneratorParams } from './chunk/terrainGeneratorParams';
 
 const scene = new THREE.Scene();
 
