@@ -183,17 +183,31 @@ export class TerrainChunkManager {
     }
 
     public update(camera: THREE.Camera, terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
-        // todo: generate/remove meshes based on camera location
+        const column = Math.floor((camera.position.x + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
+        const row = -Math.floor((camera.position.z + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
 
-        const column = Math.floor(camera.position.x / terrainGridParams.verticesPerSide);
-        const row = -Math.floor(camera.position.z / terrainGridParams.verticesPerSide);
-
+        // one chunk at a time
         const offsetX = column * terrainGridParams.verticesPerSide;
         const offsetZ = row * terrainGridParams.verticesPerSide;
 
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
         if(!closestChunk?.mesh)
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
+        
+        // TODO: closest and surrounding chunks
+        /*
+        for(let i = column-4; i < column+4; i++) {
+          for(let j = row-4; j < row+4; j++) {
+
+            const offsetX = i * terrainGridParams.verticesPerSide;
+            const offsetZ = j * terrainGridParams.verticesPerSide;
+    
+            let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
+            if(!closestChunk?.mesh)
+              this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
+          }  
+        }
+        */
 
         //if(!this.isChunkAtPosition(camera.position, terrainGridParams.verticesPerSide)) {
         //
