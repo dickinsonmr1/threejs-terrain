@@ -83,6 +83,7 @@ export class TerrainChunkManager {
         });    
     }
 
+    /*
     private isChunkAtPosition(position: THREE.Vector3, chunkSize: number): boolean {
 
       this.chunks.forEach(chunk => {
@@ -91,6 +92,7 @@ export class TerrainChunkManager {
       })
       return false;      
     }
+    */
     
     public async regenerate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
@@ -124,6 +126,7 @@ export class TerrainChunkManager {
       params: TerrainGeneratorParams, noise2D: NoiseFunction2D, randomColor: THREE.Color): Promise<THREE.Mesh> {
 
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
+        console.log(heightScale);
 
         const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, noise2D, verticesPerSide, material1, terrainGridParams.meshRotation, params);
         planeMesh.receiveShadow = true;
@@ -133,6 +136,7 @@ export class TerrainChunkManager {
         return planeMesh;
     }
 
+    /*
     private async generateHeightmap(
       offsetX: number,
       offsetZ: number,
@@ -157,6 +161,7 @@ export class TerrainChunkManager {
         }
         return heightmap;
     }
+    
 
     private getHeightFromNoiseFunction(x: number, y: number,
       params: TerrainGeneratorParams, noise2D: NoiseFunction2D): number {
@@ -181,6 +186,7 @@ export class TerrainChunkManager {
         total /= normalization;
         return Math.pow(total, params.exponentiation) * params.height;
     }
+    */
 
     public update(camera: THREE.Camera, terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
         const column = Math.floor((camera.position.x + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
@@ -272,4 +278,4 @@ export class TerrainChunkManager {
     */
 }
 
-export { TerrainGridParams };
+export { TerrainGridParams, TerrainGeneratorParams };

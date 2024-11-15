@@ -41,7 +41,7 @@ export class PerlinTerrainGenerator {
         //scene.add(mesh);
         return mesh;
     }
-    
+    /*
     public async generateHeightmap(resolution: number, heightScale: number, params: TerrainGeneratorParams): Promise<number[][]> {
         const noise = perlinNoise.generatePerlinNoise(resolution, resolution);
         const heightmap: number[][] = [];
@@ -69,6 +69,7 @@ export class PerlinTerrainGenerator {
         }
         return heightmap;
     }
+        */
     
     getHeight(x: number, y: number, params: TerrainGeneratorParams, noise2D: NoiseFunction2D) {
 

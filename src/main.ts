@@ -1,17 +1,13 @@
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
 import './style.css'
 import * as THREE from 'three'
-import { HeightMapArray } from './heightMapArray';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { SkyType } from './skyType';
-import { PerlinTerrainGenerator } from './perlinTerrainGenerator';
 import Stats from 'three/addons/libs/stats.module.js';
-import { QuadtreeTerrainSystem } from './quadtree/quadtreeTerrainSystem';
 import { TerrainChunkManager, TerrainGridParams } from './chunk/terrainChunkManager';
 import { TerrainGeneratorParams } from './chunk/terrainGeneratorParams';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
 const scene = new THREE.Scene();
 
@@ -81,10 +77,10 @@ let quadtreeTerrainSystem: any;
 
 const isWireFrame = true;
 
-const maxLODLevel = 4;        
-const heightScale = 25;
-var array = new HeightMapArray();
-let initialVertexCount = 8;
+//const maxLODLevel = 4;        
+//const heightScale = 25;
+//var array = new HeightMapArray();
+//let initialVertexCount = 8;
 
 // quadtree
 /*
@@ -163,13 +159,49 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(temp.width, temp.height);
 document.body.appendChild(renderer.domElement);
 
-//const debugOrbitControls = new OrbitControls(camera, renderer.domElement);
-const firstPersonControls = new FirstPersonControls(camera, renderer.domElement);
-firstPersonControls.movementSpeed = 50;
-firstPersonControls.lookSpeed = 0.1;
-firstPersonControls.lookVertical = false; // Enable vertical look
-firstPersonControls.autoForward = false;
-firstPersonControls.activeLook = true;
+// https://threejs.org/examples/#misc_controls_pointerlock
+const pointerLockControls = new PointerLockControls( camera, document.body );
+document.addEventListener('click', () => pointerLockControls.lock());
+
+const moveSpeed = 10;
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+
+document.addEventListener('keydown', (event) => {
+    switch (event.code) {
+        case 'KeyW': // Forward
+            velocity.z = -moveSpeed;
+            break;
+        case 'KeyS': // Backward
+            velocity.z = moveSpeed;
+            break;
+        case 'KeyA': // Left
+            velocity.x = -moveSpeed;
+            break;
+        case 'KeyD': // Right
+            velocity.x = moveSpeed;
+            break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    switch (event.code) {
+        case 'KeyW':
+        case 'KeyS':
+            velocity.z = 0;
+            break;
+        case 'KeyA':
+        case 'KeyD':
+            velocity.x = 0;
+            break;
+    }
+});
+
+function moveCamera() {
+    direction.copy(velocity).applyQuaternion(camera.quaternion);
+    camera.position.add(direction);
+}
+
 
 // https://lil-gui.georgealways.com/
 const gui = new GUI();
@@ -213,13 +245,13 @@ terrainFolder.add(terrainGeneratorParams, 'persistence', 1, 5, 0.25).onChange(re
 
 
 const onShaderChange = () => {
-  for (let k in settings.sky) {
+  //for (let k in settings.sky) {
     sky.material.uniforms["turbidity"].value = settings.sky.turbidity;
     sky.material.uniforms["rayleigh"].value = settings.sky.rayleigh;
     sky.material.uniforms["mieCoefficient"].value = settings.sky.mieCoefficient;
     sky.material.uniforms["mieDirectionalG"].value = settings.sky.mieDirectionalG;
     //sky.material.uniforms["luminance"].value = settings.sky.luminance;
-  }
+  //}
   //for (let k in settings) {
   //    sky.material.uniforms[k].value = settings.[k];
   //  }
@@ -253,54 +285,6 @@ sunFolder.add(settings.sun, "azimuth", 0.0, 1.0).onChange(onSunChange);
 const otherFolder = gui.addFolder('Other');
 otherFolder.add(water.position, 'y', -10, 20, 0.5);
 
-//terrainFolder.add(quadtreeTerrainSystem, 'totalNodes').listen();
-// todo: add items
-
-const speed = 5;
-const rotationSpeed = 0.02;
-
-// Movement state
-const movement = {
-  forward: false,
-  backward: false,
-  left: false,
-  right: false,
-  up: false,
-  down: false,
-};
-
-// Handle key down
-window.addEventListener('keydown', (event) => {
-  switch (event.code) {
-      case 'KeyW': movement.forward = true; break;
-      case 'KeyS': movement.backward = true; break;
-      case 'KeyA': movement.left = true; break;
-      case 'KeyD': movement.right = true; break;
-      case 'Space': movement.up = true; break;
-      case 'ShiftLeft': movement.down = true; break;
-      //case 'ArrowUp': rotation.pitch = -rotationSpeed; break;
-      //case 'ArrowDown': rotation.pitch = rotationSpeed; break;
-      //case 'ArrowLeft': rotation.yaw = -rotationSpeed; break;
-      //case 'ArrowRight': rotation.yaw = rotationSpeed; break;
-  }
-});
-
-// Handle key up
-window.addEventListener('keyup', (event) => {
-  switch (event.code) {
-      case 'KeyW': movement.forward = false; break;
-      case 'KeyS': movement.backward = false; break;
-      case 'KeyA': movement.left = false; break;
-      case 'KeyD': movement.right = false; break;
-      case 'Space': movement.up = false; break;
-      case 'ShiftLeft': movement.down = false; break;
-      //case 'ArrowUp': rotation.pitch = 0; break;
-      //case 'ArrowDown': rotation.pitch = 0; break;
-      //case 'ArrowLeft': rotation.yaw = 0; break;
-      //case 'ArrowRight': rotation.yaw = 0; break;
-  }
-});
-
 function rebuild() {
   terrainChunkManager.regenerate(terrainGridParams, terrainGeneratorParams);
 }
@@ -320,24 +304,8 @@ function switchSky(skyType: SkyType) {
 }
 
 function tick() {
-  //if(debugOrbitControls != null)
-//    debugOrbitControls.update();
 
-  if(firstPersonControls != null)
-    firstPersonControls.update(0.1);
-  //debugOrbitControls.getDistance
-
-  const direction = new THREE.Vector3();
-  if (movement.forward) direction.add(camera.getWorldDirection(new THREE.Vector3()));
-  if (movement.backward) direction.sub(camera.getWorldDirection(new THREE.Vector3()));
-  if (movement.left) direction.add(camera.getWorldDirection(new THREE.Vector3()).cross(camera.up).normalize().negate());
-  if (movement.right) direction.add(camera.getWorldDirection(new THREE.Vector3()).cross(camera.up).normalize());
-  if (movement.up) direction.add(camera.up.clone());
-  if (movement.down) direction.sub(camera.up.clone());
-
-  // Apply movement
-  //camera.position.addScaledVector(direction, speed);
-
+  moveCamera();
 
   //renderer.clear();
   renderer.render(scene, camera);

@@ -190,7 +190,7 @@ export class QuadtreeTerrainSystem {
         let textureLOD4 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 4);
         let textureLOD5 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", 8);
 
-        let displacementScale = 50;
+        //let displacementScale = 50;
         // lowest level of detail
         let material1 = new THREE.MeshStandardMaterial({
             wireframe: isWireframe,
