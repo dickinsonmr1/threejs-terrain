@@ -145,23 +145,40 @@ light3.target.position.set(0, 0, 0);
 light3.castShadow = true;
 scene.add(light3);
 
-const temp = {
-  width: 1920,
-  height: 1080
-};
-
-const camera = new THREE.PerspectiveCamera(75, temp.width / temp.height);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.far = 10000;
-//camera.position.z = 4;
 camera.position.set(16, 16, 16);
 
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize(temp.width, temp.height);
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
 
 // https://threejs.org/examples/#misc_controls_pointerlock
 const pointerLockControls = new PointerLockControls( camera, document.body );
-document.addEventListener('click', () => pointerLockControls.lock());
+
+const blocker = document.getElementById( 'blocker' );
+const instructions = document.getElementById( 'instructions' );
+
+instructions!.addEventListener( 'click', function () {
+
+  pointerLockControls.lock();
+
+} );
+
+pointerLockControls.addEventListener( 'lock', function () {
+
+  instructions!.style.display = 'none';
+  blocker!.style.display = 'none';
+
+} );
+
+pointerLockControls.addEventListener( 'unlock', function () {
+
+  blocker!.style.display = 'block';
+  instructions!.style.display = '';
+
+} );
 
 const moveSpeed = 10;
 const velocity = new THREE.Vector3();
@@ -181,6 +198,13 @@ document.addEventListener('keydown', (event) => {
         case 'KeyD': // Right
             velocity.x = moveSpeed;
             break;
+        case 'KeyQ': // Up
+            velocity.y = moveSpeed;
+            break;
+        case 'KeyZ': // down
+            velocity.y = -moveSpeed;
+            break;
+
     }
 });
 
@@ -193,6 +217,10 @@ document.addEventListener('keyup', (event) => {
         case 'KeyA':
         case 'KeyD':
             velocity.x = 0;
+            break;
+        case 'KeyQ':
+        case 'KeyZ':
+            velocity.y = 0;
             break;
     }
 });
