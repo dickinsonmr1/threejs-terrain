@@ -8,6 +8,7 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { TerrainChunkManager, TerrainGridParams } from './chunk/terrainChunkManager';
 import { TerrainGeneratorParams } from './chunk/terrainGeneratorParams';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { SimplexNoiseGenerator } from './chunk/simplexNoiseGenerator';
 
 const scene = new THREE.Scene();
 
@@ -128,9 +129,13 @@ lodMesh.position.set(0, 0, -256);
 scene.add(lodMesh);
 */
 
+
 let terrainGridParams = new TerrainGridParams(16, 64, 5, Math.PI * 0);
 let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
-let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, isWireFrame);
+
+let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
+
+let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, isWireFrame);
 terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
@@ -144,6 +149,13 @@ light3.position.set(100, 100, -100);
 light3.target.position.set(0, 0, 0);
 light3.castShadow = true;
 scene.add(light3);
+
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshStandardMaterial({color: 0x00ff00});
+
+const mesh1 = new THREE.Mesh(geometry, material);
+mesh1.position.set(0, 0, 0);
+scene.add(mesh1);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.far = 10000;
@@ -161,24 +173,18 @@ const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
 instructions!.addEventListener( 'click', function () {
-
   pointerLockControls.lock();
-
-} );
+});
 
 pointerLockControls.addEventListener( 'lock', function () {
-
   instructions!.style.display = 'none';
   blocker!.style.display = 'none';
-
-} );
+});
 
 pointerLockControls.addEventListener( 'unlock', function () {
-
   blocker!.style.display = 'block';
   instructions!.style.display = '';
-
-} );
+});
 
 const moveSpeed = 10;
 const velocity = new THREE.Vector3();
@@ -204,7 +210,6 @@ document.addEventListener('keydown', (event) => {
         case 'KeyZ': // down
             velocity.y = -moveSpeed;
             break;
-
     }
 });
 
@@ -238,24 +243,13 @@ gui.add( document, 'title' );
 let obj3 = { size: 'Small', terrainType: 3 };
 gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
 gui.add( obj3, 'terrainType', { Simple: 1, Splatted: 2, LOD: 3 } );
-
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
 
-
 const cameraFolder = gui.addFolder('Camera Position');
-
-// Add camera position controls
 cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
 cameraFolder.add(camera.position, 'y', -500, 500).name('Y Position').listen();
 cameraFolder.add(camera.position, 'z', -10000, 10000).name('Z Position').listen();
-
-//cameraFolder.add(debugOrbitControls.position0, 'x', -100, 100).name('debug orbit controls X Position').listen();
-//cameraFolder.add(debugOrbitControls.position0, 'y', -100, 100).name('debug orbit controls Y Position').listen();
-//cameraFolder.add(debugOrbitControls.position0, 'z', -100, 100).name('debug orbit controls Z Position').listen();
-
-// Open the folder by default (optional)
 cameraFolder.open();
-
 
 const terrainFolder = gui.addFolder('TerrainFolder');
 terrainFolder.add(terrainGridParams, 'chunksPerSideOfGrid', 1, 128, 1).onChange(rebuild);
@@ -263,7 +257,6 @@ terrainFolder.add(terrainGridParams, 'verticesPerSide', 2, 256, 2).onChange(rebu
 terrainFolder.add(terrainGridParams, 'heightScale', 1, 10, 1).onChange(rebuild);
 terrainFolder.add(terrainGridParams, 'meshRotation', 0, 2 * Math.PI, Math.PI / 2).onChange(rebuild);
 //terrainFolder.add(terrainChunkManager, 'isWireframe', { False: 0, True: 1 }).onChange(rebuild);
-
 terrainFolder.add(terrainGeneratorParams, 'scale', 1, 10000, 100).onChange(rebuild);
 terrainFolder.add(terrainGeneratorParams, 'octaves', 1, 10, 0.25).onChange(rebuild);
 terrainFolder.add(terrainGeneratorParams, 'lacunarity', 1, 100, 1).onChange(rebuild);
@@ -298,7 +291,6 @@ const onSunChange = () => {
   water.material.uniforms['sunDirection'].value.copy(sunPosition.normalize());
 };
 
-
 const skyFolder = gui.addFolder('Sky');
 skyFolder.add(settings.sky, "turbidity", 0.1, 30.0).onChange(onShaderChange);
 skyFolder.add(settings.sky, "rayleigh", 0.1, 4.0).onChange(onShaderChange);
@@ -327,8 +319,7 @@ function switchSky(skyType: SkyType) {
   else {
     sky.visible = false;
     scene.background = skyTexture;
-  }
-  
+  }  
 }
 
 function tick() {

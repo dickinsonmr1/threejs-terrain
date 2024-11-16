@@ -4,6 +4,7 @@ import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { MeshGenerator } from '../meshGenerator';
 import { TerrainGeneratorParams } from './terrainGeneratorParams';
 import { TerrainGridParams } from './terrainGridParams';
+import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
 
 export class TerrainChunkManager {
 
@@ -17,14 +18,16 @@ export class TerrainChunkManager {
     meshGenerator: MeshGenerator;
 
     noise2D: NoiseFunction2D;
+    simplexNoiseGenerator: SimplexNoiseGenerator;
 
-    constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, isWireFrame: boolean) {
+    constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, simplexNoiseGenerator: SimplexNoiseGenerator, isWireFrame: boolean) {
         this.scene = scene;
         this.isWireFrame = isWireFrame;
 
         this.meshGenerator = new MeshGenerator();
 
         this.noise2D = createNoise2D();  
+        this.simplexNoiseGenerator = simplexNoiseGenerator;
         
         // add empty chunks for entire grid
         for(var i = -100; i < 100; i++) {
@@ -65,7 +68,7 @@ export class TerrainChunkManager {
         //console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
         await this.generateMeshChunk(gridX, gridZ, offsetX, offsetZ,
           terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
-          terrainGridParams, params, this.noise2D, randomColor).then((mesh) => {
+          terrainGridParams, params, randomColor).then((mesh) => {
 
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
@@ -123,17 +126,21 @@ export class TerrainChunkManager {
       offsetZ: number,
       verticesPerSide: number, heightScale: number,
       terrainGridParams: TerrainGridParams,
-      params: TerrainGeneratorParams, noise2D: NoiseFunction2D, randomColor: THREE.Color): Promise<THREE.Mesh> {
+      params: TerrainGeneratorParams, randomColor: THREE.Color): Promise<THREE.Mesh> {
 
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
         console.log(heightScale);
 
-        const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, noise2D, verticesPerSide, material1, terrainGridParams.meshRotation, params);
+        const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, material1, terrainGridParams.meshRotation, params);
         planeMesh.receiveShadow = true;
         planeMesh.position.setX(gridX * verticesPerSide);
         planeMesh.position.setZ(-gridZ * verticesPerSide);
 
         return planeMesh;
+    }
+
+    public getPositionOnTerrain(position: THREE.Vector3) {
+      //return this.simplexNoiseGenerator.getHeightFromNoiseFunction
     }
 
     /*
