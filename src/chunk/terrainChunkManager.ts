@@ -5,6 +5,7 @@ import { MeshGenerator } from '../meshGenerator';
 import { TerrainGeneratorParams } from './terrainGeneratorParams';
 import { TerrainGridParams } from './terrainGridParams';
 import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
+import { VegetationGenerator } from './vegetationGenerator';
 
 export class TerrainChunkManager {
 
@@ -17,18 +18,19 @@ export class TerrainChunkManager {
 
     meshGenerator: MeshGenerator;
 
-    noise2D: NoiseFunction2D;
     simplexNoiseGenerator: SimplexNoiseGenerator;
+    vegetationNoiseGenerator: VegetationGenerator;
 
-    constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, simplexNoiseGenerator: SimplexNoiseGenerator, isWireFrame: boolean) {
+    constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, terrainNoiseGenerator: SimplexNoiseGenerator,
+      vegetationNoiseGenerator: VegetationGenerator, isWireFrame: boolean) {
         this.scene = scene;
         this.isWireFrame = isWireFrame;
 
         this.meshGenerator = new MeshGenerator();
 
-        this.noise2D = createNoise2D();  
-        this.simplexNoiseGenerator = simplexNoiseGenerator;
-        
+        this.simplexNoiseGenerator = terrainNoiseGenerator;
+        this.vegetationNoiseGenerator = vegetationNoiseGenerator;
+
         // add empty chunks for entire grid
         for(var i = -100; i < 100; i++) {
           for(var j = -100; j < 100; j++) {
@@ -36,7 +38,7 @@ export class TerrainChunkManager {
             let offsetX = i * terrainGridParams.verticesPerSide;
             let offsetZ = j * terrainGridParams.verticesPerSide;      
 
-            this.chunks.push(new TerrainChunk(new THREE.Vector2(offsetX, offsetZ)));
+            this.chunks.push(new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide));
           }  
         }
     }
@@ -75,13 +77,18 @@ export class TerrainChunkManager {
             if(existingChunk) {
                 existingChunk.setMesh(mesh);
                 this.scene.add(existingChunk.mesh);
+
+                //this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
+                //existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
             }
             else {
-                let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ));
+                let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
                 chunk.setMesh(mesh);
                 this.chunks.push(chunk);
-            
                 this.scene.add(chunk.mesh);
+
+                //this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
+                //chunk.vegetationMeshes.forEach(x => this.scene.add(x));
             }
         });    
     }
@@ -129,7 +136,7 @@ export class TerrainChunkManager {
       params: TerrainGeneratorParams, randomColor: THREE.Color): Promise<THREE.Mesh> {
 
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
-        console.log(heightScale);
+        //console.log(heightScale);
 
         const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, material1, terrainGridParams.meshRotation, params);
         planeMesh.receiveShadow = true;

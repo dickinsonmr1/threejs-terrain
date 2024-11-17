@@ -9,6 +9,7 @@ import { TerrainChunkManager, TerrainGridParams } from './chunk/terrainChunkMana
 import { TerrainGeneratorParams } from './chunk/terrainGeneratorParams';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { SimplexNoiseGenerator } from './chunk/simplexNoiseGenerator';
+import { VegetationGenerator } from './chunk/vegetationGenerator';
 
 const scene = new THREE.Scene();
 
@@ -135,8 +136,12 @@ let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 
 
 let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
 
-let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, isWireFrame);
+let vegetationGenerator = new VegetationGenerator();
+
+let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, isWireFrame);
 terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);
+
+
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
 light2.position.set(-100, 100, -100);
@@ -150,12 +155,16 @@ light3.target.position.set(0, 0, 0);
 light3.castShadow = true;
 scene.add(light3);
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
+// add vegetation
+const geometry = new THREE.BoxGeometry(1, 3, 1);
 const material = new THREE.MeshStandardMaterial({color: 0x00ff00});
 
 const mesh1 = new THREE.Mesh(geometry, material);
-mesh1.position.set(0, 0, 0);
+let boxPositionY = simplexNoiseGenerator.getHeightFromNoiseFunction(0, 0);
+
+mesh1.position.set(0, boxPositionY, 0);
 scene.add(mesh1);
+///////////////////////////////////////
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.far = 10000;

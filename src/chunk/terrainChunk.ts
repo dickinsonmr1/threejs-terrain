@@ -9,9 +9,13 @@ export class TerrainChunk {
     neighborRight!: TerrainChunk;
 
     offset: THREE.Vector2;
+    verticesPerSide: number;
 
-    constructor(offset: THREE.Vector2) {
+    vegetationMeshes: THREE.Mesh[] = [];
+
+    constructor(offset: THREE.Vector2, verticesPerSide: number) {
         this.offset = offset;
+        this.verticesPerSide = verticesPerSide;
     }
     
     setMesh(mesh: THREE.Mesh) {
@@ -52,4 +56,9 @@ export class TerrainChunk {
     setNeighborRight(neighborChunk: TerrainChunk) {
         this.neighborRight = neighborChunk;
     }
-}
+
+    public addVegetationMesh(mesh: THREE.Mesh) 
+    {
+        this.vegetationMeshes.push(mesh);
+    }
+} 
