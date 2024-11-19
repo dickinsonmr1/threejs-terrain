@@ -12,6 +12,7 @@ export class TerrainChunk {
     verticesPerSide: number;
 
     vegetationMeshes: THREE.Mesh[] = [];
+    instancedVegetationMesh!: THREE.InstancedMesh;
 
     constructor(offset: THREE.Vector2, verticesPerSide: number) {
         this.offset = offset;
@@ -60,5 +61,11 @@ export class TerrainChunk {
     public addVegetationMesh(mesh: THREE.Mesh) 
     {
         this.vegetationMeshes.push(mesh);
+    }
+
+    public addInstancedVegetationMesh(mesh: THREE.InstancedMesh) 
+    {
+        //this.vegetationMeshes.push(mesh);
+        this.instancedVegetationMesh = mesh;
     }
 } 

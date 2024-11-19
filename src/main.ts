@@ -136,7 +136,7 @@ let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 
 
 let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
 
-let vegetationGenerator = new VegetationGenerator();
+let vegetationGenerator = new VegetationGenerator(scene);
 
 let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, isWireFrame);
 terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);

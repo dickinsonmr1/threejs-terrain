@@ -4,7 +4,7 @@ import alea from 'alea';
 import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
 import { TerrainChunk } from './terrainChunk';
 
-export class VegetationGenerator {
+export class VegetationGenerator2 {
 
     private vegetationNoise2D: NoiseFunction2D;
     private geometry: THREE.BoxGeometry = new THREE.BoxGeometry(1, 3, 1);
@@ -15,14 +15,14 @@ export class VegetationGenerator {
     constructor(scene: THREE.Scene) {
         const prng = alea(500);
         this.vegetationNoise2D = createNoise2D(prng);
+        this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, 100000);        
+        scene.add(this.instancedMesh);
     }
 
     generateForChunk(terrainChunk: TerrainChunk, terrainNoiseGenerator: SimplexNoiseGenerator) {
 
-        var instancedMesh2 = new THREE.InstancedMesh(this.geometry, this.material, 1000);        
-        //this.instancedMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-        let counter2 = 0;
-
+        // TODO: implement me globally
+               
         for (let i = 0; i < terrainChunk.mesh.geometry.attributes.position.count; i++) {
 
             const x = terrainChunk.offset.x + terrainChunk.mesh.geometry.attributes.position.getX(i);
@@ -33,11 +33,12 @@ export class VegetationGenerator {
                 
                 let elevation = terrainNoiseGenerator.getHeightFromNoiseFunction(x, y);            
                 const matrix = new THREE.Matrix4().setPosition(x, elevation, -y);
-                instancedMesh2.setMatrixAt(counter2++, matrix);
+                this.instancedMesh.setMatrixAt(this.counter++, matrix);
             }            
         }
         
-        terrainChunk.addInstancedVegetationMesh(instancedMesh2);        
+        //instancedMesh2.instanceMatrix.needsUpdate = true;
+        terrainChunk.addInstancedVegetationMesh(this.instancedMesh);        
     }
 
     generateForAllChunks(terrainChunks: TerrainChunk[], terrainNoiseGenerator: SimplexNoiseGenerator) { 

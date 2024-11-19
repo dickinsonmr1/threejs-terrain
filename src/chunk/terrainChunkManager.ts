@@ -78,8 +78,10 @@ export class TerrainChunkManager {
                 existingChunk.setMesh(mesh);
                 this.scene.add(existingChunk.mesh);
 
+                // vegetation generator 1
                 this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
-                existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                //existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                this.scene.add(existingChunk.instancedVegetationMesh);
             }
             else {
                 let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
@@ -87,8 +89,11 @@ export class TerrainChunkManager {
                 this.chunks.push(chunk);
                 this.scene.add(chunk.mesh);
 
+                // vegetation generator 1
                 this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
-                chunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                //chunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                this.scene.add(chunk.instancedVegetationMesh);
+
             }
         });    
     }
@@ -215,6 +220,8 @@ export class TerrainChunkManager {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
 
         }
+
+        // TODO: only make vegetation visible on close chunks
         
         // TODO: closest and surrounding chunks
         /*
