@@ -78,8 +78,8 @@ export class TerrainChunkManager {
                 existingChunk.setMesh(mesh);
                 this.scene.add(existingChunk.mesh);
 
-                //this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
-                //existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
+                existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
             }
             else {
                 let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
@@ -87,8 +87,8 @@ export class TerrainChunkManager {
                 this.chunks.push(chunk);
                 this.scene.add(chunk.mesh);
 
-                //this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
-                //chunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
+                chunk.vegetationMeshes.forEach(x => this.scene.add(x));
             }
         });    
     }
@@ -211,8 +211,10 @@ export class TerrainChunkManager {
         const offsetZ = row * terrainGridParams.verticesPerSide;
 
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
-        if(!closestChunk?.mesh)
+        if(!closestChunk?.mesh) {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
+
+        }
         
         // TODO: closest and surrounding chunks
         /*

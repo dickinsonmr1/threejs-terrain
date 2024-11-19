@@ -17,21 +17,23 @@ export class VegetationGenerator {
 
     generateForChunk(terrainChunk: TerrainChunk, terrainNoiseGenerator: SimplexNoiseGenerator) {
 
-        let boundsStart2D = terrainChunk.offset;
-        let boundsEnd2D = new THREE.Vector2(terrainChunk.offset.x + terrainChunk.verticesPerSide, terrainChunk.offset.y + terrainChunk.verticesPerSide);
+        for (let i = 0; i < terrainChunk.mesh.geometry.attributes.position.count; i++) {
 
-        for(let i = boundsStart2D.x; i < boundsEnd2D.x; i++) {
-            for(let j = boundsStart2D.y; i < boundsEnd2D.y; j++) {
-                var vegetationNoise = this.vegetationNoise2D(i, j);
-                if(vegetationNoise > 0.2 && vegetationNoise < 0.2005){
-
-                    const mesh = new THREE.Mesh(this.geometry, this.material);
-                    let elevation = terrainNoiseGenerator.getHeightFromNoiseFunction(i, j);            
-                    mesh.position.set(i, elevation, j);
+            const x = terrainChunk.offset.x + terrainChunk.mesh.geometry.attributes.position.getX(i);
+            const y = terrainChunk.offset.y + terrainChunk.mesh.geometry.attributes.position.getY(i);
             
-                    terrainChunk.addVegetationMesh(mesh);
-                }                
+            var vegetationNoise = this.vegetationNoise2D(x, y);
+            if(vegetationNoise > 0.2 && vegetationNoise < 0.205){
+                
+                const mesh = new THREE.Mesh(this.geometry, this.material);
+                let elevation = terrainNoiseGenerator.getHeightFromNoiseFunction(x, y);            
+                mesh.position.set(x, elevation, -y);
+        
+                terrainChunk.addVegetationMesh(mesh);
+
             }
+            
         }
+        
     }
 }
