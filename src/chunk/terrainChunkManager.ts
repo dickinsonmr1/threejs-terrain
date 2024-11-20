@@ -75,8 +75,8 @@ export class TerrainChunkManager {
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
             if(existingChunk) {
-                existingChunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.High);
-                this.scene.add(existingChunk.mesh);
+                existingChunk.setMesh(group.children[2]! as THREE.Mesh, TerrainLOD.High);
+                this.scene.add(existingChunk.highDetailMesh);
 
                 // vegetation generator 1
                 this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
@@ -85,9 +85,9 @@ export class TerrainChunkManager {
             }
             else {
                 let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
-                chunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.High);
+                chunk.setMesh(group.children[2]! as THREE.Mesh, TerrainLOD.High);
                 this.chunks.push(chunk);
-                this.scene.add(chunk.mesh);
+                this.scene.add(chunk.highDetailMesh);
 
                 // vegetation generator 1
                 this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
@@ -113,19 +113,31 @@ export class TerrainChunkManager {
 
         this.chunks.forEach(chunk => {
             // Remove the mesh from the scene (if needed)
-            this.scene.remove(chunk.mesh);
+            this.scene.remove(chunk.group);
             
-            // Dispose of the geometry and material associated with the mesh
-            if (chunk.mesh.geometry) chunk.mesh.geometry.dispose();
-            if (chunk.mesh.material) {
-                // If the material is an array (e.g., for MultiMaterial), dispose each one
-                if (Array.isArray(chunk.mesh.material)) {
-                    chunk.mesh.material.forEach(material => material.dispose());
-                } else {
-                    chunk.mesh.material.dispose();
-                }
-            }
+            chunk.group.children.forEach(x => {
+              if(x != null) {
+  
+                  let mesh = x as THREE.Mesh;
+  
+                  this.scene.remove(mesh);
+                  
+                  // Dispose of the geometry and material associated with the mesh
+                  if (mesh.geometry) mesh.geometry.dispose();
+                  if (mesh.material) {
+                      // If the material is an array (e.g., for MultiMaterial), dispose each one
+                      if (Array.isArray(mesh.material)) {
+                          mesh.material.forEach(material => material.dispose());
+                      } else {
+                          mesh.material.dispose();
+                      }
+                  }
+              }
+  
+          })        
         });
+
+        
         
         // Clear the array after disposing
         this.chunks.length = 0;
@@ -140,18 +152,32 @@ export class TerrainChunkManager {
       terrainGridParams: TerrainGridParams,
       params: TerrainGeneratorParams, randomColor: THREE.Color): Promise<THREE.Group> {
 
+        let group = new THREE.Group();
+
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
         //console.log(heightScale);
 
-        const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide, material1, terrainGridParams.meshRotation, params);
-        planeMesh.receiveShadow = true;
-        planeMesh.position.setX(gridX * verticesPerSide);
-        planeMesh.position.setZ(-gridZ * verticesPerSide);
+        // high detail
+        const highDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide, material1, terrainGridParams.meshRotation, params);
+        highDetailPlaneMesh.receiveShadow = true;
+        highDetailPlaneMesh.position.setX(gridX * verticesPerSide);
+        highDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+        group.add(highDetailPlaneMesh);
 
-        // TODO: generate and add meshes for multiple LOD
+        // medium detail
+        const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/2, material1, terrainGridParams.meshRotation, params);
+        mediumDetailPlaneMesh.receiveShadow = true;
+        mediumDetailPlaneMesh.position.setX(gridX * verticesPerSide);
+        mediumDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+        group.add(mediumDetailPlaneMesh);
 
-        let group = new THREE.Group();
-        group.add(planeMesh);
+        // low detail
+        const lowDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/4, material1, terrainGridParams.meshRotation, params);
+        lowDetailPlaneMesh.receiveShadow = true;
+        lowDetailPlaneMesh.position.setX(gridX * verticesPerSide);
+        lowDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+        group.add(lowDetailPlaneMesh);
+
         return group;
     }
 
@@ -220,7 +246,7 @@ export class TerrainChunkManager {
         const offsetZ = row * terrainGridParams.verticesPerSide;
 
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
-        if(!closestChunk?.mesh) {
+        if(!closestChunk?.highDetailMesh) {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
 
         }

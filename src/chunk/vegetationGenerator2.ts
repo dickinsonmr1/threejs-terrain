@@ -23,10 +23,10 @@ export class VegetationGenerator2 {
 
         // TODO: implement me globally
                
-        for (let i = 0; i < terrainChunk.mesh.geometry.attributes.position.count; i++) {
+        for (let i = 0; i < terrainChunk.highDetailMesh.geometry.attributes.position.count; i++) {
 
-            const x = terrainChunk.offset.x + terrainChunk.mesh.geometry.attributes.position.getX(i);
-            const y = terrainChunk.offset.y + terrainChunk.mesh.geometry.attributes.position.getY(i);
+            const x = terrainChunk.offset.x + terrainChunk.highDetailMesh.geometry.attributes.position.getX(i);
+            const y = terrainChunk.offset.y + terrainChunk.highDetailMesh.geometry.attributes.position.getY(i);
             
             var vegetationNoise = this.vegetationNoise2D(x, y);
             if(vegetationNoise > 0.2 && vegetationNoise < 0.205){

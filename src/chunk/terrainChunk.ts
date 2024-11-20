@@ -8,8 +8,6 @@ export enum TerrainLOD {
 
 export class TerrainChunk {
 
-    mesh!: THREE.Mesh;
-
     // TODO: refactor meshes, potentially into group?
     highDetailMesh!: THREE.Mesh;
     mediumDetailMesh!: THREE.Mesh;
@@ -34,10 +32,6 @@ export class TerrainChunk {
     }
 
     setMesh(mesh: THREE.Mesh, lod: TerrainLOD) {
-
-        if(!this.mesh) {
-            this.mesh = mesh;
-        }
 
         switch(lod){
             case TerrainLOD.High:
@@ -70,22 +64,27 @@ export class TerrainChunk {
         }
     }
 
-    removeMesh(scene: THREE.Scene) {
-        // TODO: update to remove all LOD meshes
-        if(this.mesh != null) {
-            scene.remove(this.mesh);
-            
-            // Dispose of the geometry and material associated with the mesh
-            if (this.mesh.geometry) this.mesh.geometry.dispose();
-            if (this.mesh.material) {
-                // If the material is an array (e.g., for MultiMaterial), dispose each one
-                if (Array.isArray(this.mesh.material)) {
-                    this.mesh.material.forEach(material => material.dispose());
-                } else {
-                    this.mesh.material.dispose();
+    removeMeshes(scene: THREE.Scene) {
+        this.group.children.forEach(x => {
+            if(x != null) {
+
+                let mesh = x as THREE.Mesh;
+
+                scene.remove(mesh);
+                
+                // Dispose of the geometry and material associated with the mesh
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) {
+                    // If the material is an array (e.g., for MultiMaterial), dispose each one
+                    if (Array.isArray(mesh.material)) {
+                        mesh.material.forEach(material => material.dispose());
+                    } else {
+                        mesh.material.dispose();
+                    }
                 }
             }
-        }
+
+        })        
     }
 
     setNeighborTop(neighborChunk: TerrainChunk) {
