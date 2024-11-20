@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { TerrainChunk } from './terrainChunk';
+import { TerrainChunk, TerrainLOD } from './terrainChunk';
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { MeshGenerator } from '../meshGenerator';
 import { TerrainGeneratorParams } from './terrainGeneratorParams';
@@ -68,14 +68,14 @@ export class TerrainChunkManager {
         this.colors.push(randomColor);
       }
         //console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
-        await this.generateMeshChunk(gridX, gridZ, offsetX, offsetZ,
+        await this.generateMeshesForChunk(gridX, gridZ, offsetX, offsetZ,
           terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
-          terrainGridParams, params, randomColor).then((mesh) => {
+          terrainGridParams, params, randomColor).then((group) => {
 
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
             if(existingChunk) {
-                existingChunk.setMesh(mesh);
+                existingChunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.High);
                 this.scene.add(existingChunk.mesh);
 
                 // vegetation generator 1
@@ -85,7 +85,7 @@ export class TerrainChunkManager {
             }
             else {
                 let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
-                chunk.setMesh(mesh);
+                chunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.High);
                 this.chunks.push(chunk);
                 this.scene.add(chunk.mesh);
 
@@ -133,22 +133,26 @@ export class TerrainChunkManager {
         this.generate(terrainGridParams, params);
     }
 
-    private async generateMeshChunk(gridX: number, gridZ: number,
+    private async generateMeshesForChunk(gridX: number, gridZ: number,
       offsetX: number,
       offsetZ: number,
       verticesPerSide: number, heightScale: number,
       terrainGridParams: TerrainGridParams,
-      params: TerrainGeneratorParams, randomColor: THREE.Color): Promise<THREE.Mesh> {
+      params: TerrainGeneratorParams, randomColor: THREE.Color): Promise<THREE.Group> {
 
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
         //console.log(heightScale);
 
-        const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, material1, terrainGridParams.meshRotation, params);
+        const planeMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide, material1, terrainGridParams.meshRotation, params);
         planeMesh.receiveShadow = true;
         planeMesh.position.setX(gridX * verticesPerSide);
         planeMesh.position.setZ(-gridZ * verticesPerSide);
 
-        return planeMesh;
+        // TODO: generate and add meshes for multiple LOD
+
+        let group = new THREE.Group();
+        group.add(planeMesh);
+        return group;
     }
 
     public getPositionOnTerrain(position: THREE.Vector3) {

@@ -131,7 +131,7 @@ scene.add(lodMesh);
 */
 
 
-let terrainGridParams = new TerrainGridParams(16, 64, 5, Math.PI * 0);
+let terrainGridParams = new TerrainGridParams(4, 64, 5, Math.PI * 0);
 let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
 
 let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);

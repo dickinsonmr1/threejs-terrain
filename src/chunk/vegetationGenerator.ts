@@ -19,7 +19,7 @@ export class VegetationGenerator {
 
     generateForChunk(terrainChunk: TerrainChunk, terrainNoiseGenerator: SimplexNoiseGenerator) {
 
-        var instancedMesh2 = new THREE.InstancedMesh(this.geometry, this.material, 1000);        
+        var instancedMesh2 = new THREE.InstancedMesh(this.geometry, this.material, 10);        
         //this.instancedMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
         let counter2 = 0;
 
