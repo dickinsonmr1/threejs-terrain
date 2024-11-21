@@ -8,11 +8,6 @@ export enum TerrainLOD {
 
 export class TerrainChunk {
 
-    // TODO: refactor meshes, potentially into group?
-    highDetailMesh!: THREE.Mesh;
-    mediumDetailMesh!: THREE.Mesh;
-    lowDetailMesh!: THREE.Mesh;
-
     group: THREE.Group = new THREE.Group();
 
     neighborTop!: TerrainChunk;
@@ -31,40 +26,29 @@ export class TerrainChunk {
         this.verticesPerSide = verticesPerSide;
     }
 
-    setMesh(mesh: THREE.Mesh, lod: TerrainLOD) {
-
-        switch(lod){
-            case TerrainLOD.High:
-                this.setHighDetailMesh(mesh);
-                break;
-            case TerrainLOD.Medium:
-                this.setMediumDetailMesh(mesh);
-                break;
-            case TerrainLOD.Low:
-                this.setLowDetailMesh(mesh);
-            break;
-        }
-    }
-    
-    private setHighDetailMesh(mesh: THREE.Mesh) {
-        if(!this.highDetailMesh) {
-            this.highDetailMesh = mesh;
-            this.group.add(this.highDetailMesh);
-        }
+    public isVisible() {
+        return this.group.children.length > 0;
     }
 
-    private setMediumDetailMesh(mesh: THREE.Mesh) {
-        if(!this.mediumDetailMesh) {
-            this.mediumDetailMesh = mesh;
-            this.group.add(this.mediumDetailMesh);
-        }
+    public setMeshes(group: THREE.Group) {
+        this.group = group;
     }
 
-    private setLowDetailMesh(mesh: THREE.Mesh) {
-        if(!this.lowDetailMesh) {
-            this.lowDetailMesh = mesh;
-            this.group.add(this.lowDetailMesh);
-        }
+    public getMesh(camera?: THREE.Camera): THREE.Mesh {
+        
+        if(!camera)
+            return this.group.children[0]! as THREE.Mesh;
+        
+        return this.group.children[0]! as THREE.Mesh;
+    }
+
+    public getMeshByLOD(terrainLOD: TerrainLOD): THREE.Mesh | null {
+        
+        let result = this.group.children.find(x => x.userData.LOD == terrainLOD)! as THREE.Mesh;
+        if(!result)
+            return null;
+        
+        return result;
     }
 
     removeMeshes(scene: THREE.Scene) {
@@ -90,6 +74,7 @@ export class TerrainChunk {
         })        
     }
 
+    /*
     setNeighborTop(neighborChunk: TerrainChunk) {
         this.neighborTop = neighborChunk;
     }
@@ -105,6 +90,7 @@ export class TerrainChunk {
     setNeighborRight(neighborChunk: TerrainChunk) {
         this.neighborRight = neighborChunk;
     }
+    */
 
     public addVegetationMesh(mesh: THREE.Mesh) 
     {

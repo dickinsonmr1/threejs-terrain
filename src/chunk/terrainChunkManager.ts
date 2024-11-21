@@ -75,10 +75,8 @@ export class TerrainChunkManager {
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
             if(existingChunk) {
-                existingChunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.Low);
-                existingChunk.setMesh(group.children[1]! as THREE.Mesh, TerrainLOD.Medium);
-                existingChunk.setMesh(group.children[2]! as THREE.Mesh, TerrainLOD.High);
-                this.scene.add(existingChunk.highDetailMesh);
+                existingChunk.setMeshes(group);
+                this.scene.add(existingChunk.group);
 
                 // vegetation generator 1
                 this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
@@ -87,11 +85,9 @@ export class TerrainChunkManager {
             }
             else {
                 let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
-                chunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.Low);
-                chunk.setMesh(group.children[1]! as THREE.Mesh, TerrainLOD.Medium);
-                chunk.setMesh(group.children[2]! as THREE.Mesh, TerrainLOD.High);
+                chunk.setMeshes(group);
                 this.chunks.push(chunk);
-                this.scene.add(chunk.highDetailMesh);
+                this.scene.add(chunk.getMesh());
 
                 // vegetation generator 1
                 this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
@@ -162,13 +158,16 @@ export class TerrainChunkManager {
         highDetailPlaneMesh.receiveShadow = true;
         highDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         highDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+        highDetailPlaneMesh.userData.LOD = TerrainLOD.High;
         group.add(highDetailPlaneMesh);
 
+        
         // medium detail
         const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/2, material1, terrainGridParams.meshRotation, params);
         mediumDetailPlaneMesh.receiveShadow = true;
         mediumDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         mediumDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+        mediumDetailPlaneMesh.userData.LOD = TerrainLOD.Medium;
         group.add(mediumDetailPlaneMesh);
 
         // low detail
@@ -176,7 +175,8 @@ export class TerrainChunkManager {
         lowDetailPlaneMesh.receiveShadow = true;
         lowDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         lowDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
-        group.add(lowDetailPlaneMesh);
+        lowDetailPlaneMesh.userData.LOD = TerrainLOD.Low;
+        group.add(lowDetailPlaneMesh);        
 
         return group;
     }
@@ -246,12 +246,12 @@ export class TerrainChunkManager {
         const offsetZ = row * terrainGridParams.verticesPerSide;
 
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
-        if(!closestChunk?.highDetailMesh) {
+        if(!closestChunk?.isVisible()) {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
 
         }
 
-        let allVisibleChunks = this.chunks.filter(x => x.highDetailMesh != null);
+        let allVisibleChunks = this.chunks.filter(x => x.isVisible() != null);
         allVisibleChunks.forEach(chunk => {
           if(chunk.offset.distanceTo(new THREE.Vector2(offsetX, offsetX)) > 100) {
             // TODO: fix me
