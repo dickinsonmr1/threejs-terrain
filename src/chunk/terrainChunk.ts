@@ -49,18 +49,21 @@ export class TerrainChunk {
     private setHighDetailMesh(mesh: THREE.Mesh) {
         if(!this.highDetailMesh) {
             this.highDetailMesh = mesh;
+            this.group.add(this.highDetailMesh);
         }
     }
 
     private setMediumDetailMesh(mesh: THREE.Mesh) {
         if(!this.mediumDetailMesh) {
             this.mediumDetailMesh = mesh;
+            this.group.add(this.mediumDetailMesh);
         }
     }
 
     private setLowDetailMesh(mesh: THREE.Mesh) {
         if(!this.lowDetailMesh) {
             this.lowDetailMesh = mesh;
+            this.group.add(this.lowDetailMesh);
         }
     }
 

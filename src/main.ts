@@ -139,7 +139,7 @@ let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
 let vegetationGenerator = new VegetationGenerator(scene);
 
 let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, isWireFrame);
-terrainChunkManager.generate(terrainGridParams, terrainGeneratorParams);
+terrainChunkManager.generateInitialChunks(terrainGridParams, terrainGeneratorParams);
 
 
 
@@ -314,8 +314,9 @@ sunFolder.add(settings.sun, "azimuth", 0.0, 1.0).onChange(onSunChange);
 const otherFolder = gui.addFolder('Other');
 otherFolder.add(water.position, 'y', -10, 20, 0.5);
 
-function rebuild() {
-  terrainChunkManager.regenerate(terrainGridParams, terrainGeneratorParams);
+function rebuild() {  
+  terrainChunkManager.clearAllChunks(terrainGridParams, terrainGeneratorParams);
+  terrainChunkManager.generateInitialChunks(terrainGridParams, terrainGeneratorParams);
 }
 
 function switchSky(skyType: SkyType) {

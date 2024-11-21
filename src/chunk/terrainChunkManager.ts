@@ -43,7 +43,7 @@ export class TerrainChunkManager {
         }
     }
 
-    public async generate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
+    public async generateInitialChunks(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         // todo: generate all chunks, but only generate meshes for nodes that are close to camera   
         console.log(`**GENERATE: ${terrainGridParams.chunksPerSideOfGrid} x ${terrainGridParams.chunksPerSideOfGrid} grid, ${terrainGridParams.verticesPerSide} vertices per side of chunk`);
@@ -75,6 +75,8 @@ export class TerrainChunkManager {
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
             if(existingChunk) {
+                existingChunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.Low);
+                existingChunk.setMesh(group.children[1]! as THREE.Mesh, TerrainLOD.Medium);
                 existingChunk.setMesh(group.children[2]! as THREE.Mesh, TerrainLOD.High);
                 this.scene.add(existingChunk.highDetailMesh);
 
@@ -85,6 +87,8 @@ export class TerrainChunkManager {
             }
             else {
                 let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
+                chunk.setMesh(group.children[0]! as THREE.Mesh, TerrainLOD.Low);
+                chunk.setMesh(group.children[1]! as THREE.Mesh, TerrainLOD.Medium);
                 chunk.setMesh(group.children[2]! as THREE.Mesh, TerrainLOD.High);
                 this.chunks.push(chunk);
                 this.scene.add(chunk.highDetailMesh);
@@ -109,7 +113,7 @@ export class TerrainChunkManager {
     }
     */
     
-    public async regenerate(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
+    public async clearAllChunks(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         this.chunks.forEach(chunk => {
             // Remove the mesh from the scene (if needed)
@@ -133,16 +137,12 @@ export class TerrainChunkManager {
                       }
                   }
               }
-  
+
           })        
         });
-
-        
-        
+              
         // Clear the array after disposing
-        this.chunks.length = 0;
-          
-        this.generate(terrainGridParams, params);
+        this.chunks.length = 0;        
     }
 
     private async generateMeshesForChunk(gridX: number, gridZ: number,
@@ -250,6 +250,14 @@ export class TerrainChunkManager {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
 
         }
+
+        let allVisibleChunks = this.chunks.filter(x => x.highDetailMesh != null);
+        allVisibleChunks.forEach(chunk => {
+          if(chunk.offset.distanceTo(new THREE.Vector2(offsetX, offsetX)) > 100) {
+            // TODO: fix me
+            //chunk.removeMeshes(this.scene);
+          }              
+        });
 
         // TODO: only make vegetation visible on close chunks
         
