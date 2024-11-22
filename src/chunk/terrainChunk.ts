@@ -32,6 +32,18 @@ export class TerrainChunk {
 
     public setMeshes(group: THREE.Group) {
         this.group = group;
+
+        this.group.children.forEach(x => {
+            if(x != null) {
+
+                let mesh = x as THREE.Mesh;
+
+                if(x.userData.LOD == TerrainLOD.High)
+                    mesh.visible = true;
+                else   
+                    mesh.visible = false;
+            }
+        });
     }
 
     public getMesh(camera?: THREE.Camera): THREE.Mesh {
@@ -70,9 +82,61 @@ export class TerrainChunk {
                     }
                 }
             }
-
-        })        
+        });   
+        this.group.clear();
     }
+
+    setGreen() {
+        this.group.children.forEach(x => {
+            if(x != null) {
+
+                let mesh = x as THREE.Mesh;
+
+                const meshMaterial = mesh.material as THREE.MeshStandardMaterial; // Ensure correct type
+                meshMaterial.color.set(0x00ff00);
+
+                if(x.userData.LOD == TerrainLOD.High)
+                    mesh.visible = true;
+                else   
+                    mesh.visible = false;
+            }
+        });
+    }
+
+    setYellow() {
+        this.group.children.forEach(x => {
+            if(x != null) {
+
+                let mesh = x as THREE.Mesh;
+
+                const meshMaterial = mesh.material as THREE.MeshStandardMaterial; // Ensure correct type
+                meshMaterial.color.set(0xffff00);
+
+                if(x.userData.LOD == TerrainLOD.Medium)
+                    mesh.visible = true;
+                else   
+                    mesh.visible = false;
+            }
+        });
+    }
+
+    setRed() {
+        this.group.children.forEach(x => {
+            if(x != null) {
+
+                let mesh = x as THREE.Mesh;
+
+                const meshMaterial = mesh.material as THREE.MeshStandardMaterial; // Ensure correct type
+                meshMaterial.color.set(0xff0000);
+
+                if(x.userData.LOD == TerrainLOD.Low)
+                    mesh.visible = true;
+                else   
+                    mesh.visible = false;
+            }
+        });        
+    }
+    
 
     /*
     setNeighborTop(neighborChunk: TerrainChunk) {

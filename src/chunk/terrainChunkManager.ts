@@ -75,24 +75,29 @@ export class TerrainChunkManager {
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
             if(existingChunk) {
-                existingChunk.setMeshes(group);
-                this.scene.add(existingChunk.group);
+                existingChunk.setMeshes(group);                                
+                //this.scene.add(existingChunk.getMeshByLOD(TerrainLOD.High)!);
+                this.scene.add(group);
 
                 // vegetation generator 1
-                this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
-                //existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
-                this.scene.add(existingChunk.instancedVegetationMesh);
+                //this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
+                ////existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                //this.scene.add(existingChunk.instancedVegetationMesh);
             }
             else {
+                // logic only hit if outside of initialized grid
+
                 let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
                 chunk.setMeshes(group);
                 this.chunks.push(chunk);
-                this.scene.add(chunk.getMesh());
+
+                //this.scene.add(chunk.getMeshByLOD(TerrainLOD.High)!);
+                this.scene.add(group);
 
                 // vegetation generator 1
-                this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
-                //chunk.vegetationMeshes.forEach(x => this.scene.add(x));
-                this.scene.add(chunk.instancedVegetationMesh);
+                //this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
+                ////chunk.vegetationMeshes.forEach(x => this.scene.add(x));
+                //this.scene.add(chunk.instancedVegetationMesh);
 
             }
         });    
@@ -163,7 +168,7 @@ export class TerrainChunkManager {
 
         
         // medium detail
-        const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/2, material1, terrainGridParams.meshRotation, params);
+        const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/8, material1, terrainGridParams.meshRotation, params);
         mediumDetailPlaneMesh.receiveShadow = true;
         mediumDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         mediumDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
@@ -171,7 +176,7 @@ export class TerrainChunkManager {
         group.add(mediumDetailPlaneMesh);
 
         // low detail
-        const lowDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/4, material1, terrainGridParams.meshRotation, params);
+        const lowDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/16, material1, terrainGridParams.meshRotation, params);
         lowDetailPlaneMesh.receiveShadow = true;
         lowDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         lowDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
@@ -248,15 +253,27 @@ export class TerrainChunkManager {
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
         if(!closestChunk?.isVisible()) {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
-
         }
 
-        let allVisibleChunks = this.chunks.filter(x => x.isVisible() != null);
+        let allVisibleChunks = this.chunks.filter(x => x.isVisible());
         allVisibleChunks.forEach(chunk => {
-          if(chunk.offset.distanceTo(new THREE.Vector2(offsetX, offsetX)) > 100) {
+
+          let distance = chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z));
+
+          if(distance > 1000) {
             // TODO: fix me
+            chunk.setRed();
             //chunk.removeMeshes(this.scene);
+            //this.scene.remove(chunk.group);
           }              
+          else if(distance > 500)
+          {
+            chunk.setYellow();
+          }
+          else 
+          {
+            chunk.setGreen();
+          }
         });
 
         // TODO: only make vegetation visible on close chunks
