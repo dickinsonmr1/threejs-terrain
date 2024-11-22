@@ -164,6 +164,7 @@ export class TerrainChunkManager {
         highDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         highDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
         highDetailPlaneMesh.userData.LOD = TerrainLOD.High;
+        highDetailPlaneMesh.visible = false;
         group.add(highDetailPlaneMesh);
 
         
@@ -173,6 +174,7 @@ export class TerrainChunkManager {
         mediumDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         mediumDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
         mediumDetailPlaneMesh.userData.LOD = TerrainLOD.Medium;
+        mediumDetailPlaneMesh.visible = false;
         group.add(mediumDetailPlaneMesh);
 
         // low detail
@@ -181,6 +183,7 @@ export class TerrainChunkManager {
         lowDetailPlaneMesh.position.setX(gridX * verticesPerSide);
         lowDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
         lowDetailPlaneMesh.userData.LOD = TerrainLOD.Low;
+        lowDetailPlaneMesh.visible = false;
         group.add(lowDetailPlaneMesh);        
 
         return group;
@@ -246,16 +249,30 @@ export class TerrainChunkManager {
         const column = Math.floor((camera.position.x + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
         const row = -Math.floor((camera.position.z + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
 
-        // one chunk at a time
+        // one chunk at a time  
         const offsetX = column * terrainGridParams.verticesPerSide;
-        const offsetZ = row * terrainGridParams.verticesPerSide;
-
+        const offsetZ = row * terrainGridParams.verticesPerSide;      
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
-        if(!closestChunk?.isVisible()) {
+        if(!closestChunk?.meshesAreGenerated()) {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
-        }
+        }        
 
-        let allVisibleChunks = this.chunks.filter(x => x.isVisible());
+        // multiple chunks at a time
+        /*
+        for(let i = column - 4; i < column + 4; i++) {
+          for(let j = row + 4; j < row - 4; j--) {
+
+            const offsetX = i * terrainGridParams.verticesPerSide;
+            const offsetZ = j * terrainGridParams.verticesPerSide;
+    
+            let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
+            if(!closestChunk?.meshesAreGenerated())
+              this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
+          }  
+        }
+        */
+
+        let allVisibleChunks = this.chunks.filter(x => x.meshesAreGenerated());
         allVisibleChunks.forEach(chunk => {
 
           let distance = chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z));

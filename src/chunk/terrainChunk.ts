@@ -26,7 +26,7 @@ export class TerrainChunk {
         this.verticesPerSide = verticesPerSide;
     }
 
-    public isVisible() {
+    public meshesAreGenerated() {
         return this.group.children.length > 0;
     }
 
