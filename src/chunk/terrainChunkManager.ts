@@ -38,7 +38,7 @@ export class TerrainChunkManager {
             let offsetX = i * terrainGridParams.verticesPerSide;
             let offsetZ = j * terrainGridParams.verticesPerSide;      
 
-            this.chunks.push(new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide));
+            this.chunks.push(new TerrainChunk(i, j, new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide));
           }  
         }
     }
@@ -57,12 +57,12 @@ export class TerrainChunkManager {
             let offsetX = i * terrainGridParams.verticesPerSide;
             let offsetZ = j * terrainGridParams.verticesPerSide;   
             
-            await this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ);
+            await this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ, TerrainLOD.Low);
           }
         }
     }
 
-    private async generateChunk(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams, gridX: number, gridZ: number, offsetX: number, offsetZ: number) {
+    private async generateChunk(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams, gridX: number, gridZ: number, offsetX: number, offsetZ: number, terrainLOD: TerrainLOD) {
       const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
       if(this.colors.length <= this.chunks.length) {
         this.colors.push(randomColor);
@@ -70,7 +70,7 @@ export class TerrainChunkManager {
         //console.log(`-------- Chunk Offset (${offsetX}, ${offsetZ}) @ grid(${i}, ${j})`);
         await this.generateMeshesForChunk(gridX, gridZ, offsetX, offsetZ,
           terrainGridParams.verticesPerSide, terrainGridParams.heightScale,
-          terrainGridParams, params, randomColor).then((group) => {
+          terrainGridParams, params, randomColor, terrainLOD).then((group) => {
 
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
@@ -87,7 +87,7 @@ export class TerrainChunkManager {
             else {
                 // logic only hit if outside of initialized grid
 
-                let chunk = new TerrainChunk(new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
+                let chunk = new TerrainChunk(gridX, gridZ, new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
                 chunk.setMeshes(group);
                 this.chunks.push(chunk);
 
@@ -151,41 +151,48 @@ export class TerrainChunkManager {
       offsetZ: number,
       verticesPerSide: number, heightScale: number,
       terrainGridParams: TerrainGridParams,
-      params: TerrainGeneratorParams, randomColor: THREE.Color): Promise<THREE.Group> {
+      params: TerrainGeneratorParams, randomColor: THREE.Color, terrainLOD: TerrainLOD): Promise<THREE.Group> {
 
         let group = new THREE.Group();
 
         const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
         //console.log(heightScale);
 
-        // high detail
-        const highDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide, material1, terrainGridParams.meshRotation, params);
-        highDetailPlaneMesh.receiveShadow = true;
-        highDetailPlaneMesh.position.setX(gridX * verticesPerSide);
-        highDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
-        highDetailPlaneMesh.userData.LOD = TerrainLOD.High;
-        highDetailPlaneMesh.visible = false;
-        group.add(highDetailPlaneMesh);
+        switch(terrainLOD) {
+          case TerrainLOD.High:
+          // high detail
+          const highDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide, material1, terrainGridParams.meshRotation, params);
+          highDetailPlaneMesh.receiveShadow = true;
+          highDetailPlaneMesh.position.setX(gridX * verticesPerSide);
+          highDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+          highDetailPlaneMesh.userData.LOD = TerrainLOD.High;
+          highDetailPlaneMesh.visible = false;
+          group.add(highDetailPlaneMesh);
+          break;
 
+        case TerrainLOD.Medium:
+          // medium detail
+          const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/8, material1, terrainGridParams.meshRotation, params);
+          mediumDetailPlaneMesh.receiveShadow = true;
+          mediumDetailPlaneMesh.position.setX(gridX * verticesPerSide);
+          mediumDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+          mediumDetailPlaneMesh.userData.LOD = TerrainLOD.Medium;
+          mediumDetailPlaneMesh.visible = false;
+          group.add(mediumDetailPlaneMesh);
+          break;
         
-        // medium detail
-        const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/8, material1, terrainGridParams.meshRotation, params);
-        mediumDetailPlaneMesh.receiveShadow = true;
-        mediumDetailPlaneMesh.position.setX(gridX * verticesPerSide);
-        mediumDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
-        mediumDetailPlaneMesh.userData.LOD = TerrainLOD.Medium;
-        mediumDetailPlaneMesh.visible = false;
-        group.add(mediumDetailPlaneMesh);
-
-        // low detail
-        const lowDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/16, material1, terrainGridParams.meshRotation, params);
-        lowDetailPlaneMesh.receiveShadow = true;
-        lowDetailPlaneMesh.position.setX(gridX * verticesPerSide);
-        lowDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
-        lowDetailPlaneMesh.userData.LOD = TerrainLOD.Low;
-        lowDetailPlaneMesh.visible = false;
-        group.add(lowDetailPlaneMesh);        
-
+        case TerrainLOD.Low:
+          // low detail
+          const lowDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/16, material1, terrainGridParams.meshRotation, params);
+          lowDetailPlaneMesh.receiveShadow = true;
+          lowDetailPlaneMesh.position.setX(gridX * verticesPerSide);
+          lowDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
+          lowDetailPlaneMesh.userData.LOD = TerrainLOD.Low;
+          lowDetailPlaneMesh.visible = false;
+          group.add(lowDetailPlaneMesh);      
+          break;
+        }
+  
         return group;
     }
 
@@ -246,50 +253,71 @@ export class TerrainChunkManager {
     */
 
     public update(camera: THREE.Camera, terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
-        const column = Math.floor((camera.position.x + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
-        const row = -Math.floor((camera.position.z + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
-
+      
+        let column = Math.floor((camera.position.x + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
+        let row = -Math.floor((camera.position.z + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
+        
         // one chunk at a time  
+        /*
         const offsetX = column * terrainGridParams.verticesPerSide;
         const offsetZ = row * terrainGridParams.verticesPerSide;      
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
         if(!closestChunk?.meshesAreGenerated()) {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
-        }        
+        } 
+        */       
 
         // multiple chunks at a time
+
         /*
         for(let i = column - 4; i < column + 4; i++) {
-          for(let j = row + 4; j < row - 4; j--) {
+          for(let j = row + 4; j > row - 4; j--) {
 
             const offsetX = i * terrainGridParams.verticesPerSide;
             const offsetZ = j * terrainGridParams.verticesPerSide;
     
             let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
-            if(!closestChunk?.meshesAreGenerated())
-              this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
+            if(!closestChunk?.meshesAreGenerated()) {
+              this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ, TerrainLOD.Low);
+              this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ, TerrainLOD.Medium);
+              this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ, TerrainLOD.High);
+            }
+              //console.log(`Terrain grid: (${i}, ${j});  World coordinate offset: (${offsetX}, ${offsetZ})`);
           }  
         }
         */
 
-        let allVisibleChunks = this.chunks.filter(x => x.meshesAreGenerated());
-        allVisibleChunks.forEach(chunk => {
+        let allCloseChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) < 1000);
+        allCloseChunks.forEach(chunk => {
+
+        //let allVisibleChunks = this.chunks.filter(x => x.meshesAreGenerated());
+        //allVisibleChunks.forEach(chunk => {
 
           let distance = chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z));
 
-          if(distance > 1000) {
+          if(distance > 400) {
             // TODO: fix me
-            chunk.setRed();
+            //
+            if(!chunk.getMeshByLOD(TerrainLOD.Low)) {
+              this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Low);
+              chunk.setRed();
+            }
             //chunk.removeMeshes(this.scene);
             //this.scene.remove(chunk.group);
           }              
-          else if(distance > 500)
+          else if(distance > 200)
           {
-            chunk.setYellow();
+            if(!chunk.getMeshByLOD(TerrainLOD.Medium)) {
+              this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Medium);
+              chunk.setYellow();
+            }
           }
           else 
           {
-            chunk.setGreen();
+            if(!chunk.getMeshByLOD(TerrainLOD.High)) {
+              this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.High);
+              chunk.setGreen();
+            }
           }
         });
 

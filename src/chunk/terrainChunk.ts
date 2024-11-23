@@ -15,13 +15,21 @@ export class TerrainChunk {
     neighborLeft!: TerrainChunk;
     neighborRight!: TerrainChunk;
 
+    gridX: number;
+    gridZ: number;
+    position: THREE.Vector3;
     offset: THREE.Vector2;
     verticesPerSide: number;
 
     vegetationMeshes: THREE.Mesh[] = [];
     instancedVegetationMesh!: THREE.InstancedMesh;
 
-    constructor(offset: THREE.Vector2, verticesPerSide: number) {
+    constructor(gridX: number, gridZ: number, offset: THREE.Vector2, verticesPerSide: number) {
+
+        this.gridX = gridX;
+        this.gridZ = gridZ;
+        this.position = new THREE.Vector3(gridX * verticesPerSide, 0, -gridZ * verticesPerSide);
+
         this.offset = offset;
         this.verticesPerSide = verticesPerSide;
     }
@@ -38,10 +46,15 @@ export class TerrainChunk {
 
                 let mesh = x as THREE.Mesh;
 
+                mesh.visible = true;
+
+                /*
                 if(x.userData.LOD == TerrainLOD.High)
                     mesh.visible = true;
                 else   
                     mesh.visible = false;
+
+                */
             }
         });
     }
