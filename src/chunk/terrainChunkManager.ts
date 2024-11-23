@@ -6,6 +6,7 @@ import { TerrainGeneratorParams } from './terrainGeneratorParams';
 import { TerrainGridParams } from './terrainGridParams';
 import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
 import { VegetationGenerator } from './vegetationGenerator';
+import { TerrainLodSettings } from './terrainLodSettings';
 
 export class TerrainChunkManager {
 
@@ -20,9 +21,11 @@ export class TerrainChunkManager {
 
     simplexNoiseGenerator: SimplexNoiseGenerator;
     vegetationNoiseGenerator: VegetationGenerator;
+    
+    terrainLodSettings: TerrainLodSettings
 
     constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, terrainNoiseGenerator: SimplexNoiseGenerator,
-      vegetationNoiseGenerator: VegetationGenerator, isWireFrame: boolean) {
+      vegetationNoiseGenerator: VegetationGenerator, terrainLodSettings: TerrainLodSettings, isWireFrame: boolean) {
         this.scene = scene;
         this.isWireFrame = isWireFrame;
 
@@ -30,6 +33,8 @@ export class TerrainChunkManager {
 
         this.simplexNoiseGenerator = terrainNoiseGenerator;
         this.vegetationNoiseGenerator = vegetationNoiseGenerator;
+
+        this.terrainLodSettings = terrainLodSettings;
 
         // add empty chunks for entire grid
         for(var i = -100; i < 100; i++) {
@@ -103,9 +108,8 @@ export class TerrainChunkManager {
               this.scene.remove(group);
 
                 // vegetation generator 1
-                //this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
-                ////existingChunk.vegetationMeshes.forEach(x => this.scene.add(x));
-                //this.scene.add(existingChunk.instancedVegetationMesh);
+                this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
+                this.scene.add(existingChunk.instancedVegetationMesh);
             }
             else {
                 // logic only hit if outside of initialized grid
@@ -277,11 +281,13 @@ export class TerrainChunkManager {
 
     public update(camera: THREE.Camera, terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
       
-        let column = Math.floor((camera.position.x + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
-        let row = -Math.floor((camera.position.z + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
         
         // one chunk at a time  
         /*
+
+        let column = Math.floor((camera.position.x + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
+        let row = -Math.floor((camera.position.z + terrainGridParams.verticesPerSide * 0.5) / terrainGridParams.verticesPerSide);
+      
         const offsetX = column * terrainGridParams.verticesPerSide;
         const offsetZ = row * terrainGridParams.verticesPerSide;      
         let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
@@ -289,91 +295,42 @@ export class TerrainChunkManager {
           this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
         } 
         */       
-
-        // multiple chunks at a time
-
-        /*
-        for(let i = column - 4; i < column + 4; i++) {
-          for(let j = row + 4; j > row - 4; j--) {
-
-            const offsetX = i * terrainGridParams.verticesPerSide;
-            const offsetZ = j * terrainGridParams.verticesPerSide;
-    
-            let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
-            if(!closestChunk?.meshesAreGenerated()) {
-              this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ, TerrainLOD.Low);
-              this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ, TerrainLOD.Medium);
-              this.generateChunk(terrainGridParams, params, i, j, offsetX, offsetZ, TerrainLOD.High);
-            }
-              //console.log(`Terrain grid: (${i}, ${j});  World coordinate offset: (${offsetX}, ${offsetZ})`);
-          }  
-        }
-        */
-
-        let farDistance = 1000;
-
-        let allCloseChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) < farDistance);
+        let allCloseChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) < this.terrainLodSettings.drawDistance);
         allCloseChunks.forEach(chunk => {
-
-        //let allVisibleChunks = this.chunks.filter(x => x.meshesAreGenerated());
-        //allVisibleChunks.forEach(chunk => {
-
           let distance = chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z));
 
-          if(distance > farDistance / 2) {
-            // TODO: fix me
-            //
+          if(distance > this.terrainLodSettings.lowDetailThreshold) {
             if(!chunk.getMeshByLOD(TerrainLOD.Low)) {
               chunk.removeMeshes(this.scene);
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Low);
-              //chunk.setRed();
+              chunk.setRed();
             }
-            /*
-            else 
-            {
-              let mesh = chunk.getMeshByLOD(TerrainLOD.Low);
-              if(mesh != null)
-                  mesh.visible = true;
-            }
-            */
-            //chunk.removeMeshes(this.scene);
-            //this.scene.remove(chunk.group);
+            if(chunk.instancedVegetationMesh != null)
+              chunk.instancedVegetationMesh.visible = false;
           }              
-          else if(distance > farDistance / 4)
+          else if(distance > this.terrainLodSettings.mediumDetailThreshold)
           {
             if(!chunk.getMeshByLOD(TerrainLOD.Medium)) {
               chunk.removeMeshes(this.scene);
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Medium);
-              //chunk.setYellow();
+              chunk.setYellow();
             }
-            /*
-            else 
-            {
-              let mesh = chunk.getMeshByLOD(TerrainLOD.Medium);
-              if(mesh != null)
-                  mesh.visible = true;
-            }
-            */
+            if(chunk.instancedVegetationMesh != null)
+              chunk.instancedVegetationMesh.visible = false;
           }
           else 
           {
             if(!chunk.getMeshByLOD(TerrainLOD.High)) {
               chunk.removeMeshes(this.scene);
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.High);
-              //chunk.setGreen();
+              chunk.setGreen();
             }
-            /*
-            else 
-            {
-              let mesh = chunk.getMeshByLOD(TerrainLOD.High);
-              if(mesh != null)
-                  mesh.visible = true;
-            }
-            */
+            if(chunk.instancedVegetationMesh != null)
+              chunk.instancedVegetationMesh.visible = true;
           }
         });
 
-        let allFarChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) >= farDistance);
+        let allFarChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) >= this.terrainLodSettings.drawDistance);
         allFarChunks.forEach(chunk => {
           chunk.removeMeshes(this.scene);
         });

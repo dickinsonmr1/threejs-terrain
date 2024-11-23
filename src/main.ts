@@ -10,6 +10,7 @@ import { TerrainGeneratorParams } from './chunk/terrainGeneratorParams';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { SimplexNoiseGenerator } from './chunk/simplexNoiseGenerator';
 import { VegetationGenerator } from './chunk/vegetationGenerator';
+import { TerrainLodSettings } from './chunk/terrainLodSettings';
 
 const scene = new THREE.Scene();
 
@@ -50,8 +51,10 @@ const settings = {
   sun: {
     inclination: 0.31,
     azimuth: 0.25,
-  }
+  },
 };
+
+let terrainLodSettings = new TerrainLodSettings(1000, 500, 250, 100);
 
 const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
 let water = new Water(
@@ -138,7 +141,7 @@ let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
 
 let vegetationGenerator = new VegetationGenerator(scene);
 
-let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, isWireFrame);
+let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, terrainLodSettings, isWireFrame);
 //terrainChunkManager.generateInitialChunks(terrainGridParams, terrainGeneratorParams);
 
 
@@ -258,6 +261,12 @@ gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
+
+gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
+gui.add(terrainLodSettings, 'drawDistance', 0, 5000, 100).listen();
+gui.add(terrainLodSettings, 'lowDetailThreshold', 0, 2000, 100).listen();
+gui.add(terrainLodSettings, 'mediumDetailThreshold', 0, 500, 50).listen();
+gui.add(terrainLodSettings, 'highDetailThreshold', 0, 100, 10).listen();
 
 const cameraFolder = gui.addFolder('Camera Position');
 cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
