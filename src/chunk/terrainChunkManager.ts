@@ -287,7 +287,9 @@ export class TerrainChunkManager {
         }
         */
 
-        let allCloseChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) < 1000);
+        let farDistance = 1000;
+
+        let allCloseChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) < farDistance);
         allCloseChunks.forEach(chunk => {
 
         //let allVisibleChunks = this.chunks.filter(x => x.meshesAreGenerated());
@@ -295,7 +297,7 @@ export class TerrainChunkManager {
 
           let distance = chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z));
 
-          if(distance > 400) {
+          if(distance > farDistance / 2) {
             // TODO: fix me
             //
             if(!chunk.getMeshByLOD(TerrainLOD.Low)) {
@@ -305,7 +307,7 @@ export class TerrainChunkManager {
             //chunk.removeMeshes(this.scene);
             //this.scene.remove(chunk.group);
           }              
-          else if(distance > 200)
+          else if(distance > farDistance / 4)
           {
             if(!chunk.getMeshByLOD(TerrainLOD.Medium)) {
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Medium);
@@ -319,6 +321,11 @@ export class TerrainChunkManager {
               chunk.setGreen();
             }
           }
+        });
+
+        let allFarChunks = this.chunks.filter(chunk => chunk.offset.distanceTo(new THREE.Vector2(camera.position.x, -camera.position.z)) >= farDistance);
+        allFarChunks.forEach(chunk => {
+          chunk.removeMeshes(this.scene);
         });
 
         // TODO: only make vegetation visible on close chunks
