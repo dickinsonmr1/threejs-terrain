@@ -76,7 +76,7 @@ let water = new Water(
     }
 );
 water.rotation.x = - Math.PI / 2;
-water.position.y = -0.5;
+water.position.y = 2;
 scene.add( water );
 
 let quadtreeTerrainSystem: any;
@@ -143,9 +143,6 @@ let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
 let vegetationGenerator = new VegetationGenerator(scene);
 
 let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, terrainLodSettings, isWireFrame);
-//terrainChunkManager.generateInitialChunks(terrainGridParams, terrainGeneratorParams);
-
-
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
 light2.position.set(-100, 100, -100);
@@ -206,15 +203,19 @@ const direction = new THREE.Vector3();
 document.addEventListener('keydown', (event) => {
     switch (event.code) {
         case 'KeyW': // Forward
+        case 'ArrowUp': // Forward
             velocity.z = -moveSpeed;
             break;
         case 'KeyS': // Backward
+        case 'ArrowDown': // Backward
             velocity.z = moveSpeed;
             break;
         case 'KeyA': // Left
+        case 'ArrowLeft': // Left
             velocity.x = -moveSpeed;
             break;
         case 'KeyD': // Right
+        case 'ArrowRight': // Right
             velocity.x = moveSpeed;
             break;
         case 'KeyQ': // Up
@@ -230,10 +231,14 @@ document.addEventListener('keyup', (event) => {
     switch (event.code) {
         case 'KeyW':
         case 'KeyS':
+        case 'ArrowUp':
+        case 'ArrowDown':
             velocity.z = 0;
             break;
         case 'KeyA':
         case 'KeyD':
+        case 'ArrowLeft':
+        case 'ArrowRight':
             velocity.x = 0;
             break;
         case 'KeyQ':

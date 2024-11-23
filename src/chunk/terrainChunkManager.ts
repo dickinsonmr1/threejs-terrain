@@ -22,7 +22,9 @@ export class TerrainChunkManager {
     simplexNoiseGenerator: SimplexNoiseGenerator;
     vegetationNoiseGenerator: VegetationGenerator;
     
-    terrainLodSettings: TerrainLodSettings
+    terrainLodSettings: TerrainLodSettings;
+
+    shaderMaterial: THREE.Material;
 
     constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, terrainNoiseGenerator: SimplexNoiseGenerator,
       vegetationNoiseGenerator: VegetationGenerator, terrainLodSettings: TerrainLodSettings, isWireFrame: boolean) {
@@ -46,6 +48,8 @@ export class TerrainChunkManager {
             this.chunks.push(new TerrainChunk(i, j, new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide));
           }  
         }
+
+        this.shaderMaterial = this.generateMaterial(1, 100, false);
     }
 
     public async generateInitialChunks(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
@@ -119,6 +123,7 @@ export class TerrainChunkManager {
     public async clearAllChunks(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
         this.chunks.forEach(chunk => {
+          
             // Remove the mesh from the scene (if needed)
             this.scene.remove(chunk.group);
             
@@ -157,13 +162,13 @@ export class TerrainChunkManager {
 
         let group = new THREE.Group();
 
-        const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        
+        //const material1 = new THREE.MeshStandardMaterial({ color: randomColor, wireframe: this.isWireFrame});        /
         //console.log(heightScale);
 
         switch(terrainLOD) {
           case TerrainLOD.High:
           // high detail
-          const highDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide, material1, terrainGridParams.meshRotation, params);
+          const highDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide, this.shaderMaterial, terrainGridParams.meshRotation, params);
           highDetailPlaneMesh.receiveShadow = true;
           highDetailPlaneMesh.position.setX(gridX * verticesPerSide);
           highDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
@@ -174,7 +179,7 @@ export class TerrainChunkManager {
 
         case TerrainLOD.Medium:
           // medium detail
-          const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/8, material1, terrainGridParams.meshRotation, params);
+          const mediumDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/8, this.shaderMaterial, terrainGridParams.meshRotation, params);
           mediumDetailPlaneMesh.receiveShadow = true;
           mediumDetailPlaneMesh.position.setX(gridX * verticesPerSide);
           mediumDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
@@ -185,7 +190,7 @@ export class TerrainChunkManager {
         
         case TerrainLOD.Low:
           // low detail
-          const lowDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/16, material1, terrainGridParams.meshRotation, params);
+          const lowDetailPlaneMesh = this.meshGenerator.createPlaneMeshFromNoise(offsetX, offsetZ, this.simplexNoiseGenerator, verticesPerSide, verticesPerSide/16, this.shaderMaterial, terrainGridParams.meshRotation, params);
           lowDetailPlaneMesh.receiveShadow = true;
           lowDetailPlaneMesh.position.setX(gridX * verticesPerSide);
           lowDetailPlaneMesh.position.setZ(-gridZ * verticesPerSide);
@@ -255,6 +260,36 @@ export class TerrainChunkManager {
         });
     }
 
+    private generateMaterial(repeats: number, heightFactor: number, isWireframe: boolean): THREE.Material {
+
+      const loader = new THREE.TextureLoader();
+
+      const texture1 = this.loadAndConfigureTexture(loader, "assets/sand.png", repeats);                
+      const texture2 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", repeats);        
+      const texture3 = this.loadAndConfigureTexture(loader, "assets/stone.png", repeats);        
+      const texture4 = this.loadAndConfigureTexture(loader, "assets/stone.png", repeats);
+      const texture5 = this.loadAndConfigureTexture(loader, "assets/snow.png", repeats);
+
+      return new THREE.ShaderMaterial({
+          uniforms: {
+            lowTexture: { value: texture1},
+            lowMidTexture: { value: texture2 },
+            midTexture: { value: texture3 },
+            highMidTexture: { value: texture4 },
+            highTexture: { value: texture5 },
+            repeats: { value: repeats },
+            heightFactor: { value: heightFactor },
+            //fogColor: { value: this.fog?.color ?? new THREE.Color('black') },
+            //fogNear: { value: (this.fog as THREE.Fog)?.near ?? 10000 },
+            //fogFar: { value: (this.fog as THREE.Fog)?.far ?? 10000 },
+          },
+          //fog: this.gameConfig.useFog,
+          vertexShader: this.vertexShader4(),
+          fragmentShader: this.fragmentShader4(),
+          wireframe: isWireframe
+      });
+    }
+
     /*
     stitchChunks(chunk: TerrainChunk) {
         // Check each edge to see if stitching is needed with a lower-LOD neighbor
@@ -311,6 +346,89 @@ export class TerrainChunkManager {
         return { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[edge];
     }
     */
+    loadAndConfigureTexture(loader: THREE.TextureLoader, asset: string, repeats: number): THREE.Texture
+    {
+        const texture = loader.load(asset);                
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.magFilter = THREE.LinearFilter;
+        //texture.minFilter = THREE.NearestMipMapLinearFilter;
+        //texture.anisotropy = 16;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.repeat.set(repeats, repeats);
+        texture.needsUpdate = true;
+
+        return texture;
+    }
+    
+    vertexShader4() {
+      return `
+      varying vec3 vPosition;
+      varying vec2 vUv;
+      varying float vFogDepth;
+
+      void main() {
+        vPosition = position;
+        vUv = uv;
+        
+        // Calculate model-view position (required for fog)
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+
+        // Pass the fog depth (distance from the camera)
+        vFogDepth = -mvPosition.z;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+      `
+    }
+
+    fragmentShader4() {
+      return `
+
+      uniform sampler2D lowTexture;
+      uniform sampler2D lowMidTexture;
+      uniform sampler2D midTexture;
+      uniform sampler2D highMidTexture;
+      uniform sampler2D highTexture;      
+      
+      uniform float repeats;
+      uniform float heightFactor;
+
+      uniform vec3 fogColor;
+      uniform float fogNear;
+      uniform float fogFar;
+
+      varying vec3 vPosition;      
+      varying vec2 vUv;
+      varying float vFogDepth;
+
+      void main() {
+        float height = vPosition.z / heightFactor; // Normalize height to 0.0 - 1.0
+
+        vec2 repeatedUv = vUv * repeats; // Adjust the number of repetitions here
+
+        vec4 lowColor = texture2D(lowTexture, repeatedUv);
+        vec4 lowMidColor = texture2D(lowMidTexture, repeatedUv);
+        vec4 midColor = texture2D(midTexture, repeatedUv);
+        vec4 highMidColor = texture2D(highMidTexture, repeatedUv);
+        vec4 highColor = texture2D(highTexture, repeatedUv);
+
+        vec4 color = mix(lowColor, lowMidColor, smoothstep(0.0, 0.25, height));
+        color = mix(color, midColor, smoothstep(0.25, 0.5, height));
+        color = mix(color, highMidColor, smoothstep(0.5, 0.75, height));
+        color = mix(color, highColor, smoothstep(0.75, 1.0, height));
+
+        gl_FragColor = color;
+
+        
+        //// Fog factor calculation (standard linear fog)
+        //float fogFactor = smoothstep(fogNear, fogFar, vFogDepth);
+
+        //// Mix base color with fog color based on fog factor
+        //gl_FragColor = vec4(mix(color.rgb, fogColor, fogFactor), color.a);
+      }
+        `
+    }
 }
 
 export { TerrainGridParams, TerrainGeneratorParams };
