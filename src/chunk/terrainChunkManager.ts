@@ -82,9 +82,9 @@ export class TerrainChunkManager {
 
                 group.children.forEach(x => {
                   if(x != null) {
-      
+
                       let mesh = x as THREE.Mesh;
-      
+
                       this.scene.remove(mesh);
                       
                       // Dispose of the geometry and material associated with the mesh
@@ -324,25 +324,52 @@ export class TerrainChunkManager {
             // TODO: fix me
             //
             if(!chunk.getMeshByLOD(TerrainLOD.Low)) {
+              chunk.removeMeshes(this.scene);
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Low);
               //chunk.setRed();
             }
+            /*
+            else 
+            {
+              let mesh = chunk.getMeshByLOD(TerrainLOD.Low);
+              if(mesh != null)
+                  mesh.visible = true;
+            }
+            */
             //chunk.removeMeshes(this.scene);
             //this.scene.remove(chunk.group);
           }              
           else if(distance > farDistance / 4)
           {
             if(!chunk.getMeshByLOD(TerrainLOD.Medium)) {
+              chunk.removeMeshes(this.scene);
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Medium);
               //chunk.setYellow();
             }
+            /*
+            else 
+            {
+              let mesh = chunk.getMeshByLOD(TerrainLOD.Medium);
+              if(mesh != null)
+                  mesh.visible = true;
+            }
+            */
           }
           else 
           {
             if(!chunk.getMeshByLOD(TerrainLOD.High)) {
+              chunk.removeMeshes(this.scene);
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.High);
               //chunk.setGreen();
             }
+            /*
+            else 
+            {
+              let mesh = chunk.getMeshByLOD(TerrainLOD.High);
+              if(mesh != null)
+                  mesh.visible = true;
+            }
+            */
           }
         });
 

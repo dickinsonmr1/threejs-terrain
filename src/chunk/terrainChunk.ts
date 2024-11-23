@@ -98,7 +98,7 @@ export class TerrainChunk {
             }
         });   
         this.group.clear();
-        scene.remove(this.group);
+        scene.remove(this.group);    
     }
 
     setGreen() {
