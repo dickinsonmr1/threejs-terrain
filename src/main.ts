@@ -52,9 +52,10 @@ const settings = {
     inclination: 0.31,
     azimuth: 0.25,
   },
+  visibleTerrainChunkCount: 0
 };
 
-let terrainLodSettings = new TerrainLodSettings(1000, 500, 250, 100);
+let terrainLodSettings = new TerrainLodSettings(1000, 200, 100, 50);
 
 const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
 let water = new Water(
@@ -261,8 +262,8 @@ gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
+gui.add(settings, 'visibleTerrainChunkCount').name('Visible Terrain Chunks').listen();
 
-gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
 gui.add(terrainLodSettings, 'drawDistance', 0, 5000, 100).listen();
 gui.add(terrainLodSettings, 'lowDetailThreshold', 0, 2000, 100).listen();
 gui.add(terrainLodSettings, 'mediumDetailThreshold', 0, 500, 50).listen();
@@ -361,6 +362,8 @@ function tick() {
 
   if(terrainChunkManager != null)
     terrainChunkManager.update(camera, terrainGridParams, terrainGeneratorParams);
+
+  settings.visibleTerrainChunkCount = terrainChunkManager.getVisibleChunkCount();
 
   if(water !== null)    
     water.material.uniforms[ 'time' ].value += 0.5 / 60.0;

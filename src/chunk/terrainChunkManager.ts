@@ -111,6 +111,10 @@ export class TerrainChunkManager {
             }
         });    
     }
+
+    public getVisibleChunkCount(): number {
+      return this.chunks.filter(x => x.group.children.length > 0).length;
+    }
     
     public async clearAllChunks(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
