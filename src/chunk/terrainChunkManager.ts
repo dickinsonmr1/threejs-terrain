@@ -75,9 +75,32 @@ export class TerrainChunkManager {
             let existingChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
 
             if(existingChunk) {
-                existingChunk.setMeshes(group);                                
+                existingChunk.setMeshes(group);      
+                
                 //this.scene.add(existingChunk.getMeshByLOD(TerrainLOD.High)!);
-                this.scene.add(group);
+                this.scene.add(existingChunk.group);
+
+                group.children.forEach(x => {
+                  if(x != null) {
+      
+                      let mesh = x as THREE.Mesh;
+      
+                      this.scene.remove(mesh);
+                      
+                      // Dispose of the geometry and material associated with the mesh
+                      if (mesh.geometry) mesh.geometry.dispose();
+                      if (mesh.material) {
+                          // If the material is an array (e.g., for MultiMaterial), dispose each one
+                          if (Array.isArray(mesh.material)) {
+                              mesh.material.forEach(material => material.dispose());
+                          } else {
+                              mesh.material.dispose();
+                          }
+                      }
+                  }
+              });   
+              group.clear();
+              this.scene.remove(group);
 
                 // vegetation generator 1
                 //this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
@@ -302,7 +325,7 @@ export class TerrainChunkManager {
             //
             if(!chunk.getMeshByLOD(TerrainLOD.Low)) {
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Low);
-              chunk.setRed();
+              //chunk.setRed();
             }
             //chunk.removeMeshes(this.scene);
             //this.scene.remove(chunk.group);
@@ -311,14 +334,14 @@ export class TerrainChunkManager {
           {
             if(!chunk.getMeshByLOD(TerrainLOD.Medium)) {
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.Medium);
-              chunk.setYellow();
+              //chunk.setYellow();
             }
           }
           else 
           {
             if(!chunk.getMeshByLOD(TerrainLOD.High)) {
               this.generateChunk(terrainGridParams, params, chunk.gridX, chunk.gridZ, chunk.offset.x, chunk.offset.y, TerrainLOD.High);
-              chunk.setGreen();
+              //chunk.setGreen();
             }
           }
         });

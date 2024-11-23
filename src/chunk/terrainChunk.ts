@@ -39,14 +39,15 @@ export class TerrainChunk {
     }
 
     public setMeshes(group: THREE.Group) {
-        this.group = group;
 
-        this.group.children.forEach(x => {
+        group.children.forEach(x => {
             if(x != null) {
 
                 let mesh = x as THREE.Mesh;
-
+                                
+                this.group.add(mesh);
                 mesh.visible = true;
+                this.group.visible = true;
 
                 /*
                 if(x.userData.LOD == TerrainLOD.High)
@@ -97,6 +98,7 @@ export class TerrainChunk {
             }
         });   
         this.group.clear();
+        scene.remove(this.group);
     }
 
     setGreen() {

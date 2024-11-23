@@ -253,6 +253,11 @@ let obj3 = { size: 'Small', terrainType: 3 };
 gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
 gui.add( obj3, 'terrainType', { Simple: 1, Splatted: 2, LOD: 3 } );
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
+gui.add(scene.children, 'length').name('Scene Children Count').listen();
+
+gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
+gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
+gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
 
 const cameraFolder = gui.addFolder('Camera Position');
 cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
