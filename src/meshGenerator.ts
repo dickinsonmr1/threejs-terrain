@@ -17,9 +17,7 @@ export class MeshGenerator {
             const x = planeGeometry.attributes.position.getX(i);
             const y = planeGeometry.attributes.position.getY(i);
             
-            //const z = noise2D(x + offsetX, y + offsetY);
             const z = simplexNoiseGenerator.getHeightFromNoiseFunction(x + offsetX, y + offsetY);
-            //console.log(`createPlaneMeshFromNoise: noise(${(x + offsetX).toFixed(2)}, ${(y + offsetY).toFixed(2)}) = ${z.toFixed(2)}`);
             
             planeGeometry.attributes.position.setZ(i, z);
         }

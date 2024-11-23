@@ -23,21 +23,23 @@ export class VegetationGenerator {
         //this.instancedMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
         let counter2 = 0;
 
-        for (let i = 0; i < terrainChunk.getMeshByLOD(TerrainLOD.High)!.geometry.attributes.position.count; i++) {
+        if(terrainChunk.getMeshByLOD(TerrainLOD.High) != null ) {
+            for (let i = 0; i < terrainChunk.getMeshByLOD(TerrainLOD.High)!.geometry.attributes.position.count; i++) {
 
-            const x = terrainChunk.offset.x + terrainChunk.getMeshByLOD(TerrainLOD.High)!.geometry.attributes.position.getX(i);
-            const y = terrainChunk.offset.y + terrainChunk.getMeshByLOD(TerrainLOD.High)!.geometry.attributes.position.getY(i);
-            
-            var vegetationNoise = this.vegetationNoise2D(x, y);
-            if(vegetationNoise > 0.2 && vegetationNoise < 0.205){
+                const x = terrainChunk.offset.x + terrainChunk.getMeshByLOD(TerrainLOD.High)!.geometry.attributes.position.getX(i);
+                const y = terrainChunk.offset.y + terrainChunk.getMeshByLOD(TerrainLOD.High)!.geometry.attributes.position.getY(i);
                 
-                let elevation = terrainNoiseGenerator.getHeightFromNoiseFunction(x, y);            
-                const matrix = new THREE.Matrix4().setPosition(x, elevation, -y);
-                instancedMesh2.setMatrixAt(counter2++, matrix);
-            }            
-        }
-        
-        terrainChunk.addInstancedVegetationMesh(instancedMesh2);        
+                var vegetationNoise = this.vegetationNoise2D(x, y);
+                if(vegetationNoise > 0.2 && vegetationNoise < 0.205){
+                    
+                    let elevation = terrainNoiseGenerator.getHeightFromNoiseFunction(x, y);            
+                    const matrix = new THREE.Matrix4().setPosition(x, elevation, -y);
+                    instancedMesh2.setMatrixAt(counter2++, matrix);
+                }            
+            }
+            
+            terrainChunk.addInstancedVegetationMesh(instancedMesh2);        
+        }        
     }
 
     generateForAllChunks(terrainChunks: TerrainChunk[], terrainNoiseGenerator: SimplexNoiseGenerator) { 

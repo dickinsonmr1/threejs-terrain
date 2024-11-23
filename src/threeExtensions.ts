@@ -61,4 +61,4 @@ THREE.Mesh.prototype.disposeMeshAndRemoveFromScene = function (
             this.material.dispose();
         }
     }
-  };
+};

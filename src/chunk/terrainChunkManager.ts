@@ -68,7 +68,7 @@ export class TerrainChunkManager {
     }
 
     private async generateChunk(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams, gridX: number, gridZ: number, offsetX: number, offsetZ: number, terrainLOD: TerrainLOD) {
-      const randomColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+      const randomColor = new THREE.Color('green')//Math.random(), Math.random(), Math.random());
       if(this.colors.length <= this.chunks.length) {
         this.colors.push(randomColor);
       }
@@ -85,31 +85,13 @@ export class TerrainChunkManager {
                 //this.scene.add(existingChunk.getMeshByLOD(TerrainLOD.High)!);
                 this.scene.add(existingChunk.group);
 
-                group.children.forEach(x => {
-                  if(x != null) {
-
-                      let mesh = x as THREE.Mesh;
-
-                      this.scene.remove(mesh);
-                      
-                      // Dispose of the geometry and material associated with the mesh
-                      if (mesh.geometry) mesh.geometry.dispose();
-                      if (mesh.material) {
-                          // If the material is an array (e.g., for MultiMaterial), dispose each one
-                          if (Array.isArray(mesh.material)) {
-                              mesh.material.forEach(material => material.dispose());
-                          } else {
-                              mesh.material.dispose();
-                          }
-                      }
-                  }
-              });   
-              group.clear();
-              this.scene.remove(group);
-
+                group.disposeGroupAndRemoveFromScene(this.scene);
+                
                 // vegetation generator 1
+                
                 this.vegetationNoiseGenerator.generateForChunk(existingChunk, this.simplexNoiseGenerator);
-                this.scene.add(existingChunk.instancedVegetationMesh);
+                if(existingChunk.instancedVegetationMesh != null)
+                  this.scene.add(existingChunk.instancedVegetationMesh);
             }
             else {
                 // logic only hit if outside of initialized grid
@@ -129,17 +111,6 @@ export class TerrainChunkManager {
             }
         });    
     }
-
-    /*
-    private isChunkAtPosition(position: THREE.Vector3, chunkSize: number): boolean {
-
-      this.chunks.forEach(chunk => {
-         if(position.distanceTo(new THREE.Vector3(chunk.offset.x + chunkSize / 2, 0, chunk.offset.y + chunkSize / 2)) < chunkSize)
-            return true;
-      })
-      return false;      
-    }
-    */
     
     public async clearAllChunks(terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
 
@@ -223,62 +194,6 @@ export class TerrainChunkManager {
         return group;
     }
 
-    public getPositionOnTerrain(position: THREE.Vector3) {
-      //return this.simplexNoiseGenerator.getHeightFromNoiseFunction
-    }
-
-    /*
-    private async generateHeightmap(
-      offsetX: number,
-      offsetZ: number,
-      verticesPerSide: number,
-      heightScale: number,
-      params: TerrainGeneratorParams,
-      noise2D: NoiseFunction2D): Promise<number[][]> {
-                
-        const heightmap: number[][] = [];
-        for (let i = 0; i < verticesPerSide; i++) {
-
-            heightmap[i] = [];
-            for (let j = 0; j < verticesPerSide; j++) {
-                // TODO: ensure offset is correct for noise function
-
-                let z = verticesPerSide * i + offsetX;
-                let x = verticesPerSide * j + offsetZ;                
-                heightmap[i][j] =  this.getHeightFromNoiseFunction(x, z, params, noise2D);
-                //heightmap[i][j] = noise2D(x, z);
-                //console.log(`using noise @ (${x}, ${z}): ${heightmap[i][j].toFixed(2)}`);
-            }
-        }
-        return heightmap;
-    }
-    
-
-    private getHeightFromNoiseFunction(x: number, y: number,
-      params: TerrainGeneratorParams, noise2D: NoiseFunction2D): number {
-
-      const xs = x / params.scale;
-        const ys = y / params.scale;
-        const G = 2.0 ** (-params.persistence);
-
-        let amplitude = 1.0;
-        let frequency = 1.0;
-        let normalization = 0;
-        let total = 0;
-
-        for (let o = 0; o < params.octaves; o++) {
-            const noiseValue = noise2D(xs * frequency, ys * frequency) * 0.5 + 0.5;
-            total += noiseValue * amplitude;
-            normalization += amplitude;
-            amplitude *= G;
-            frequency *= params.lacunarity;
-        }
-
-        total /= normalization;
-        return Math.pow(total, params.exponentiation) * params.height;
-    }
-    */
-
     public update(camera: THREE.Camera, terrainGridParams: TerrainGridParams, params: TerrainGeneratorParams) {
       
         
@@ -334,27 +249,6 @@ export class TerrainChunkManager {
         allFarChunks.forEach(chunk => {
           chunk.removeMeshes(this.scene);
         });
-
-        // TODO: only make vegetation visible on close chunks
-        
-        // TODO: closest and surrounding chunks
-        /*
-        for(let i = column-4; i < column+4; i++) {
-          for(let j = row-4; j < row+4; j++) {
-
-            const offsetX = i * terrainGridParams.verticesPerSide;
-            const offsetZ = j * terrainGridParams.verticesPerSide;
-    
-            let closestChunk = this.chunks.find(x => x.offset.x == offsetX && x.offset.y == offsetZ);
-            if(!closestChunk?.mesh)
-              this.generateChunk(terrainGridParams, params, column, row, offsetX, offsetZ);
-          }  
-        }
-        */
-
-        //if(!this.isChunkAtPosition(camera.position, terrainGridParams.verticesPerSide)) {
-        //
-        //}
     }
 
     /*

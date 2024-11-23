@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import '../threeExtensions'; // Import the extension method to enhance THREE.Group
 
 export enum TerrainLOD {
     Low = 0.25,
@@ -48,14 +49,6 @@ export class TerrainChunk {
                 this.group.add(mesh);
                 mesh.visible = true;
                 this.group.visible = true;
-
-                /*
-                if(x.userData.LOD == TerrainLOD.High)
-                    mesh.visible = true;
-                else   
-                    mesh.visible = false;
-
-                */
             }
         });
     }
@@ -78,6 +71,8 @@ export class TerrainChunk {
     }
 
     removeMeshes(scene: THREE.Scene) {
+
+        this.group.disposeGroupAndRemoveFromScene(scene);
         this.group.children.forEach(x => {
             if(x != null) {
 
