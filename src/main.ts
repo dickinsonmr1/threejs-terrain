@@ -76,7 +76,7 @@ let water = new Water(
     }
 );
 water.rotation.x = - Math.PI / 2;
-water.position.y = 2;
+water.position.y = 5;
 scene.add( water );
 
 let quadtreeTerrainSystem: any;

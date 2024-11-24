@@ -38,9 +38,10 @@ export class TerrainChunkManager {
 
         this.terrainLodSettings = terrainLodSettings;
 
+        let gridSize = 50;
         // add empty chunks for entire grid
-        for(var i = -100; i < 100; i++) {
-          for(var j = -100; j < 100; j++) {
+        for(var i = -gridSize/2; i < gridSize/2; i++) {
+          for(var j = -gridSize/2; j < gridSize/2; j++) {
 
             let offsetX = i * terrainGridParams.verticesPerSide;
             let offsetZ = j * terrainGridParams.verticesPerSide;      
@@ -102,10 +103,14 @@ export class TerrainChunkManager {
 
                 let chunk = new TerrainChunk(gridX, gridZ, new THREE.Vector2(offsetX, offsetZ), terrainGridParams.verticesPerSide);                
                 chunk.setMeshes(group);
-                this.chunks.push(chunk);
+                this.scene.add(chunk.group);
 
+                this.chunks.push(chunk);
+                
+
+                group.disposeGroupAndRemoveFromScene(this.scene);
                 //this.scene.add(chunk.getMeshByLOD(TerrainLOD.High)!);
-                this.scene.add(group);
+                //this.scene.add(group);
 
                 // vegetation generator 1
                 //this.vegetationNoiseGenerator.generateForChunk(chunk, this.simplexNoiseGenerator);
@@ -413,8 +418,8 @@ export class TerrainChunkManager {
         vec4 highMidColor = texture2D(highMidTexture, repeatedUv);
         vec4 highColor = texture2D(highTexture, repeatedUv);
 
-        vec4 color = mix(lowColor, lowMidColor, smoothstep(0.0, 0.25, height));
-        color = mix(color, midColor, smoothstep(0.25, 0.5, height));
+        vec4 color = mix(lowColor, lowMidColor, smoothstep(0.0, 0.1, height));
+        color = mix(color, midColor, smoothstep(0.1, 0.5, height));
         color = mix(color, highMidColor, smoothstep(0.5, 0.75, height));
         color = mix(color, highColor, smoothstep(0.75, 1.0, height));
 
