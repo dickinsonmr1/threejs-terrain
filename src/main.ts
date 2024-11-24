@@ -11,6 +11,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { SimplexNoiseGenerator } from './chunk/simplexNoiseGenerator';
 import { VegetationGenerator } from './chunk/vegetationGenerator';
 import { TerrainLodSettings } from './chunk/terrainLodSettings';
+import { QuadTree } from './chunk/quadtree';
 
 const scene = new THREE.Scene();
 
@@ -171,6 +172,15 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.far = 10000;
 camera.position.set(16, 16, 16);
 
+let quadTree = new QuadTree(new THREE.Box2(
+  new THREE.Vector2(-40000, -40000),
+  new THREE.Vector2(40000, 40000)
+));
+quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z));
+let qtStats = {
+  totalNodes: quadTree.getTotalNodeCount()
+};
+
 const renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -268,6 +278,9 @@ gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen(
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
 gui.add(settings, 'visibleTerrainChunkCount').name('Visible Terrain Chunks').listen();
+gui.add(qtStats, 'totalNodes').name('Total Quadtree Terrain Chunk Nodes').listen();
+
+let totalNodes = quadTree.getTotalNodeCount();
 
 gui.add(terrainLodSettings, 'drawDistance', 0, 5000, 100).listen();
 gui.add(terrainLodSettings, 'lowDetailThreshold', 0, 2000, 100).listen();
@@ -369,6 +382,9 @@ function tick() {
     terrainChunkManager.update(camera, terrainGridParams, terrainGeneratorParams);
 
   settings.visibleTerrainChunkCount = terrainChunkManager.getVisibleChunkCount();
+
+  quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z));
+  qtStats.totalNodes = quadTree.getTotalNodeCount();
 
   if(water !== null)    
     water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
