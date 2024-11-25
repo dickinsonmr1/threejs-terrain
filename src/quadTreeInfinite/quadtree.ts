@@ -78,6 +78,8 @@ export class QuadTree {
                 this.generateMesh(x, scene);
             });
 
+            if(node.mesh != null)
+                node.mesh!.visible = false;
             //node.mesh?.disposeMeshAndRemoveFromScene(scene);            
             return;
         }
@@ -110,6 +112,9 @@ export class QuadTree {
                 console.log(`Generating mesh for node: size ${nodeSize} // bounds min(${node.bounds.min.x}, ${node.bounds.min.y}) -> max(${node.bounds.max.x}, ${node.bounds.max.y}) // translating (${meshDrawOffset.x}, ${meshDrawOffset.y}) `);
                 node.mesh = mesh;
                 scene.add(node.mesh);
+            }
+            else {
+                node.mesh!.visible = true;
             }
         }
     }
@@ -161,6 +166,8 @@ export class QuadTree {
     
     private vertexShader4() {
       return `
+      //#include <logdepthbuf_pars_vertex>
+
       varying vec3 vPosition;
       varying vec2 vUv;
       varying float vFogDepth;
@@ -176,12 +183,15 @@ export class QuadTree {
         vFogDepth = -mvPosition.z;
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+
+        //#include <logdepthbuf_vertex>
       }
       `
     }
 
     private fragmentShader4() {
       return `
+      //#include <logdepthbuf_pars_fragment>
 
       uniform sampler2D lowTexture;
       uniform sampler2D lowMidTexture;
@@ -224,6 +234,8 @@ export class QuadTree {
 
         //// Mix base color with fog color based on fog factor
         //gl_FragColor = vec4(mix(color.rgb, fogColor, fogFactor), color.a);
+
+        //#include <logdepthbuf_fragment>
       }
         `
     }
@@ -278,6 +290,8 @@ export class Node {
         console.log(`Upper Right: min(${upperRight.bounds.min.x}, ${upperRight.bounds.min.y}) -> max(${upperRight.bounds.max.x}, ${upperRight.bounds.max.y})`);
         console.log(`Upper Left:  min(${lowerRight.bounds.min.x}, ${lowerRight.bounds.min.y}) -> max(${lowerRight.bounds.max.x}, ${lowerRight.bounds.max.y})`);
         //this.mesh?.disposeMeshAndRemoveFromScene(scene);
+        //if(this.mesh != null)
+            //this.mesh!.visible = false;
     }
 
     public merge(scene: THREE.Scene): void {

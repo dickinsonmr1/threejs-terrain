@@ -58,7 +58,7 @@ const settings = {
 
 let terrainLodSettings = new TerrainLodSettings(1000, 200, 100, 50);
 
-const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
+const waterGeometry = new THREE.PlaneGeometry( 100000, 100000 );
 let water = new Water(
     waterGeometry,
     {
@@ -77,7 +77,10 @@ let water = new Water(
     }
 );
 water.rotation.x = - Math.PI / 2;
-water.position.y = 0;
+water.position.y = 5.01;
+//water.material.polygonOffset = true;
+//water.material.polygonOffsetFactor = -1; // Push back slightly
+//water.material.polygonOffsetUnits = -1;
 scene.add( water );
 
 let quadtreeTerrainSystem: any;
@@ -170,8 +173,10 @@ scene.add(mesh1);
 ///////////////////////////////////////
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
+camera.near = 1;
 camera.far = 10000;
-camera.position.set(16, 16, 16);
+camera.position.set(0, 1, 0);
+camera.updateProjectionMatrix();
 
 let quadTree = new QuadTree(
   new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)),
@@ -186,7 +191,10 @@ let qtStats = {
   totalNodes: quadTree.getTotalNodeCount()
 };
 
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({
+  //antialias: true,
+  //logarithmicDepthBuffer: true
+});
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
@@ -278,10 +286,14 @@ gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
 gui.add( obj3, 'terrainType', { Simple: 1, Splatted: 2, LOD: 3 } );
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
 gui.add(scene.children, 'length').name('Scene Children Count').listen();
-
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
+
+const quadTreeFolder = gui.addFolder('Quadtree');
+quadTreeFolder.add(qtStats, 'totalNodes').name('Total Nodes').listen();
+let totalNodes = quadTree.getTotalNodeCount();
+
 
 const terrainChunkFolder = gui.addFolder('Terrain Chunk');
 terrainChunkFolder.add(settings, 'visibleTerrainChunkCount').name('Visible Chunks').listen();
@@ -290,9 +302,6 @@ terrainChunkFolder.add(terrainLodSettings, 'lowDetailThreshold', 0, 2000, 100).l
 terrainChunkFolder.add(terrainLodSettings, 'mediumDetailThreshold', 0, 500, 50).listen();
 terrainChunkFolder.add(terrainLodSettings, 'highDetailThreshold', 0, 100, 10).listen();
 
-const quadTreeFolder = gui.addFolder('Quadtree');
-quadTreeFolder.add(qtStats, 'totalNodes').name('Total Nodes').listen();
-let totalNodes = quadTree.getTotalNodeCount();
 
 const cameraFolder = gui.addFolder('Camera Position');
 cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
