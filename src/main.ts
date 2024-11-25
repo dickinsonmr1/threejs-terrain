@@ -11,7 +11,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { SimplexNoiseGenerator } from './chunk/simplexNoiseGenerator';
 import { VegetationGenerator } from './chunk/vegetationGenerator';
 import { TerrainLodSettings } from './chunk/terrainLodSettings';
-import { QuadTree } from './chunk/quadtree';
+import { QuadTree } from './quadTreeInfinite/quadtree';
 
 const scene = new THREE.Scene();
 
@@ -143,7 +143,8 @@ let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
 
 let vegetationGenerator = new VegetationGenerator(scene);
 
-let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, terrainLodSettings, isWireFrame);
+let terrainChunkManager: any;
+//let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, terrainLodSettings, isWireFrame);
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
 light2.position.set(-100, 100, -100);
@@ -172,11 +173,14 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.far = 10000;
 camera.position.set(16, 16, 16);
 
-let quadTree = new QuadTree(new THREE.Box2(
-  new THREE.Vector2(-40000, -40000),
-  new THREE.Vector2(40000, 40000)
-));
-quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z));
+let quadTree = new QuadTree(
+  new THREE.Box2(new THREE.Vector2(-4000, -4000), new THREE.Vector2(4000, 4000)),
+  simplexNoiseGenerator,
+  terrainGeneratorParams
+);
+
+quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z), scene);
+quadTree.updateMeshes(scene);
 let qtStats = {
   totalNodes: quadTree.getTotalNodeCount()
 };
@@ -277,15 +281,17 @@ gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
-gui.add(settings, 'visibleTerrainChunkCount').name('Visible Terrain Chunks').listen();
-gui.add(qtStats, 'totalNodes').name('Total Quadtree Terrain Chunk Nodes').listen();
 
+const terrainChunkFolder = gui.addFolder('Terrain Chunk');
+terrainChunkFolder.add(settings, 'visibleTerrainChunkCount').name('Visible Chunks').listen();
+terrainChunkFolder.add(terrainLodSettings, 'drawDistance', 0, 5000, 100).listen();
+terrainChunkFolder.add(terrainLodSettings, 'lowDetailThreshold', 0, 2000, 100).listen();
+terrainChunkFolder.add(terrainLodSettings, 'mediumDetailThreshold', 0, 500, 50).listen();
+terrainChunkFolder.add(terrainLodSettings, 'highDetailThreshold', 0, 100, 10).listen();
+
+const quadTreeFolder = gui.addFolder('Quadtree');
+quadTreeFolder.add(qtStats, 'totalNodes').name('Total Nodes').listen();
 let totalNodes = quadTree.getTotalNodeCount();
-
-gui.add(terrainLodSettings, 'drawDistance', 0, 5000, 100).listen();
-gui.add(terrainLodSettings, 'lowDetailThreshold', 0, 2000, 100).listen();
-gui.add(terrainLodSettings, 'mediumDetailThreshold', 0, 500, 50).listen();
-gui.add(terrainLodSettings, 'highDetailThreshold', 0, 100, 10).listen();
 
 const cameraFolder = gui.addFolder('Camera Position');
 cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
@@ -348,6 +354,9 @@ const otherFolder = gui.addFolder('Other');
 otherFolder.add(water.position, 'y', -10, 20, 0.5);
 
 function rebuild() {  
+  if(!terrainChunkManager)
+    return;
+
   terrainChunkManager.clearAllChunks(terrainGridParams, terrainGeneratorParams);
   terrainChunkManager.generateInitialChunks(terrainGridParams, terrainGeneratorParams);
 }
@@ -378,13 +387,16 @@ function tick() {
   if(quadtreeTerrainSystem != null)
     quadtreeTerrainSystem.update(camera);
 
-  if(terrainChunkManager != null)
+  if(terrainChunkManager != null) {
     terrainChunkManager.update(camera, terrainGridParams, terrainGeneratorParams);
+    settings.visibleTerrainChunkCount = terrainChunkManager.getVisibleChunkCount();
+  }
 
-  settings.visibleTerrainChunkCount = terrainChunkManager.getVisibleChunkCount();
-
-  quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z));
-  qtStats.totalNodes = quadTree.getTotalNodeCount();
+  if(quadTree != null) {
+    quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z), scene);
+    //quadTree.updateMeshes(scene);
+    qtStats.totalNodes = quadTree.getTotalNodeCount();
+  }
 
   if(water !== null)    
     water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
