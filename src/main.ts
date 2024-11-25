@@ -77,7 +77,7 @@ let water = new Water(
     }
 );
 water.rotation.x = - Math.PI / 2;
-water.position.y = 5;
+water.position.y = 0;
 scene.add( water );
 
 let quadtreeTerrainSystem: any;
@@ -174,7 +174,7 @@ camera.far = 10000;
 camera.position.set(16, 16, 16);
 
 let quadTree = new QuadTree(
-  new THREE.Box2(new THREE.Vector2(-4000, -4000), new THREE.Vector2(4000, 4000)),
+  new THREE.Box2(new THREE.Vector2(-250, -250), new THREE.Vector2(250, 250)),
   simplexNoiseGenerator,
   terrainGeneratorParams
 );
@@ -394,7 +394,7 @@ function tick() {
 
   if(quadTree != null) {
     quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z), scene);
-    //quadTree.updateMeshes(scene);
+    quadTree.updateMeshes(scene);
     qtStats.totalNodes = quadTree.getTotalNodeCount();
   }
 

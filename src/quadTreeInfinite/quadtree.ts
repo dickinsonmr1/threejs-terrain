@@ -14,7 +14,7 @@ export class QuadTree {
 
     terrainGeneratorParams: TerrainGeneratorParams;
 
-    MIN_NODE_SIZE: number = 64;
+    MIN_NODE_SIZE: number = 250;
 
     constructor(bounds: THREE.Box2, simplexNoiseGenerator: SimplexNoiseGenerator, terrainGeneratorParams: TerrainGeneratorParams) 
     {
@@ -39,17 +39,20 @@ export class QuadTree {
 
         if(cameraDistanceToNode < nodeSize && nodeSize > this.MIN_NODE_SIZE) {
             if(node.children.length == 0)
-                node.split();
+                node.split(scene);
 
             node.children.forEach(childNode => {
                 this.insertAtNode(childNode, position2D, scene);
             });
         }
         else {
-            node.children.forEach(x => x.merge());
-            node.merge();   
-            //if(node.mesh != null)
-            //this.generateMesh(node, scene);         
+            //node.children.forEach(x => x.merge(scene));
+
+            if(node.children.length > 0) {
+                node.merge(scene);   
+                //if(node.mesh != null)
+                //this.generateMesh(node, scene);         
+            }
         }
     }
 
@@ -65,27 +68,29 @@ export class QuadTree {
         return this.root.getTotalNodeCount();
     }
 
-    public generateMesh(node: Node, scene: THREE.Scene) {
+    private generateMesh(node: Node, scene: THREE.Scene) {
         if(node.children.length > 0){
             
-            if(node.mesh != null)
-                node.mesh?.disposeMeshAndRemoveFromScene(scene);            
+            //if(node.mesh != null)
+                //node.mesh?.disposeMeshAndRemoveFromScene(scene);            
 
             node.children.forEach(x => {
-                this.generateMesh(x, scene);
-            })
+                if(!x.mesh)
+                    this.generateMesh(x, scene);
+            });
             return;
         }
         else {
             if(node.mesh != null)
                 return;
 
-            let mesh = this.meshGenerator.createPlaneMeshFromNoise(this.bounds.min.x, this.bounds.min.y,
-                this.simplexNoiseGenerator, this.bounds.getSize(new THREE.Vector2()).x, 256, this.shaderMaterial, 0, this.terrainGeneratorParams);
+            //node.mesh!.disposeMeshAndRemoveFromScene(scene);
+            let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
+                this.simplexNoiseGenerator, node.bounds.getSize(new THREE.Vector2()).x, 64, this.shaderMaterial, 0, this.terrainGeneratorParams);
 
             mesh.receiveShadow = true;
-            mesh.position.setX(this.bounds.min.x);
-            mesh.position.setZ(this.bounds.min.y);
+            mesh.position.setX(node.bounds.min.x);
+            mesh.position.setZ(node.bounds.min.y);
             //mesh.visible = false;
 
             node.mesh = mesh;
@@ -222,7 +227,7 @@ export class Node {
         //this.verticesPerSide = verticesPerSide;
     }
 
-    public split(): void {
+    public split(scene: THREE.Scene): void {
 
         let center = this.bounds.getCenter(new THREE.Vector2);
 
@@ -250,13 +255,28 @@ export class Node {
         this.children.push(lowerLeft);
         this.children.push(upperRight);
         this.children.push(lowerRight);
+
+        //this.mesh?.disposeMeshAndRemoveFromScene(scene);
     }
 
-    public merge(): void {
+    public merge(scene: THREE.Scene): void {
         // fast
-        //this.children.forEach(x => x.merge());                
-        this.children.length = 0;       
-        
+        this.children.forEach(x => 
+        {
+            x.merge(scene);
+            x.mesh?.disposeMeshAndRemoveFromScene(scene);     
+        });   
+        this.children.length = 0;  
+
+        /*
+        if(this.children.length > 0)
+            this.children.forEach(x => x.merge(scene));                
+        else
+        {
+            this.mesh?.disposeMeshAndRemoveFromScene(scene);     
+            this.children.length = 0;      
+        } 
+        */           
     }
 
     public getChildren(): Node[] {

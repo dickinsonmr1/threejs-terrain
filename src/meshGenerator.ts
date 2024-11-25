@@ -9,7 +9,7 @@ export class MeshGenerator {
 
     public createPlaneMeshFromNoise(offsetX: number, offsetY: number,
         simplexNoiseGenerator: SimplexNoiseGenerator,
-        planeSize: number, verticesPerSide: number, material: THREE.Material, meshRotation: number, params: TerrainGeneratorParams,): THREE.Mesh {
+        planeSize: number, verticesPerSide: number, material: THREE.Material, meshRotation: number, params: TerrainGeneratorParams): THREE.Mesh {
 
         const planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize, verticesPerSide, verticesPerSide );
 
