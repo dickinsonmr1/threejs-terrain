@@ -14,17 +14,18 @@ export class QuadTree {
 
     terrainGeneratorParams: TerrainGeneratorParams;
 
-    MIN_NODE_SIZE: number = 250;
+    MIN_NODE_SIZE: number = 50;
 
-    constructor(bounds: THREE.Box2, simplexNoiseGenerator: SimplexNoiseGenerator, terrainGeneratorParams: TerrainGeneratorParams) 
+    constructor(bounds: THREE.Box2, simplexNoiseGenerator: SimplexNoiseGenerator, terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number) 
     {
         this.bounds = bounds;
         this.root = new Node(bounds);
         this.meshGenerator = new MeshGenerator();
         this.simplexNoiseGenerator = simplexNoiseGenerator;
         this.terrainGeneratorParams = terrainGeneratorParams;
+        this.MIN_NODE_SIZE = minimumNodeSize;
         
-        this.shaderMaterial = this.generateMaterial(1, 100, true);
+        this.shaderMaterial = this.generateMaterial(1, 100, false);
     }
 
     public insert(position2D: THREE.Vector2, scene: THREE.Scene) {
@@ -55,11 +56,7 @@ export class QuadTree {
             }
         }
     }
-
-    updateMeshes(scene: THREE.Scene): void {
-        this.generateMesh(this.root, scene);
-    }
-
+    
     private getChildren(): Node[] {
         return this.root.getChildren();
     }
@@ -68,33 +65,49 @@ export class QuadTree {
         return this.root.getTotalNodeCount();
     }
 
+    public updateMeshes(scene: THREE.Scene): void {
+        this.generateMesh(this.root, scene);
+    }
+
     private generateMesh(node: Node, scene: THREE.Scene) {
         if(node.children.length > 0){
             
-            //if(node.mesh != null)
-                //node.mesh?.disposeMeshAndRemoveFromScene(scene);            
-
+            //if(node.mesh != null)        
             node.children.forEach(x => {
-                if(!x.mesh)
-                    this.generateMesh(x, scene);
+                //if(!x.mesh)
+                this.generateMesh(x, scene);
             });
+
+            node.mesh?.disposeMeshAndRemoveFromScene(scene);            
             return;
         }
         else {
-            if(node.mesh != null)
-                return;
+            if(!node.mesh) {
+                //if(node.mesh != null)
+                    //return;
 
-            //node.mesh!.disposeMeshAndRemoveFromScene(scene);
-            let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
-                this.simplexNoiseGenerator, node.bounds.getSize(new THREE.Vector2()).x, 64, this.shaderMaterial, 0, this.terrainGeneratorParams);
+                let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
 
-            mesh.receiveShadow = true;
-            mesh.position.setX(node.bounds.getCenter(new THREE.Vector2()).x);
-            mesh.position.setZ(node.bounds.getCenter(new THREE.Vector2()).y);
-            //mesh.visible = false;
+                //node.mesh!.disposeMeshAndRemoveFromScene(scene);
+                let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
+                //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
+                //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.max.x, node.bounds.max.y,
+                    this.simplexNoiseGenerator, nodeSize, 4, this.shaderMaterial, 0, this.terrainGeneratorParams);
 
-            node.mesh = mesh;
-            scene.add(node.mesh);
+                mesh.receiveShadow = true;
+
+                //let meshDrawOffset = node.bounds.min;
+                let meshDrawOffset = node.bounds.getCenter(new THREE.Vector2());
+                //let meshDrawOffset = node.bounds.max;
+
+                mesh.position.setX(meshDrawOffset.x);
+                mesh.position.setZ(-meshDrawOffset.y);
+                //mesh.visible = false;
+
+                console.log(`Node with bounds min(${node.bounds.min.x}, ${node.bounds.min.y}) -> max(${node.bounds.max.x}, ${node.bounds.max.y}): translating (${meshDrawOffset.x}, ${meshDrawOffset.y}) `);
+                node.mesh = mesh;
+                scene.add(node.mesh);
+            }
         }
     }
     
@@ -138,7 +151,7 @@ export class QuadTree {
         //texture.anisotropy = 16;
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.repeat.set(repeats, repeats);
-        texture.needsUpdate = true;
+        //texture.needsUpdate = true;
 
         return texture;
     }
@@ -247,7 +260,7 @@ export class Node {
         ));
 
         let lowerRight = new Node(new THREE.Box2(
-            new THREE.Vector2(center.x, center.y),
+            center,
             new THREE.Vector2(this.bounds.max.x, this.bounds.max.y)
         ));
         
@@ -256,6 +269,11 @@ export class Node {
         this.children.push(upperRight);
         this.children.push(lowerRight);
 
+        console.log(`Splitting node with bounds: min(${this.bounds.min.x}, ${this.bounds.min.y}) -> max(${this.bounds.max.x}, ${this.bounds.max.y})`);
+        console.log(`Upper Left:  min(${upperLeft.bounds.min.x}, ${upperLeft.bounds.min.y}) -> max(${upperLeft.bounds.max.x}, ${upperLeft.bounds.max.y})`);
+        console.log(`Lower Left:  min(${lowerLeft.bounds.min.x}, ${lowerLeft.bounds.min.y}) -> max(${lowerLeft.bounds.max.x}, ${lowerLeft.bounds.max.y})`);
+        console.log(`Upper Right: min(${upperRight.bounds.min.x}, ${upperRight.bounds.min.y}) -> max(${upperRight.bounds.max.x}, ${upperRight.bounds.max.y})`);
+        console.log(`Upper Left:  min(${lowerRight.bounds.min.x}, ${lowerRight.bounds.min.y}) -> max(${lowerRight.bounds.max.x}, ${lowerRight.bounds.max.y})`);
         //this.mesh?.disposeMeshAndRemoveFromScene(scene);
     }
 

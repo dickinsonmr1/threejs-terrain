@@ -174,12 +174,13 @@ camera.far = 10000;
 camera.position.set(16, 16, 16);
 
 let quadTree = new QuadTree(
-  new THREE.Box2(new THREE.Vector2(-250, -250), new THREE.Vector2(250, 250)),
+  new THREE.Box2(new THREE.Vector2(-40000, -40000), new THREE.Vector2(40000, 40000)),
   simplexNoiseGenerator,
-  terrainGeneratorParams
+  terrainGeneratorParams,
+  100
 );
 
-quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z), scene);
+quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
 quadTree.updateMeshes(scene);
 let qtStats = {
   totalNodes: quadTree.getTotalNodeCount()
@@ -393,7 +394,7 @@ function tick() {
   }
 
   if(quadTree != null) {
-    quadTree.insert(new THREE.Vector2(camera.position.x, camera.position.z), scene);
+    quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
     quadTree.updateMeshes(scene);
     qtStats.totalNodes = quadTree.getTotalNodeCount();
   }
