@@ -78,7 +78,7 @@ export class QuadTree {
                 this.generateMesh(x, scene);
             });
 
-            node.mesh?.disposeMeshAndRemoveFromScene(scene);            
+            //node.mesh?.disposeMeshAndRemoveFromScene(scene);            
             return;
         }
         else {
@@ -86,13 +86,13 @@ export class QuadTree {
                 //if(node.mesh != null)
                     //return;
 
-                let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
+                //node.mesh!.disposeMeshAndRemoveFromScene(scene);                                
 
-                //node.mesh!.disposeMeshAndRemoveFromScene(scene);
-                let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
+                let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
+                let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.max.x, node.bounds.max.y,
-                    this.simplexNoiseGenerator, nodeSize, 4, this.shaderMaterial, 0, this.terrainGeneratorParams);
+                    this.simplexNoiseGenerator, nodeSize, 16, this.shaderMaterial, 0, this.terrainGeneratorParams);
 
                 mesh.receiveShadow = true;
 
@@ -102,9 +102,12 @@ export class QuadTree {
 
                 mesh.position.setX(meshDrawOffset.x);
                 mesh.position.setZ(-meshDrawOffset.y);
+
+                //mesh.position.setX(meshDrawOffset.x / 2);
+                //mesh.position.setZ(meshDrawOffset.y / 2);
                 //mesh.visible = false;
 
-                console.log(`Node with bounds min(${node.bounds.min.x}, ${node.bounds.min.y}) -> max(${node.bounds.max.x}, ${node.bounds.max.y}): translating (${meshDrawOffset.x}, ${meshDrawOffset.y}) `);
+                console.log(`Generating mesh for node: size ${nodeSize} // bounds min(${node.bounds.min.x}, ${node.bounds.min.y}) -> max(${node.bounds.max.x}, ${node.bounds.max.y}) // translating (${meshDrawOffset.x}, ${meshDrawOffset.y}) `);
                 node.mesh = mesh;
                 scene.add(node.mesh);
             }

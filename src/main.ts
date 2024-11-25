@@ -174,10 +174,10 @@ camera.far = 10000;
 camera.position.set(16, 16, 16);
 
 let quadTree = new QuadTree(
-  new THREE.Box2(new THREE.Vector2(-40000, -40000), new THREE.Vector2(40000, 40000)),
+  new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)),
   simplexNoiseGenerator,
   terrainGeneratorParams,
-  100
+  50
 );
 
 quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
