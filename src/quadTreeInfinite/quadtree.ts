@@ -85,12 +85,12 @@ export class QuadTree {
                 return;
 
             //node.mesh!.disposeMeshAndRemoveFromScene(scene);
-            let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
+            let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
                 this.simplexNoiseGenerator, node.bounds.getSize(new THREE.Vector2()).x, 64, this.shaderMaterial, 0, this.terrainGeneratorParams);
 
             mesh.receiveShadow = true;
-            mesh.position.setX(node.bounds.min.x);
-            mesh.position.setZ(node.bounds.min.y);
+            mesh.position.setX(node.bounds.getCenter(new THREE.Vector2()).x);
+            mesh.position.setZ(node.bounds.getCenter(new THREE.Vector2()).y);
             //mesh.visible = false;
 
             node.mesh = mesh;
