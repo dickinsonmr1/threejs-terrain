@@ -15,8 +15,10 @@ export class QuadTree {
     terrainGeneratorParams: TerrainGeneratorParams;
 
     MIN_NODE_SIZE: number = 50;
+    verticesPerChunk: number;
+    heightFactor: number;
 
-    constructor(bounds: THREE.Box2, simplexNoiseGenerator: SimplexNoiseGenerator, terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number) 
+    constructor(bounds: THREE.Box2, simplexNoiseGenerator: SimplexNoiseGenerator, terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number) 
     {
         this.bounds = bounds;
         this.root = new Node(bounds);
@@ -24,8 +26,12 @@ export class QuadTree {
         this.simplexNoiseGenerator = simplexNoiseGenerator;
         this.terrainGeneratorParams = terrainGeneratorParams;
         this.MIN_NODE_SIZE = minimumNodeSize;
+
+        this.verticesPerChunk = verticesPerChunk;
+
+        this.heightFactor = heightFactor;
         
-        this.shaderMaterial = this.generateMaterial(1, 100, false);
+        this.shaderMaterial = this.generateMaterial(4, heightFactor, false);
     }
 
     public insert(position2D: THREE.Vector2, scene: THREE.Scene) {
@@ -94,7 +100,7 @@ export class QuadTree {
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
                 let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.max.x, node.bounds.max.y,
-                    this.simplexNoiseGenerator, nodeSize, 16, this.shaderMaterial, 0, this.terrainGeneratorParams);
+                    this.simplexNoiseGenerator, nodeSize, this.verticesPerChunk, this.shaderMaterial, 0, this.terrainGeneratorParams);
 
                 mesh.receiveShadow = true;
 

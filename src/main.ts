@@ -175,14 +175,16 @@ scene.add(mesh1);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.near = 1;
 camera.far = 10000;
-camera.position.set(0, 1, 0);
+camera.position.set(0, 50, 0);
 camera.updateProjectionMatrix();
 
 let quadTree = new QuadTree(
-  new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)),
+  new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
   simplexNoiseGenerator,
   terrainGeneratorParams,
-  50
+  500, // minimum chunk size
+  32, // vertices per chunk side
+  100 // height factor
 );
 
 quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
@@ -219,9 +221,10 @@ pointerLockControls.addEventListener( 'unlock', function () {
   instructions!.style.display = '';
 });
 
-const moveSpeed = 10;
+const moveSpeed = 1;
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
+let turboOn = false;
 
 document.addEventListener('keydown', (event) => {
     switch (event.code) {
@@ -247,6 +250,10 @@ document.addEventListener('keydown', (event) => {
         case 'KeyZ': // down
             velocity.y = -moveSpeed;
             break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          turboOn = true;
+          break;
     }
 });
 
@@ -268,11 +275,17 @@ document.addEventListener('keyup', (event) => {
         case 'KeyZ':
             velocity.y = 0;
             break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+            turboOn = false;
+            break;
     }
 });
 
 function moveCamera() {
-    direction.copy(velocity).applyQuaternion(camera.quaternion);
+    let multiplier = turboOn ? 10 : 1;
+    let temp = velocity.clone();
+    direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
     camera.position.add(direction);
 }
 
@@ -362,6 +375,11 @@ sunFolder.add(settings.sun, "azimuth", 0.0, 1.0).onChange(onSunChange);
 
 const otherFolder = gui.addFolder('Other');
 otherFolder.add(water.position, 'y', -10, 20, 0.5);
+
+// Handle pointer lock errors
+document.addEventListener('pointerlockerror', (event) => {
+  console.error('Pointer lock failed:', event);
+});
 
 function rebuild() {  
   if(!terrainChunkManager)
