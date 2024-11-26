@@ -1,17 +1,21 @@
+// **********************************************************
+// demo 01: quadtree from height map
+// **********************************************************
+
 import './style.css'
 import * as THREE from 'three'
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
 import { Sky } from 'three/addons/objects/Sky.js';
-import { SkyType } from './skyType';
+import { SkyType } from '../shared/skyType';
 import Stats from 'three/addons/libs/stats.module.js';
-import { TerrainChunkManager, TerrainGridParams } from './chunk/terrainChunkManager';
-import { TerrainGeneratorParams } from './chunk/terrainGeneratorParams';
+import { TerrainChunkManager, TerrainGridParams } from '../02-chunk/terrainChunkManager';
+import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { SimplexNoiseGenerator } from './chunk/simplexNoiseGenerator';
-import { VegetationGenerator } from './chunk/vegetationGenerator';
-import { TerrainLodSettings } from './chunk/terrainLodSettings';
-import { QuadTree } from './quadTreeInfinite/quadtree';
+import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
+import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
+import { TerrainLodSettings } from '../02-chunk/terrainLodSettings';
+import { QuadTree } from '../03-quadTreeInfinite/quadtree';
 
 const scene = new THREE.Scene();
 

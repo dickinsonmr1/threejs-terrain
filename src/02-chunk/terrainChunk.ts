@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import '../threeExtensions'; // Import the extension method to enhance THREE.Group
+import '../shared/threeExtensions'; // Import the extension method to enhance THREE.Group
 
 export enum TerrainLOD {
     Low = 0.25,

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import perlinNoise from 'perlin-noise';
 import { NoiseFunction2D } from 'simplex-noise';
-import { TerrainGeneratorParams } from './chunk/terrainChunkManager';
+import { TerrainGeneratorParams } from '../02-chunk/terrainChunkManager';
 
 export class PerlinTerrainGenerator {
 

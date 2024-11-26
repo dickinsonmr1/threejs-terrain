@@ -1,5 +1,5 @@
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
-import { TerrainGeneratorParams } from './terrainGeneratorParams';
+import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import alea from 'alea';
 
 export class SimplexNoiseGenerator {

@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import { TerrainChunk, TerrainLOD } from './terrainChunk';
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
-import { MeshGenerator } from '../meshGenerator';
-import { TerrainGeneratorParams } from './terrainGeneratorParams';
+import { MeshGenerator } from '../shared/meshGenerator';
+import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { TerrainGridParams } from './terrainGridParams';
 import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
 import { VegetationGenerator } from './vegetationGenerator';

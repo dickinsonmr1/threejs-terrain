@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import { MeshGenerator } from '../meshGenerator';
-import { SimplexNoiseGenerator } from '../chunk/simplexNoiseGenerator';
-import { TerrainGeneratorParams } from '../chunk/terrainGeneratorParams';
+import { MeshGenerator } from '../shared/meshGenerator';
+import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
+import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 
 export class QuadTree {
 
