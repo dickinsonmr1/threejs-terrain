@@ -76,8 +76,11 @@ export class QuadTree {
                 this.generateMesh(x, scene);
             });
 
-            if(node.mesh != null)
+            if(node.mesh != null) 
                 node.mesh!.visible = false;
+
+            if(node.vegetation != null) 
+                node.vegetation!.visible = false;
 
             return;
         }
@@ -108,7 +111,20 @@ export class QuadTree {
                 scene.add(node.mesh);
             }
             else {
-                node.mesh!.visible = true;
+                node.mesh!.visible = true;                
+            }
+
+            if(!node.vegetation) {
+                node.generateGrassBillboards('assets/billboard_grass_32x32.png',
+                    this.simplexNoiseGenerator,
+                    node.bounds,
+                    10,  // yMin
+                    30, // yMax
+                    10000);
+                scene.add(node.vegetation!);
+            }
+            else {
+                node.vegetation!.visible = true;
             }
         }
     }

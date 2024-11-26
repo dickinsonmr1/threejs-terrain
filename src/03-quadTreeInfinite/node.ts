@@ -1,16 +1,14 @@
 import * as THREE from 'three'
+import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
 export class Node {
 
     bounds: THREE.Box2;
     children: Node[] = [];
-    //offset: THREE.Vector2;
-    //verticesPerSide: number;
     mesh?: THREE.Mesh;
+    vegetation?: THREE.Points;
 
-    constructor(bounds: THREE.Box2) {//, offset: THREE.Vector2, verticesPerSide: number) {
+    constructor(bounds: THREE.Box2) {
         this.bounds = bounds;
-        //this.offset = offset;
-        //this.verticesPerSide = verticesPerSide;
     }
 
     public split(scene: THREE.Scene): void {
@@ -47,9 +45,6 @@ export class Node {
         console.log(`Lower Left:  min(${lowerLeft.bounds.min.x}, ${lowerLeft.bounds.min.y}) -> max(${lowerLeft.bounds.max.x}, ${lowerLeft.bounds.max.y})`);
         console.log(`Upper Right: min(${upperRight.bounds.min.x}, ${upperRight.bounds.min.y}) -> max(${upperRight.bounds.max.x}, ${upperRight.bounds.max.y})`);
         console.log(`Upper Left:  min(${lowerRight.bounds.min.x}, ${lowerRight.bounds.min.y}) -> max(${lowerRight.bounds.max.x}, ${lowerRight.bounds.max.y})`);
-        //this.mesh?.disposeMeshAndRemoveFromScene(scene);
-        //if(this.mesh != null)
-            //this.mesh!.visible = false;
     }
 
     public merge(scene: THREE.Scene): void {
@@ -58,20 +53,10 @@ export class Node {
         {
             x.merge(scene);
 
-            let temp = scene as THREE.Scene;
-            x.mesh?.disposeMeshAndRemoveFromScene(temp);     
+            x.mesh?.disposeMeshAndRemoveFromScene(scene);     
+            x.vegetation?.disposeAndRemoveFromScene(scene);
         });   
         this.children.length = 0;  
-
-        /*
-        if(this.children.length > 0)
-            this.children.forEach(x => x.merge(scene));                
-        else
-        {
-            this.mesh?.disposeMeshAndRemoveFromScene(scene);     
-            this.children.length = 0;      
-        } 
-        */           
     }
 
     public getChildren(): Node[] {
@@ -101,5 +86,31 @@ export class Node {
             count += child.getTotalNodeCount();
         }
         return count;
+    }
+
+    public generateGrassBillboards(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
+
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+    
+        const sprite = new THREE.TextureLoader().load( textureName );
+        sprite.colorSpace = THREE.SRGBColorSpace;
+    
+        for ( let i = 0; i < maxCount; i ++ ) {
+    
+            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * Math.random();
+            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * Math.random();
+    
+            let elevation = simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
+            if(elevation > yMin && elevation < yMax)
+                vertices.push( x, elevation, z);
+        }
+    
+        geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+    
+        var material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: false, depthTest: true, depthWrite: false } );
+        //material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
+    
+        this.vegetation = new THREE.Points( geometry, material );
     }
 }
