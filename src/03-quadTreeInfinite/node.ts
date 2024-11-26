@@ -8,9 +8,11 @@ export class Node {
     mesh?: THREE.Mesh;
     vegetation?: THREE.Points;
     instancedMesh!: THREE.InstancedMesh;
+    lod: number;
 
-    constructor(bounds: THREE.Box2) {
+    constructor(bounds: THREE.Box2, lod: number) {
         this.bounds = bounds;
+        this.lod = lod;
     }
 
     public split(scene: THREE.Scene): void {
@@ -19,23 +21,27 @@ export class Node {
 
         let upperLeft = new Node(new THREE.Box2(
             new THREE.Vector2(this.bounds.min.x, this.bounds.min.y),
-            center
-        ));
+            center),
+            this.lod + 1
+        );
 
         let lowerLeft = new Node(new THREE.Box2(
             new THREE.Vector2(this.bounds.min.x, center.y),
-            new THREE.Vector2(center.x, this.bounds.max.y),
-        ));
+            new THREE.Vector2(center.x, this.bounds.max.y)),
+            this.lod + 1
+        );
 
         let upperRight = new Node(new THREE.Box2(
             new THREE.Vector2(center.x, this.bounds.min.y),
-            new THREE.Vector2(this.bounds.max.x, center.y)
-        ));
+            new THREE.Vector2(this.bounds.max.x, center.y)),
+            this.lod + 1
+        );
 
         let lowerRight = new Node(new THREE.Box2(
             center,
-            new THREE.Vector2(this.bounds.max.x, this.bounds.max.y)
-        ));
+            new THREE.Vector2(this.bounds.max.x, this.bounds.max.y)),
+            this.lod + 1
+        );
         
         this.children.push(upperLeft);
         this.children.push(lowerLeft);
@@ -118,6 +124,6 @@ export class Node {
 
     public generateTreeModels(vegetationMeshGenerator: VegetationMeshGenerator) {
 
-        this.instancedMesh = vegetationMeshGenerator.generateForNode(this.bounds, 100);        
+        this.instancedMesh = vegetationMeshGenerator.generateForNode(this.bounds, 1000);        
     }
 }

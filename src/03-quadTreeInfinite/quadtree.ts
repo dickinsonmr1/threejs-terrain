@@ -5,6 +5,7 @@ import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import '../shared/threeExtensions'; // Import the extensions
 import { VegetationMeshGenerator } from './VegetationMeshGenerator';
+import { instance } from 'three/webgpu';
 
 export class QuadTree {
 
@@ -22,13 +23,15 @@ export class QuadTree {
     verticesPerChunk: number;
     heightFactor: number;
 
+    maxLOD: number = 1;
+
     constructor(bounds: THREE.Box2,
         simplexNoiseGenerator: SimplexNoiseGenerator,
         vegetationMeshGenerator: VegetationMeshGenerator,
         terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number) 
     {
         this.bounds = bounds;
-        this.root = new Node(bounds);
+        this.root = new Node(bounds, this.maxLOD);
         this.meshGenerator = new MeshGenerator();
         this.simplexNoiseGenerator = simplexNoiseGenerator;
         this.vegetationMeshGenerator = vegetationMeshGenerator;
@@ -88,7 +91,8 @@ export class QuadTree {
             if(node.vegetation != null) 
                 node.vegetation!.visible = false;
 
-            // TODO: logic for vegetation meshes
+            if(node.instancedMesh != null) 
+                node.instancedMesh!.visible = false;
 
             return;
         }
@@ -134,8 +138,14 @@ export class QuadTree {
             else {
                 node.vegetation!.visible = true;
             }
-
-            // TODO: generate vegetation meshes
+            
+            if(!node.instancedMesh) {
+                node.generateTreeModels(this.vegetationMeshGenerator);
+                scene.add(node.instancedMesh);
+            }
+            else {
+                node.instancedMesh!.visible = true;
+            }
         }
     }
     
