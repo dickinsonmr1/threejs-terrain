@@ -27,10 +27,10 @@ export default class GameScene extends THREE.Scene {
 
         this.addSkybox();
         this.addShaderSky();
+        this.addTerrain();
         this.addWater();
         this.addLights();
-
-        this.addTerrain();
+        
         this.addVegetation();                
     }
 
@@ -133,9 +133,6 @@ export default class GameScene extends THREE.Scene {
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);
-        let qtStats = {
-            totalNodes: this.quadTree.getTotalNodeCount()
-        };
     }
 
     private addVegetation() {
@@ -149,6 +146,8 @@ export default class GameScene extends THREE.Scene {
 
         mesh1.position.set(0, boxPositionY, 0);
         this.add(mesh1);
+
+        // TODO: generate by node
     }
 
     public update(): void {

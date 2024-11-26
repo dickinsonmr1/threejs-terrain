@@ -55,20 +55,12 @@ export class QuadTree {
             });
         }
         else {
-            //node.children.forEach(x => x.merge(scene));
-
             if(node.children.length > 0) {
                 node.merge(scene);   
-                //if(node.mesh != null)
-                //this.generateMesh(node, scene);         
             }
         }
     }
-    
-    private getChildren(): Node[] {
-        return this.root.getChildren();
-    }
-    
+        
     public getTotalNodeCount(): number {
         return this.root.getTotalNodeCount();
     }
@@ -80,23 +72,17 @@ export class QuadTree {
     private generateMesh(node: Node, scene: THREE.Scene) {
         if(node.children.length > 0){
             
-            //if(node.mesh != null)        
             node.children.forEach(x => {
-                //if(!x.mesh)
                 this.generateMesh(x, scene);
             });
 
             if(node.mesh != null)
                 node.mesh!.visible = false;
-            //node.mesh?.disposeMeshAndRemoveFromScene(scene);            
+
             return;
         }
         else {
             if(!node.mesh) {
-                //if(node.mesh != null)
-                    //return;
-
-                //node.mesh!.disposeMeshAndRemoveFromScene(scene);                                
 
                 let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,

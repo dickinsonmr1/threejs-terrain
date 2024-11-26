@@ -146,9 +146,9 @@ const quadTreeFolder = gui.addFolder('Quadtree');
 quadTreeFolder.add(scene, 'totalNodes').name('Total Nodes').listen();
 
 const cameraFolder = gui.addFolder('Camera Position');
-cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
-cameraFolder.add(camera.position, 'y', -500, 500).name('Y Position').listen();
-cameraFolder.add(camera.position, 'z', -10000, 10000).name('Z Position').listen();
+const cameraX = cameraFolder.add(camera.position, 'x', scene.quadTree.bounds.min.x, scene.quadTree.bounds.max.x).listen();
+const cameraY = cameraFolder.add(camera.position, 'y', 0, 10000).listen();
+const cameraZ = cameraFolder.add(camera.position, 'z', scene.quadTree.bounds.min.y, scene.quadTree.bounds.max.y).listen();
 cameraFolder.open();
 
 const onShaderChange = () => {
