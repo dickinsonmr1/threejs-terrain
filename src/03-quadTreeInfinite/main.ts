@@ -4,45 +4,22 @@
 
 import '../style.css'
 import * as THREE from 'three'
-import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
-import { Sky } from 'three/addons/objects/Sky.js';
 import { SkyType } from '../shared/skyType';
 import Stats from 'three/addons/libs/stats.module.js';
-import { TerrainChunkManager, TerrainGridParams } from '../02-chunk/terrainChunkManager';
-import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
-import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
-import { TerrainLodSettings } from '../02-chunk/terrainLodSettings';
-import { QuadTree } from './quadtree';
+import GameScene from './gameScene';
 
-const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
+camera.near = 1;
+camera.far = 10000;
+camera.position.set(0, 50, 0);
+camera.updateProjectionMatrix();
+
+const scene = new GameScene(camera);
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
-
-const textureLoader = new THREE.TextureLoader();
-let skyTexture = textureLoader.load(
-  'assets/industrial_sunset_puresky.jpg',
-  () => {
-
-      skyTexture.mapping = THREE.EquirectangularReflectionMapping;
-      skyTexture.colorSpace = THREE.SRGBColorSpace;
-      scene.background = skyTexture;
-  }  
-);
-
-const sky = new Sky();
-sky.scale.setScalar( 450000 );
-
-const phi = THREE.MathUtils.degToRad( 90 );
-const theta = THREE.MathUtils.degToRad( 180 );
-const sunPosition = new THREE.Vector3().setFromSphericalCoords( 1, phi, theta );
-
-sky.material.uniforms.sunPosition.value = sunPosition;
-
-scene.add( sky );
 
 const settings = {  
   skyType: SkyType.Skybox,
@@ -56,86 +33,7 @@ const settings = {
   sun: {
     inclination: 0.31,
     azimuth: 0.25,
-  },
-  visibleTerrainChunkCount: 0
-};
-
-let terrainLodSettings = new TerrainLodSettings(1000, 200, 100, 50);
-
-const waterGeometry = new THREE.PlaneGeometry( 100000, 100000 );
-let water = new Water(
-    waterGeometry,
-    {
-        textureWidth: 512,
-        textureHeight: 512,
-        waterNormals: new THREE.TextureLoader().load( 'assets/waternormals.jpg', function ( texture ) {
-
-            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-
-        } ),
-        sunDirection: new THREE.Vector3(),
-        sunColor: 0xffffff,
-        waterColor: 0x001e0f,
-        distortionScale: 3.7,
-        //fog: this.fog !== undefined
-    }
-);
-water.rotation.x = - Math.PI / 2;
-water.position.y = 5.01;
-//water.material.polygonOffset = true;
-//water.material.polygonOffsetFactor = -1; // Push back slightly
-//water.material.polygonOffsetUnits = -1;
-scene.add( water );
-
-let terrainGridParams = new TerrainGridParams(32, 64, 5, Math.PI * 0);
-let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
-
-let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
-
-let vegetationGenerator = new VegetationGenerator(scene);
-
-let light2 = new THREE.DirectionalLight(0x808080, 0.8);
-light2.position.set(-100, 100, -100);
-light2.target.position.set(0, 0, 0);
-light2.castShadow = true;
-scene.add(light2);
-
-let light3 = new THREE.DirectionalLight(0x404040, 0.8);
-light3.position.set(100, 100, -100);
-light3.target.position.set(0, 0, 0);
-light3.castShadow = true;
-scene.add(light3);
-
-// add vegetation
-const geometry = new THREE.BoxGeometry(1, 3, 1);
-const material = new THREE.MeshStandardMaterial({color: 0x00ff00});
-
-const mesh1 = new THREE.Mesh(geometry, material);
-let boxPositionY = simplexNoiseGenerator.getHeightFromNoiseFunction(0, 0);
-
-mesh1.position.set(0, boxPositionY, 0);
-scene.add(mesh1);
-///////////////////////////////////////
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
-camera.near = 1;
-camera.far = 10000;
-camera.position.set(0, 50, 0);
-camera.updateProjectionMatrix();
-
-let quadTree = new QuadTree(
-  new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
-  simplexNoiseGenerator,
-  terrainGeneratorParams,
-  500, // minimum chunk size
-  32, // vertices per chunk side
-  100 // height factor
-);
-
-quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
-quadTree.updateMeshes(scene);
-let qtStats = {
-  totalNodes: quadTree.getTotalNodeCount()
+  }
 };
 
 const renderer = new THREE.WebGLRenderer({
@@ -238,9 +136,6 @@ function moveCamera() {
 const gui = new GUI();
 
 gui.add( document, 'title' );
-let obj3 = { size: 'Small', terrainType: 3 };
-gui.add( obj3, 'size', [ 'Small', 'Medium', 'Large' ] );
-gui.add( obj3, 'terrainType', { Simple: 1, Splatted: 2, LOD: 3 } );
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
 gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
@@ -248,17 +143,7 @@ gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
 
 const quadTreeFolder = gui.addFolder('Quadtree');
-quadTreeFolder.add(qtStats, 'totalNodes').name('Total Nodes').listen();
-let totalNodes = quadTree.getTotalNodeCount();
-
-
-const terrainChunkFolder = gui.addFolder('Terrain Chunk');
-terrainChunkFolder.add(settings, 'visibleTerrainChunkCount').name('Visible Chunks').listen();
-terrainChunkFolder.add(terrainLodSettings, 'drawDistance', 0, 5000, 100).listen();
-terrainChunkFolder.add(terrainLodSettings, 'lowDetailThreshold', 0, 2000, 100).listen();
-terrainChunkFolder.add(terrainLodSettings, 'mediumDetailThreshold', 0, 500, 50).listen();
-terrainChunkFolder.add(terrainLodSettings, 'highDetailThreshold', 0, 100, 10).listen();
-
+quadTreeFolder.add(scene, 'totalNodes').name('Total Nodes').listen();
 
 const cameraFolder = gui.addFolder('Camera Position');
 cameraFolder.add(camera.position, 'x', -10000, 10000).name('X Position').listen();
@@ -268,10 +153,10 @@ cameraFolder.open();
 
 const onShaderChange = () => {
   //for (let k in settings.sky) {
-    sky.material.uniforms["turbidity"].value = settings.sky.turbidity;
-    sky.material.uniforms["rayleigh"].value = settings.sky.rayleigh;
-    sky.material.uniforms["mieCoefficient"].value = settings.sky.mieCoefficient;
-    sky.material.uniforms["mieDirectionalG"].value = settings.sky.mieDirectionalG;
+    scene.sky.material.uniforms["turbidity"].value = settings.sky.turbidity;
+    scene.sky.material.uniforms["rayleigh"].value = settings.sky.rayleigh;
+    scene.sky.material.uniforms["mieCoefficient"].value = settings.sky.mieCoefficient;
+    scene.sky.material.uniforms["mieDirectionalG"].value = settings.sky.mieDirectionalG;
     //sky.material.uniforms["luminance"].value = settings.sky.luminance;
   //}
   //for (let k in settings) {
@@ -288,9 +173,10 @@ const onSunChange = () => {
   sunPosition.y = Math.sin(phi) * Math.sin(theta);
   sunPosition.z = Math.sin(phi) * Math.cos(theta);
 
-  sky.material.uniforms['sunPosition'].value.copy(sunPosition);
-  water.material.uniforms['sunDirection'].value.copy(sunPosition.normalize());
+  scene.sky.material.uniforms['sunPosition'].value.copy(sunPosition);
+  scene.water.material.uniforms['sunDirection'].value.copy(sunPosition.normalize());
 };
+
 
 const skyFolder = gui.addFolder('Sky');
 skyFolder.add(settings.sky, "turbidity", 0.1, 30.0).onChange(onShaderChange);
@@ -303,8 +189,8 @@ const sunFolder = gui.addFolder('Sun');
 sunFolder.add(settings.sun, "inclination", 0.0, 1.0).onChange(onSunChange);
 sunFolder.add(settings.sun, "azimuth", 0.0, 1.0).onChange(onSunChange);
 
-const otherFolder = gui.addFolder('Other');
-otherFolder.add(water.position, 'y', -10, 20, 0.5);
+const otherFolder = gui.addFolder('Water');
+otherFolder.add(scene.water.position, 'y', -10, 100, 0.5).name('Elevation');
 
 // Handle pointer lock errors
 document.addEventListener('pointerlockerror', (event) => {
@@ -312,16 +198,7 @@ document.addEventListener('pointerlockerror', (event) => {
 });
 
 function switchSky(skyType: SkyType) {
-
-  if(skyType == SkyType.Shader) {
-    sky.visible = true;
-    scene.background = null;
-  
-  }
-  else {
-    sky.visible = false;
-    scene.background = skyTexture;
-  }  
+  scene.switchSky(skyType);
 }
 
 function tick() {
@@ -334,14 +211,7 @@ function tick() {
   stats.update();
   requestAnimationFrame(tick);
 
-  if(quadTree != null) {
-    quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
-    quadTree.updateMeshes(scene);
-    qtStats.totalNodes = quadTree.getTotalNodeCount();
-  }
-
-  if(water !== null)    
-    water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
+  scene.update();
 }
 
 tick()
