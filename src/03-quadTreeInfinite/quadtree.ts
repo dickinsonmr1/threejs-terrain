@@ -4,8 +4,7 @@ import { MeshGenerator } from '../shared/meshGenerator';
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import '../shared/threeExtensions'; // Import the extensions
-import { VegetationMeshGenerator } from './VegetationMeshGenerator';
-import { instance } from 'three/webgpu';
+import { VegetationMeshGenerator } from './vegetationMeshGenerator';
 
 export class QuadTree {
 

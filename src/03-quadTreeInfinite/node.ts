@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
-import { VegetationMeshGenerator } from './VegetationMeshGenerator';
+import { VegetationMeshGenerator } from './vegetationMeshGenerator';
 export class Node {
 
     bounds: THREE.Box2;

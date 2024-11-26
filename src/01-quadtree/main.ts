@@ -182,21 +182,6 @@ camera.far = 10000;
 camera.position.set(0, 50, 0);
 camera.updateProjectionMatrix();
 
-let quadTree = new QuadTree(
-  new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
-  simplexNoiseGenerator,
-  terrainGeneratorParams,
-  500, // minimum chunk size
-  32, // vertices per chunk side
-  100 // height factor
-);
-
-quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
-quadTree.updateMeshes(scene);
-let qtStats = {
-  totalNodes: quadTree.getTotalNodeCount()
-};
-
 const renderer = new THREE.WebGLRenderer({
   //antialias: true,
   //logarithmicDepthBuffer: true
@@ -306,11 +291,6 @@ gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
-
-const quadTreeFolder = gui.addFolder('Quadtree');
-quadTreeFolder.add(qtStats, 'totalNodes').name('Total Nodes').listen();
-let totalNodes = quadTree.getTotalNodeCount();
-
 
 const terrainChunkFolder = gui.addFolder('Terrain Chunk');
 terrainChunkFolder.add(settings, 'visibleTerrainChunkCount').name('Visible Chunks').listen();
@@ -422,12 +402,6 @@ function tick() {
   if(terrainChunkManager != null) {
     terrainChunkManager.update(camera, terrainGridParams, terrainGeneratorParams);
     settings.visibleTerrainChunkCount = terrainChunkManager.getVisibleChunkCount();
-  }
-
-  if(quadTree != null) {
-    quadTree.insert(new THREE.Vector2(camera.position.x, -camera.position.z), scene);
-    quadTree.updateMeshes(scene);
-    qtStats.totalNodes = quadTree.getTotalNodeCount();
   }
 
   if(water !== null)    

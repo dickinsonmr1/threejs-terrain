@@ -4,8 +4,7 @@ import { SkyType } from '../shared/skyType';
 import { QuadTree } from './quadtree';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
-import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
-import { VegetationMeshGenerator } from './VegetationMeshGenerator';
+import { VegetationMeshGenerator } from './vegetationMeshGenerator';
 
 export default class GameScene extends THREE.Scene {
 
