@@ -12,7 +12,7 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { TerrainChunkManager, TerrainGridParams } from '../02-chunk/terrainChunkManager';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
 import { TerrainLodSettings } from '../02-chunk/terrainLodSettings';
 import { QuadTree } from '../03-quadTreeInfinite/quadtree';

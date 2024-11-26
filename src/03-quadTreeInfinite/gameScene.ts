@@ -3,7 +3,9 @@ import { Sky, Water } from 'three/examples/jsm/Addons.js';
 import { SkyType } from '../shared/skyType';
 import { QuadTree } from './quadtree';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
-import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
+import { VegetationMeshGenerator } from './VegetationMeshGenerator';
 
 export default class GameScene extends THREE.Scene {
 
@@ -16,6 +18,7 @@ export default class GameScene extends THREE.Scene {
 
     terrainGeneratorParams: TerrainGeneratorParams;
     simplexNoiseGenerator: SimplexNoiseGenerator;
+    vegetationMeshGenerator: VegetationMeshGenerator;
     
     constructor(camera: THREE.Camera) {
         super();
@@ -24,6 +27,7 @@ export default class GameScene extends THREE.Scene {
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
         this.simplexNoiseGenerator = new SimplexNoiseGenerator(this.terrainGeneratorParams)
+        this.vegetationMeshGenerator = new VegetationMeshGenerator(this, this.simplexNoiseGenerator);
 
         this.addSkybox();
         this.addShaderSky();
@@ -124,12 +128,12 @@ export default class GameScene extends THREE.Scene {
         this.quadTree = new QuadTree(
             new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
             this.simplexNoiseGenerator,
+            this.vegetationMeshGenerator,
             this.terrainGeneratorParams,
             500, // minimum chunk size
             32, // vertices per chunk side
             100 // height factor
-          );
-
+        );
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);

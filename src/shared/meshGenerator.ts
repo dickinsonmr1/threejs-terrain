@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { TerrainGeneratorParams } from '../02-chunk/terrainChunkManager';
-import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
 
 export class MeshGenerator {
     constructor(){

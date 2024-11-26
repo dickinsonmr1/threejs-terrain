@@ -1,9 +1,10 @@
 import * as THREE from 'three'
 import { Node } from './node';
 import { MeshGenerator } from '../shared/meshGenerator';
-import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import '../shared/threeExtensions'; // Import the extensions
+import { VegetationMeshGenerator } from './VegetationMeshGenerator';
 
 export class QuadTree {
 
@@ -11,6 +12,7 @@ export class QuadTree {
     root: Node;
     bounds: THREE.Box2;
     simplexNoiseGenerator: SimplexNoiseGenerator;
+    vegetationMeshGenerator: VegetationMeshGenerator;
 
     shaderMaterial: THREE.Material;
 
@@ -20,12 +22,16 @@ export class QuadTree {
     verticesPerChunk: number;
     heightFactor: number;
 
-    constructor(bounds: THREE.Box2, simplexNoiseGenerator: SimplexNoiseGenerator, terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number) 
+    constructor(bounds: THREE.Box2,
+        simplexNoiseGenerator: SimplexNoiseGenerator,
+        vegetationMeshGenerator: VegetationMeshGenerator,
+        terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number) 
     {
         this.bounds = bounds;
         this.root = new Node(bounds);
         this.meshGenerator = new MeshGenerator();
         this.simplexNoiseGenerator = simplexNoiseGenerator;
+        this.vegetationMeshGenerator = vegetationMeshGenerator;
         this.terrainGeneratorParams = terrainGeneratorParams;
         this.MIN_NODE_SIZE = minimumNodeSize;
 
@@ -82,6 +88,8 @@ export class QuadTree {
             if(node.vegetation != null) 
                 node.vegetation!.visible = false;
 
+            // TODO: logic for vegetation meshes
+
             return;
         }
         else {
@@ -126,6 +134,8 @@ export class QuadTree {
             else {
                 node.vegetation!.visible = true;
             }
+
+            // TODO: generate vegetation meshes
         }
     }
     

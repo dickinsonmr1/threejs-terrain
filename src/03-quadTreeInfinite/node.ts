@@ -1,11 +1,13 @@
 import * as THREE from 'three'
-import { SimplexNoiseGenerator } from '../02-chunk/simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { VegetationMeshGenerator } from './VegetationMeshGenerator';
 export class Node {
 
     bounds: THREE.Box2;
     children: Node[] = [];
     mesh?: THREE.Mesh;
     vegetation?: THREE.Points;
+    instancedMesh!: THREE.InstancedMesh;
 
     constructor(bounds: THREE.Box2) {
         this.bounds = bounds;
@@ -112,5 +114,10 @@ export class Node {
         //material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
     
         this.vegetation = new THREE.Points( geometry, material );
+    }
+
+    public generateTreeModels(vegetationMeshGenerator: VegetationMeshGenerator) {
+
+        this.instancedMesh = vegetationMeshGenerator.generateForNode(this.bounds, 100);        
     }
 }

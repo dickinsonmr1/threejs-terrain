@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import alea from 'alea';
-import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { TerrainChunk, TerrainLOD } from './terrainChunk';
 
 export class VegetationGenerator {

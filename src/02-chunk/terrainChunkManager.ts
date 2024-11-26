@@ -4,7 +4,7 @@ import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { MeshGenerator } from '../shared/meshGenerator';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { TerrainGridParams } from './terrainGridParams';
-import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { VegetationGenerator } from './vegetationGenerator';
 import { TerrainLodSettings } from './terrainLodSettings';
 
