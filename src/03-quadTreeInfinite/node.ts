@@ -5,9 +5,11 @@ export class Node {
 
     bounds: THREE.Box2;
     children: Node[] = [];
+
     mesh?: THREE.Mesh;
-    vegetation?: THREE.Points;
-    instancedMesh!: THREE.InstancedMesh;
+    vegetationBillboards?: THREE.Points;
+    instancedTreeMesh?: THREE.InstancedMesh;
+    
     lod: number;
 
     constructor(bounds: THREE.Box2, lod: number) {
@@ -62,7 +64,8 @@ export class Node {
             x.merge(scene);
 
             x.mesh?.disposeMeshAndRemoveFromScene(scene);     
-            x.vegetation?.disposeAndRemoveFromScene(scene);
+            x.vegetationBillboards?.disposeAndRemoveFromScene(scene);
+            x.instancedTreeMesh?.disposeMeshAndRemoveFromScene(scene);
         });   
         this.children.length = 0;  
     }
@@ -119,11 +122,10 @@ export class Node {
         var material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: false, depthTest: true, depthWrite: false } );
         //material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
     
-        this.vegetation = new THREE.Points( geometry, material );
+        this.vegetationBillboards = new THREE.Points( geometry, material );
     }
 
     public generateTreeModels(vegetationMeshGenerator: VegetationMeshGenerator) {
-
-        this.instancedMesh = vegetationMeshGenerator.generateForNode(this.bounds, 1000);        
+        this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 1000);        
     }
 }

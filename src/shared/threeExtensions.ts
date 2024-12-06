@@ -14,6 +14,15 @@ declare module 'three' {
     }
   }
 
+  
+// Extend the THREE.Group type
+declare module 'three' {
+  interface InstancedMesh {
+    disposeMeshAndRemoveFromScene(scene: THREE.Scene): void;
+  }
+}
+
+
 // Extend the THREE.Group type
 declare module 'three' {
   interface Points {
@@ -50,6 +59,7 @@ THREE.Group.prototype.disposeGroupAndRemoveFromScene = function (
     scene.remove(this);
 };
 
+
 // Add the method to the THREE.Mesh prototype
 THREE.Mesh.prototype.disposeMeshAndRemoveFromScene = function (
     this: THREE.Mesh,
@@ -68,6 +78,27 @@ THREE.Mesh.prototype.disposeMeshAndRemoveFromScene = function (
             this.material.dispose();
         }
     }
+};
+
+
+// Add the method to the THREE.Mesh prototype
+THREE.InstancedMesh.prototype.disposeMeshAndRemoveFromScene = function (
+  this: THREE.InstancedMesh,
+  scene: THREE.Scene
+): void {
+    
+  scene.remove(this);
+  
+  // Dispose of the geometry and material associated with the mesh
+  if (this.geometry) this.geometry.dispose();
+  if (this.material) {
+      // If the material is an array (e.g., for MultiMaterial), dispose each one
+      if (Array.isArray(this.material)) {
+          this.material.forEach(material => material.dispose());
+      } else {
+          this.material.dispose();
+      }
+  }
 };
 
 // Add the method to the THREE.Mesh prototype

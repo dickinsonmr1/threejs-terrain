@@ -131,7 +131,8 @@ export default class GameScene extends THREE.Scene {
             this.terrainGeneratorParams,
             500, // minimum chunk size
             32, // vertices per chunk side
-            100 // height factor
+            100, // height factor
+            true, // isWireframe
         );
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);

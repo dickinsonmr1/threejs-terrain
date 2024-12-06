@@ -22,12 +22,13 @@ export class QuadTree {
     verticesPerChunk: number;
     heightFactor: number;
 
-    maxLOD: number = 1;
+    maxLOD: number = 0;
+    minLODForDetails: number = 3;
 
     constructor(bounds: THREE.Box2,
         simplexNoiseGenerator: SimplexNoiseGenerator,
         vegetationMeshGenerator: VegetationMeshGenerator,
-        terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number) 
+        terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, isWireFrame: boolean) 
     {
         this.bounds = bounds;
         this.root = new Node(bounds, this.maxLOD);
@@ -41,11 +42,13 @@ export class QuadTree {
 
         this.heightFactor = heightFactor;
         
-        this.shaderMaterial = this.generateMaterial(4, heightFactor, false);
+        this.shaderMaterial = this.generateMaterial(4, heightFactor, isWireFrame);
     }
 
     public insert(position2D: THREE.Vector2, scene: THREE.Scene) {
         this.insertAtNode(this.root, position2D, scene);
+
+        //this.maxLOD = this.root
     }
 
     private insertAtNode(node: Node, position2D: THREE.Vector2, scene: THREE.Scene) {
@@ -78,6 +81,8 @@ export class QuadTree {
     }
 
     private generateMesh(node: Node, scene: THREE.Scene) {
+
+        let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
         if(node.children.length > 0){
             
             node.children.forEach(x => {
@@ -87,18 +92,16 @@ export class QuadTree {
             if(node.mesh != null) 
                 node.mesh!.visible = false;
 
-            if(node.vegetation != null) 
-                node.vegetation!.visible = false;
+            if(node.vegetationBillboards != null) 
+                node.vegetationBillboards!.visible = false;
 
-            if(node.instancedMesh != null) 
-                node.instancedMesh!.visible = false;
+            //if(node.instancedMesh != null) 
+                //node.instancedMesh!.visible = false;
 
             return;
         }
         else {
             if(!node.mesh) {
-
-                let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
                 let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.max.x, node.bounds.max.y,
@@ -125,25 +128,38 @@ export class QuadTree {
                 node.mesh!.visible = true;                
             }
 
-            if(!node.vegetation) {
-                node.generateGrassBillboards('assets/billboard_grass_32x32.png',
-                    this.simplexNoiseGenerator,
-                    node.bounds,
-                    10,  // yMin
-                    30, // yMax
-                    10000);
-                scene.add(node.vegetation!);
+            if(!node.vegetationBillboards) {
+
+                //if(node.lod > this.minLODForDetails)
+                if(nodeSize <= this.MIN_NODE_SIZE) {
+                    node.generateGrassBillboards('assets/billboard_grass_32x32.png',
+                        this.simplexNoiseGenerator,
+                        node.bounds,
+                        10,  // yMin
+                        30, // yMax
+                        10000);
+                    scene.add(node.vegetationBillboards!);
+                }
             }
             else {
-                node.vegetation!.visible = true;
+                //if(node.lod > this.minLODForDetails)
+                if(nodeSize <= this.MIN_NODE_SIZE) {
+                    node.vegetationBillboards!.visible = true;
+                }
             }
             
-            if(!node.instancedMesh) {
-                node.generateTreeModels(this.vegetationMeshGenerator);
-                scene.add(node.instancedMesh);
+            if(!node.instancedTreeMesh) {
+                //if(node.lod > this.minLODForDetails)
+                if(nodeSize <= this.MIN_NODE_SIZE) {
+                    node.generateTreeModels(this.vegetationMeshGenerator);
+                    scene.add(node.instancedTreeMesh!);
+                }
             }
             else {
-                node.instancedMesh!.visible = true;
+                //if(node.lod > this.minLODForDetails)
+                if(nodeSize <= this.MIN_NODE_SIZE) {
+                    node.instancedTreeMesh!.visible = true;
+                }
             }
         }
     }
