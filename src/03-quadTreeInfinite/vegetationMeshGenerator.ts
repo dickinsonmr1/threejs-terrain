@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import alea from 'alea';
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { SeededRandom } from '../shared/seededRandom';
 
 export class VegetationMeshGenerator {
 
@@ -27,12 +28,14 @@ export class VegetationMeshGenerator {
 
     public generateForNode(bounds: THREE.Box2, terrainMesh: THREE.Mesh, maxCount: number) {
        
+        let seededRandom = new SeededRandom(5000);
+
         this.counter = 0;
-        var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, 1000);        
+        var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, maxCount);        
         for ( let i = 0; i < maxCount; i ++ ) {
     
-            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * Math.random();
-            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * Math.random();
+            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
+            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
     
             var vegetationNoise = this.vegetationNoise2D(x, z);
             if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
