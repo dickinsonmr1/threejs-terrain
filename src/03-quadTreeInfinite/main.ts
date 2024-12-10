@@ -22,6 +22,7 @@ const stats = new Stats();
 document.body.appendChild(stats.dom)
 
 const settings = {  
+  lockCameraToTerrain: false,
   skyType: SkyType.Skybox,
   sky: {
     turbidity: 10.0,
@@ -141,6 +142,7 @@ gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
+gui.add(settings, 'lockCameraToTerrain').listen();
 
 const quadTreeFolder = gui.addFolder('Quadtree');
 quadTreeFolder.add(scene, 'totalNodes').name('Total Nodes').listen();
@@ -211,7 +213,7 @@ function tick() {
   stats.update();
   requestAnimationFrame(tick);
 
-  scene.update();
+  scene.update(settings.lockCameraToTerrain);
 }
 
 tick()

@@ -154,11 +154,17 @@ export default class GameScene extends THREE.Scene {
         // TODO: generate by node
     }
 
-    public update(): void {
+    public update(lockCameraToTerrain: boolean): void {
         
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);
         this.totalNodes = this.quadTree.getTotalNodeCount();
+
+        if(lockCameraToTerrain) {
+
+            let newCameraY = this.simplexNoiseGenerator.getHeightFromNoiseFunction(this.camera.position.x, -this.camera.position.z) + 2;
+            this.camera.position.setY(newCameraY);
+        }
 
         if(this.water !== null)    
             this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
