@@ -51,19 +51,49 @@ const pointerLockControls = new PointerLockControls( camera, document.body );
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
-instructions!.addEventListener( 'click', function () {
-  pointerLockControls.lock();
-});
 
-pointerLockControls.addEventListener( 'lock', function () {
-  instructions!.style.display = 'none';
-  blocker!.style.display = 'none';
-});
+function isMobileBrowser(): boolean {
+  return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile/.test(navigator.userAgent);
+}
 
-pointerLockControls.addEventListener( 'unlock', function () {
-  blocker!.style.display = 'block';
-  instructions!.style.display = '';
-});
+function isPointerLockSupported(): boolean {
+  return 'pointerLockElement' in document && 'requestPointerLock' in HTMLElement.prototype;
+}
+
+//function initializePointerLock(canvas: HTMLCanvasElement): void {
+function initializePointerLock(): void {
+  if (isMobileBrowser()) {
+      console.warn("Pointer Lock is not supported on mobile devices.");
+      return;
+  }
+
+  if (!isPointerLockSupported()) {
+      console.warn("Pointer Lock API is not supported by this browser.");
+      return;
+  }
+
+  instructions!.addEventListener( 'click', function () {
+    pointerLockControls.lock();
+  });
+  
+  pointerLockControls.addEventListener( 'lock', function () {
+    instructions!.style.display = 'none';
+    blocker!.style.display = 'none';
+  });
+  
+  pointerLockControls.addEventListener( 'unlock', function () {
+    blocker!.style.display = 'block';
+    instructions!.style.display = '';
+  });
+  
+  // Handle pointer lock errors
+  document.addEventListener('pointerlockerror', (event) => {
+    console.error('Pointer lock failed:', event);
+  });
+}
+
+const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+initializePointerLock();//canvas);
 
 const moveSpeed = 1;
 const velocity = new THREE.Vector3();
@@ -142,7 +172,7 @@ gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
-gui.add(settings, 'lockCameraToTerrain').listen();
+gui.add(settings, 'lockCameraToTerrain').name('Lock Camera To Terrain?').listen();
 
 const quadTreeFolder = gui.addFolder('Quadtree');
 quadTreeFolder.add(scene, 'totalNodes').name('Total Nodes').listen();
@@ -193,11 +223,6 @@ sunFolder.add(settings.sun, "azimuth", 0.0, 1.0).onChange(onSunChange);
 
 const otherFolder = gui.addFolder('Water');
 otherFolder.add(scene.water.position, 'y', -10, 100, 0.5).name('Elevation');
-
-// Handle pointer lock errors
-document.addEventListener('pointerlockerror', (event) => {
-  console.error('Pointer lock failed:', event);
-});
 
 function switchSky(skyType: SkyType) {
   scene.switchSky(skyType);
