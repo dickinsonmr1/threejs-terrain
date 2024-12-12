@@ -46,7 +46,6 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
 
 // https://threejs.org/examples/#misc_controls_pointerlock
-const pointerLockControls = new PointerLockControls( camera, document.body );
 
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
@@ -61,16 +60,19 @@ function isPointerLockSupported(): boolean {
 }
 
 //function initializePointerLock(canvas: HTMLCanvasElement): void {
-function initializePointerLock(): void {
+function initializePointerLock(camera: THREE.Camera, document: Document): PointerLockControls | null {
+
   if (isMobileBrowser()) {
       console.warn("Pointer Lock is not supported on mobile devices.");
-      return;
+      return null;
   }
 
   if (!isPointerLockSupported()) {
       console.warn("Pointer Lock API is not supported by this browser.");
-      return;
+      return null;
   }
+
+  let pointerLockControls = new PointerLockControls( camera, document.body );
 
   instructions!.addEventListener( 'click', function () {
     pointerLockControls.lock();
@@ -88,12 +90,15 @@ function initializePointerLock(): void {
   
   // Handle pointer lock errors
   document.addEventListener('pointerlockerror', (event) => {
-    console.error('Pointer lock failed:', event);
+    //console.error('Pointer lock failed:', event);
+    console.log('Pointer lock failed:', event);
   });
+
+  return pointerLockControls;
 }
 
-const canvas = document.querySelector('canvas') as HTMLCanvasElement;
-initializePointerLock();//canvas);
+//const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+let pointerLockControls = initializePointerLock(camera, document);//canvas);
 
 const moveSpeed = 1;
 const velocity = new THREE.Vector3();
