@@ -26,12 +26,25 @@
 				font-size: 14px;
 				cursor: pointer;
 			}
+			#build-info {
+				position: absolute;
+				top: 10px;
+				left: 50%;
+				transform: translateX(-50%);
+				background-color: rgba(0, 0, 0, 0.8);
+				color: white;
+				padding: 5px 10px;
+				border-radius: 5px;
+				font-family: Arial, sans-serif;
+				font-size: 14px;
+			}
 		</style>
     <script type="module" crossorigin src="/threejs-terrain/assets/index-BSrN6L2e.js"></script>
     <link rel="stylesheet" crossorigin href="/threejs-terrain/assets/index-Cz4zGhbH.css">
   </head>
   <body>
-    <div id="blocker">
+    <div id="build-info" ></div>
+	<div id="blocker">
 			<div id="instructions">
 				<p style="font-size:36px">
 					Click to start terrain sandbox
@@ -45,5 +58,11 @@
 				</p>
 			</div>
 		</div>
+	<script>		
+		const buildDate = __BUILD_DATE__;
+		const buildNumber = __BUILD_NUMBER__;
+		console.log(`Build Number: ${buildNumber}, Build Date: ${buildDate}`);
+		document.getElementById('build-info').innerText = `Build: ${buildNumber} - ${buildDate}`;
+	</script>
   </body>
 </html>
