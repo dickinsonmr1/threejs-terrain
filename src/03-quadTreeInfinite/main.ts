@@ -50,46 +50,49 @@ document.body.appendChild(renderer.domElement);
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
-
-function isMobileBrowser(): boolean {
-  return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile/.test(navigator.userAgent);
-}
-
-function isPointerLockSupported(): boolean {
-  return 'pointerLockElement' in document && 'requestPointerLock' in HTMLElement.prototype;
-}
-
-//function initializePointerLock(canvas: HTMLCanvasElement): void {
 function initializePointerLock(camera: THREE.Camera, document: Document): PointerLockControls | null {
 
-  if (isMobileBrowser()) {
-      console.warn("Pointer Lock is not supported on mobile devices.");
-      return null;
-  }
+  const isPointerLockSupported = 
+  'requestPointerLock' in document.body || 
+  'webkitRequestPointerLock' in document.body || 
+  'mozRequestPointerLock' in document.body;
 
-  if (!isPointerLockSupported()) {
-      console.warn("Pointer Lock API is not supported by this browser.");
-      return null;
-  }
+  if (!isPointerLockSupported)
+    return null;
 
   let pointerLockControls = new PointerLockControls( camera, document.body );
 
-  instructions!.addEventListener( 'click', function () {
-    pointerLockControls.lock();
-  });
+  let isPointerLockRequested = false;
   
-  pointerLockControls.addEventListener( 'lock', function () {
+  instructions!.addEventListener( 'click', async () => {
+    if(!isPointerLockRequested) {
+      try {
+        isPointerLockRequested = true;
+        pointerLockControls.lock();
+
+        setTimeout(() => {
+          isPointerLockRequested = false;
+        }, 2000);
+      }
+      catch(error) {
+        console.log('Error locking pointer:', error);
+      }
+    }
+  });
+
+  pointerLockControls.addEventListener( 'lock', async () => {
     instructions!.style.display = 'none';
     blocker!.style.display = 'none';
   });
   
-  pointerLockControls.addEventListener( 'unlock', function () {
+  pointerLockControls.addEventListener( 'unlock', async () => {
     blocker!.style.display = 'block';
     instructions!.style.display = '';
   });
   
+  
   // Handle pointer lock errors
-  document.addEventListener('pointerlockerror', (event) => {
+  document.addEventListener('pointerlockerror', async (event) => {
     //console.error('Pointer lock failed:', event);
     console.log('Pointer lock failed:', event);
   });
@@ -97,8 +100,9 @@ function initializePointerLock(camera: THREE.Camera, document: Document): Pointe
   return pointerLockControls;
 }
 
-//const canvas = document.querySelector('canvas') as HTMLCanvasElement;
 let pointerLockControls = initializePointerLock(camera, document);//canvas);
+if(pointerLockControls)
+  scene.add(pointerLockControls?.object);
 
 const moveSpeed = 1;
 const velocity = new THREE.Vector3();

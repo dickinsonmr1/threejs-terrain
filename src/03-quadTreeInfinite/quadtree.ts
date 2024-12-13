@@ -14,7 +14,8 @@ export class QuadTree {
     simplexNoiseGenerator: SimplexNoiseGenerator;
     vegetationMeshGenerator: VegetationMeshGenerator;
 
-    shaderMaterial: THREE.Material;
+    highDetailShaderMaterial: THREE.Material;
+    lowDetailShaderMaterial: THREE.Material;
 
     terrainGeneratorParams: TerrainGeneratorParams;
 
@@ -42,7 +43,8 @@ export class QuadTree {
 
         this.heightFactor = heightFactor;
         
-        this.shaderMaterial = this.generateMaterial(4, heightFactor, isWireFrame);
+        this.highDetailShaderMaterial = this.generateMaterial(4, heightFactor, isWireFrame);
+        this.lowDetailShaderMaterial = this.generateMaterial(1, heightFactor, isWireFrame);        
     }
 
     public insert(position2D: THREE.Vector2, scene: THREE.Scene) {
@@ -102,10 +104,18 @@ export class QuadTree {
         }
         else {
             if(!node.mesh) {
-                //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
-                let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,
+
                 //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.max.x, node.bounds.max.y,
-                    this.simplexNoiseGenerator, nodeSize, this.verticesPerChunk, this.shaderMaterial, 0, this.terrainGeneratorParams);
+                //let mesh = this.meshGenerator.createPlaneMeshFromNoise(node.bounds.min.x, node.bounds.min.y,
+                let mesh = this.meshGenerator.createPlaneMeshFromNoise(
+                    node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,                
+                    this.simplexNoiseGenerator,
+                    nodeSize,
+                    this.verticesPerChunk,
+                    nodeSize <= this.MIN_NODE_SIZE ? this.highDetailShaderMaterial : this.lowDetailShaderMaterial,
+                    0,
+                    this.terrainGeneratorParams
+                );
 
                 mesh.receiveShadow = true;
 
@@ -285,3 +295,4 @@ export class QuadTree {
         `
     }
 }
+
