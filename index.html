@@ -26,10 +26,23 @@
 				font-size: 14px;
 				cursor: pointer;
 			}
+			#build-info {
+				position: absolute;
+				bottom: 10px;
+				left: 50%;
+				transform: translateX(-50%);
+				background-color: rgba(0, 0, 0, 0.8);
+				color: white;
+				padding: 5px 10px;
+				border-radius: 5px;
+				font-family: Arial, sans-serif;
+				font-size: 14px;
+			}
 		</style>
   </head>
   <body>
-    <div id="blocker">
+    <div id="build-info" ></div>
+	<div id="blocker">
 			<div id="instructions">
 				<p style="font-size:36px">
 					Click to start terrain sandbox
@@ -43,6 +56,7 @@
 				</p>
 			</div>
 		</div>
-    <script type="module" src="/src/03-quadTreeInfinite/main.ts"></script>
+	<script type="module" src="/src/03-quadTreeInfinite/global.ts"></script>
+    <script type="module" src="/src/03-quadTreeInfinite/main.ts"></script>	
   </body>
 </html>

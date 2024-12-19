@@ -1,0 +1,9 @@
+import { defineConfig } from 'vite';
+
+export default defineConfig({  
+  base: '/threejs-terrain/', // Replace 'my-threejs-app' with your GitHub repository name
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    __BUILD_NUMBER__: JSON.stringify(process.env.BUILD_NUMBER || '1'),
+  },
+});
