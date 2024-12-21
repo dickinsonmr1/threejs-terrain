@@ -5,6 +5,7 @@ import { QuadTree } from './quadtree';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { VegetationMeshGenerator } from './vegetationMeshGenerator';
+import { PrecipitationSystem, PrecipitationType } from './precipitationSystem';
 
 export default class GameScene extends THREE.Scene {
 
@@ -18,6 +19,8 @@ export default class GameScene extends THREE.Scene {
     terrainGeneratorParams: TerrainGeneratorParams;
     simplexNoiseGenerator: SimplexNoiseGenerator;
     vegetationMeshGenerator: VegetationMeshGenerator;
+
+    precipitationSystem: PrecipitationSystem;
     
     constructor(camera: THREE.Camera) {
         super();
@@ -34,7 +37,9 @@ export default class GameScene extends THREE.Scene {
         this.addWater();
         this.addLights();
         
-        this.addVegetation();                
+        this.addVegetation();         
+        
+        this.precipitationSystem = new PrecipitationSystem(this, 100, PrecipitationType.Rain, 1);
     }
 
     public switchSky(skyType: SkyType): void {
@@ -168,5 +173,7 @@ export default class GameScene extends THREE.Scene {
 
         if(this.water !== null)    
             this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
+
+        this.precipitationSystem.animateRain();
     }
 }
