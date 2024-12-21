@@ -21,6 +21,8 @@ export default class GameScene extends THREE.Scene {
     vegetationMeshGenerator: VegetationMeshGenerator;
 
     precipitationSystem: PrecipitationSystem;
+
+    clock: THREE.Clock = new THREE.Clock();
     
     constructor(camera: THREE.Camera) {
         super();
@@ -39,7 +41,7 @@ export default class GameScene extends THREE.Scene {
         
         this.addVegetation();         
         
-        this.precipitationSystem = new PrecipitationSystem(this, 100, PrecipitationType.Rain, 1);
+        this.precipitationSystem = new PrecipitationSystem(this, 1000, PrecipitationType.Rain, 1);
     }
 
     public switchSky(skyType: SkyType): void {
@@ -160,7 +162,7 @@ export default class GameScene extends THREE.Scene {
     }
 
     public update(lockCameraToTerrain: boolean): void {
-        
+                
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);
         this.totalNodes = this.quadTree.getTotalNodeCount();
@@ -174,6 +176,6 @@ export default class GameScene extends THREE.Scene {
         if(this.water !== null)    
             this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
 
-        this.precipitationSystem.animateRain();
+        this.precipitationSystem.animateRain(this.clock);
     }
 }
