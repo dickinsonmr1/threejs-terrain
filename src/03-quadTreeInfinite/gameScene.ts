@@ -176,6 +176,6 @@ export default class GameScene extends THREE.Scene {
         if(this.water !== null)    
             this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
 
-        this.precipitationSystem.animateRain(this.clock);
+        this.precipitationSystem.update(this.clock, this.camera);
     }
 }

@@ -10,15 +10,18 @@ export class PrecipitationSystem {
 
     // https://www.youtube.com/watch?v=1bkibGIG8i0
 
-    private static rainCount: number = 20000;
+    private static rainCount: number = 100000;
     rainGeometry: THREE.BufferGeometry;
-    private static maxY: number = 500;
+    private static maxY: number = 1000;
 
     private velocityY: number;
 
     uniforms = {
         uTime: { value: 0.0 },
-        uFallSpeed: { value: 100.0}
+        uFallSpeed: { value: 500.0},
+        rainAreaCenter: { value: new THREE.Vector3(0, 0, 0) },
+        initialRainHeight: {value: PrecipitationSystem.maxY },
+        rainRadius: { value: 500 },
     };
     rainMaterial: THREE.ShaderMaterial;
 
@@ -37,7 +40,7 @@ export class PrecipitationSystem {
             positions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
             positions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY; // y position
             positions[i * 3 + 2] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // z position
-            velocities[i] = Math.random() * 0.5 + 0.5; // random velocity
+            velocities[i] = 0.75;//Math.random() * 0.5 + 0.5; // random velocity
         }
 
         // Set the positions as the attribute of the geometry
@@ -72,34 +75,69 @@ export class PrecipitationSystem {
             uniforms: this.uniforms,
             vertexShader: `
                 attribute float velocity;
+
                 uniform float uTime;
                 uniform float uFallSpeed;
-                void main() {
-                    vec3 pos = position;
-                    pos.y -= velocity * uFallSpeed * uTime; // Update position based on velocity and time
-                    pos.y = mod(pos.y, 200.0); // Update position based on velocity and time
+                uniform vec3 rainAreaCenter;
+                uniform float initialRainHeight;
+                uniform float rainRadius;
 
-                    //if (pos.y <= 0.0) pos.y += 100.0; // Reset position when it falls below threshold
-
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                    gl_PointSize = 4.0; // Size of each raindrop
+                float random(vec2 st) {
+                    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
                 }
-          `,
-          fragmentShader: `
+
+                void main() {
+                    
+                    //float newY = position.y - velocity * uFallSpeed * uTime;
+                    //if(newY <= 0.0)
+                        //newY = mod(newY, 200.0);
+                
+                    vec3 newPosition = position;
+                                    
+                    newPosition.y -= velocity * uFallSpeed * uTime; // Update position based on velocity and time
+                    newPosition.y = mod(newPosition.y, initialRainHeight); // Update position based on velocity and time
+                    
+                    /*
+                    if (newPosition.y >= initialRainHeight - 5.0) {
+                        //newPosition.y += 100.0; // Reset position when it falls below threshold
+                        //newPosition.y = initialRainHeight;
+
+                        float angle = random(vec2(newPosition.x, newPosition.z)) * 6.283185;
+                        float radius = random(vec2(newPosition.y, newPosition.z)) * rainRadius;
+                        newPosition.x = rainAreaCenter.x + cos(angle) * radius;
+                        newPosition.z = rainAreaCenter.z + sin(angle) * radius;
+                    }
+                    */
+
+                    newPosition.x += rainAreaCenter.x;
+                    newPosition.z += rainAreaCenter.z;
+
+                    // Size attenuation
+                    //float size = 5.0 / -newPosition.z;
+                    //gl_PointSize = size;
+                            
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+                    gl_PointSize = 3.0; // Size of each raindrop
+                }
+            `,
+            fragmentShader: `
             void main() {
-              gl_FragColor = vec4(0.7, 0.7, 1.0, 0.7); // Light blue raindrops
+                gl_FragColor = vec4(0.7, 0.7, 1.0, 0.7); // Light blue raindrops
             }
-          `,
+            `,
             transparent: true,
+
         });
 
         const rain = new THREE.Points(this.rainGeometry, this.rainMaterial);
+        rain.frustumCulled = false;
         scene.add(rain);          
     }
 
-    animateRain(clock: THREE.Clock): void {
+    update(clock: THREE.Clock, camera: THREE.Camera): void {
 
         //this.rainMaterial.uniforms['uTime'].value += clock.getDelta();
+        this.rainMaterial.uniforms['rainAreaCenter'].value.copy(camera.position);
         this.rainMaterial.uniforms['uTime'].value += 0.5 / 60.0;
         if(this.rainMaterial.uniforms['uTime'].value >= 5)
             this.rainMaterial.uniforms['uTime'].value = 0;
