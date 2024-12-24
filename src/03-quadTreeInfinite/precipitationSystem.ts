@@ -10,11 +10,14 @@ export class PrecipitationSystem {
 
     // https://www.youtube.com/watch?v=1bkibGIG8i0
 
-    private static rainCount: number = 100000;
+    private static rainCount: number = 50000;
     rainGeometry: THREE.BufferGeometry;
     private static maxY: number = 1000;
 
     private velocityY: number;
+    private clouds: THREE.Mesh[] = [];
+
+    private flash: THREE.PointLight;
 
     uniforms = {
         uTime: { value: 0.0 },
@@ -24,9 +27,12 @@ export class PrecipitationSystem {
         rainRadius: { value: 500 },
     };
     rainMaterial: THREE.ShaderMaterial;
+    mapSize: number;
 
     constructor(scene: THREE.Scene, mapSize: number, precipitationType: PrecipitationType, horizontalScale: number) {
 
+
+        this.mapSize = mapSize;
         // Create an empty geometry
         this.rainGeometry = new THREE.BufferGeometry();
 
@@ -125,13 +131,55 @@ export class PrecipitationSystem {
                 gl_FragColor = vec4(0.7, 0.7, 1.0, 0.7); // Light blue raindrops
             }
             `,
-            transparent: true,
+            transparent: false,
 
         });
 
         const rain = new THREE.Points(this.rainGeometry, this.rainMaterial);
         rain.frustumCulled = false;
         scene.add(rain);          
+
+        let loader = new THREE.TextureLoader();
+        let cloudTexture = loader.load("assets/weather/cloud-128x128.png");
+        cloudTexture.colorSpace = THREE.SRGBColorSpace;        
+        cloudTexture.wrapS = THREE.ClampToEdgeWrapping;
+        cloudTexture.wrapT = THREE.ClampToEdgeWrapping;
+        cloudTexture.repeat.set(1, 1); // Ensure texture isn't repeated
+
+        let cloudGeo = new THREE.PlaneGeometry(500, 500);
+        let cloudMaterial = new THREE.MeshLambertMaterial({
+            map: cloudTexture,   
+            transparent: true,
+            //alphaTest: 0.1,
+            depthTest: true,
+
+            color: new THREE.Color('gray')        
+        });
+
+        for(let p = 0; p < 250; p++) {
+            let cloud = new THREE.Mesh(cloudGeo, cloudMaterial);
+            cloud.position.set(
+                Math.random()*mapSize- mapSize/2,
+                300,
+                Math.random()*mapSize- mapSize / 2
+            );
+            cloud.rotation.x = 1.16;
+            cloud.rotation.y = -0.12;
+            cloud.rotation.z = Math.random()*360;
+
+            cloud.material.opacity = 0.6
+            this.clouds.push(cloud);
+            scene.add(cloud);
+        }
+
+        this.flash = new THREE.PointLight(0x062d89, 30, 500, 1.7);
+        this.flash.position.set(0, 300, 0);
+        scene.add(this.flash);
+
+        const sphereSize = 50;
+        const pointLightHelper = new THREE.PointLightHelper( this.flash, sphereSize );
+        scene.add( pointLightHelper );
+
     }
 
     update(clock: THREE.Clock, camera: THREE.Camera): void {
@@ -163,5 +211,21 @@ export class PrecipitationSystem {
         // Need to update the geometry attribute
         this.rainGeometry.attributes.position.needsUpdate = true;
         */
+
+        this.clouds.forEach(x => {
+            x.rotation.z -= 0.002;
+        });
+
+        if(Math.random() > 0.93) {//} || this.flash.intensity > 100) {
+            if(this.flash.intensity < 1000.0) {
+                this.flash.position.set(
+                    Math.random()*this.mapSize - this.mapSize/2,
+                    200,/// + Math.random() * 200,
+                    Math.random()*this.mapSize - this.mapSize/2
+                );
+            }
+            this.flash.intensity = 50 + Math.random() * 1000;
+            //this.flash.intensity = 10000;
+        }
     }
 }
