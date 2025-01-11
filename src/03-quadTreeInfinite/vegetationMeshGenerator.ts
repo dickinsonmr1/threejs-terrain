@@ -37,15 +37,17 @@ export class VegetationMeshGenerator {
             const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
             const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
     
-            var vegetationNoise = this.vegetationNoise2D(x, z);
-            if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
-                
-                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
-                if(elevation > 30 && elevation < 40)     {
-                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 8, z);
-                    instancedMesh.setMatrixAt(this.counter++, matrix);
-                }
-            }            
+            if(x != 0 || z != 0) {
+                var vegetationNoise = this.vegetationNoise2D(x, z);
+                if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
+                    
+                    let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
+                    if(elevation > 30 && elevation < 40)     {
+                        const matrix = new THREE.Matrix4().setPosition(x, elevation + 8, z);
+                        instancedMesh.setMatrixAt(this.counter++, matrix);
+                    }
+                }            
+            }
         }
        
        /*
