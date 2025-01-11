@@ -15,13 +15,10 @@ export class VegetationMeshGenerator {
     private material: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({color: 0x00ff00});
     private counter: number = 0;
     //private instancedMesh!: THREE.InstancedMesh;
-    private simplexNoiseGenerator!: SimplexNoiseGenerator;
-
-    constructor(scene: THREE.Scene, simplexNoiseGenerator: SimplexNoiseGenerator) {
+    
+    constructor(scene: THREE.Scene, private simplexNoiseGenerator: SimplexNoiseGenerator) {
         const prng = alea(500);
         this.vegetationNoise2D = createNoise2D(prng);
-
-        this.simplexNoiseGenerator = simplexNoiseGenerator;
 
         //this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, 1000);        
     }
@@ -37,6 +34,7 @@ export class VegetationMeshGenerator {
             const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
             const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
     
+            // todo: fix issue where lots of instanced meshes are generated at (0,0)
             if(x != 0 || z != 0) {
                 var vegetationNoise = this.vegetationNoise2D(x, z);
                 if(vegetationNoise > 0.0 && vegetationNoise < 0.5){

@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { Group } from 'three/examples/jsm/libs/tween.module.js';
 
 export enum PrecipitationType {
     None = 0,
@@ -21,23 +20,25 @@ export class PrecipitationSystem {
 
     private flash: THREE.PointLight;
 
-    uniforms = {
-        uTime: { value: 0.0 },
-        uFallSpeed: { value: 500.0},
-        rainAreaCenter: { value: new THREE.Vector3(0, 0, 0) },
-        initialRainHeight: {value: PrecipitationSystem.maxY },
-        rainRadius: { value: 500 },
-    };
+    uniforms: any;
     rainMaterial: THREE.ShaderMaterial;
-    mapSize: number;
 
-    constructor(scene: THREE.Scene, mapSize: number, precipitationType: PrecipitationType, horizontalScale: number) {
+    constructor(scene: THREE.Scene, private mapSize: number, precipitationType: PrecipitationType, horizontalScale: number) {
 
-        this.mapSize = mapSize;
         // Create an empty geometry
         this.rainGeometry = new THREE.BufferGeometry();
 
         // Define the number of raindrops
+        
+        this.uniforms = {
+            uTime: { value: 0.0 },
+            uFallSpeed: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 50.0},
+            blueColor: { value: precipitationType == PrecipitationType.Rain ? 0.8 : 0.6},
+            rainAreaCenter: { value: new THREE.Vector3(0, 0, 0) },
+            initialRainHeight: {value: PrecipitationSystem.maxY },
+            rainRadius: { value: 500 },
+            dropletSize: { value: precipitationType == PrecipitationType.Rain ? 3 : 4},
+        };
 
         // Create an array to hold the positions of the raindrops
         const positions = new Float32Array(PrecipitationSystem.rainCount * 3);
@@ -77,7 +78,6 @@ export class PrecipitationSystem {
         });
         */
 
-
         this.rainMaterial = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
             vertexShader: `
@@ -88,6 +88,7 @@ export class PrecipitationSystem {
                 uniform vec3 rainAreaCenter;
                 uniform float initialRainHeight;
                 uniform float rainRadius;
+                uniform float dropletSize;
 
                 float random(vec2 st) {
                     return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -124,13 +125,15 @@ export class PrecipitationSystem {
                     //gl_PointSize = size;
                             
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-                    gl_PointSize = 3.0; // Size of each raindrop
+                    gl_PointSize = dropletSize; // Size of each raindrop / snowflake
                 }
             `,
-            fragmentShader: `
-            void main() {
-                gl_FragColor = vec4(0.5, 0.5, 0.8, 0.5); // Light blue raindrops
-            }
+            fragmentShader: `            
+                uniform float blueColor;
+
+                void main() {
+                    gl_FragColor = vec4(0.5, 0.5, blueColor, 0.5); // Light blue raindrops
+                }
             `,
             transparent: false,
 

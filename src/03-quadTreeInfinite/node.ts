@@ -1,20 +1,16 @@
 import * as THREE from 'three'
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { VegetationMeshGenerator } from './vegetationMeshGenerator';
+
 export class Node {
 
-    bounds: THREE.Box2;
     children: Node[] = [];
 
     mesh?: THREE.Mesh;
     vegetationBillboards?: THREE.Points;
     instancedTreeMesh?: THREE.InstancedMesh;
     
-    lod: number;
-
-    constructor(bounds: THREE.Box2, lod: number) {
-        this.bounds = bounds;
-        this.lod = lod;
+    constructor(public bounds: THREE.Box2, private lod: number) {
     }
 
     public split(scene: THREE.Scene): void {
