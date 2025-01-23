@@ -6,6 +6,7 @@ import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { VegetationMeshGenerator } from './vegetationMeshGenerator';
 import { PrecipitationSystem, PrecipitationType } from './precipitationSystem';
+import { FireParticleEmitter } from './fireParticleEmitter';
 
 export default class GameScene extends THREE.Scene {
 
@@ -21,6 +22,7 @@ export default class GameScene extends THREE.Scene {
     vegetationMeshGenerator: VegetationMeshGenerator;
 
     precipitationSystem: PrecipitationSystem;
+    fireParticleEmitter!: FireParticleEmitter;
 
     clock: THREE.Clock = new THREE.Clock();
     
@@ -39,7 +41,8 @@ export default class GameScene extends THREE.Scene {
         this.addWater();
         this.addLights();
         
-        this.addVegetation();         
+        this.addVegetation();    
+        this.addFireParticleEmitter();
         
         this.precipitationSystem = new PrecipitationSystem(this, 1000, PrecipitationType.Snow, 1);
     }
@@ -161,6 +164,11 @@ export default class GameScene extends THREE.Scene {
         // TODO: generate by node
     }
 
+    private addFireParticleEmitter() {
+
+        this.fireParticleEmitter = new FireParticleEmitter(this);
+    }
+
     public update(lockCameraToTerrain: boolean): void {
                 
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
@@ -177,5 +185,8 @@ export default class GameScene extends THREE.Scene {
             this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
 
         this.precipitationSystem.update(this.clock, this.camera);
+
+        if(this.fireParticleEmitter != null)
+            this.fireParticleEmitter.update(this.clock);
     }
 }
