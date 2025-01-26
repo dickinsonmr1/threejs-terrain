@@ -35,7 +35,7 @@ export class VegetationMeshGenerator {
             const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
     
             // todo: fix issue where lots of instanced meshes are generated at (0,0)
-            if(x != 0 || z != 0) {
+            if(Math.abs(x) > 1 && Math.abs(z) > 1) {
                 var vegetationNoise = this.vegetationNoise2D(x, z);
                 if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
                     
@@ -66,6 +66,7 @@ export class VegetationMeshGenerator {
         }
         */
 
+        console.log(`vegetation instanced mesh count for node: ${instancedMesh.count}`);
         instancedMesh.visible = true;
         return instancedMesh;
     }    

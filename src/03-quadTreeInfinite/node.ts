@@ -122,6 +122,6 @@ export class Node {
     }
 
     public generateTreeModels(vegetationMeshGenerator: VegetationMeshGenerator) {
-        this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 1000);        
+        this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 50);        
     }
 }

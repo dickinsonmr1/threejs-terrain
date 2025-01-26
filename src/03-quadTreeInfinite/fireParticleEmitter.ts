@@ -30,8 +30,10 @@ export class FireParticleEmitter {
 
         for (let i = 0; i < particleCount; i++) {
 
-            let randOffsetX = (Math.random() * fireSize) - fireSize/2;
-            let randOffsetZ = (Math.random() * fireSize) - fireSize/2;
+            const angle = Math.random() * Math.PI * 2; // Random angle between 0 and 2π
+            const r = Math.sqrt(Math.random()) * fireSize; // Random radius with sqrt for uniform distribution
+            const randOffsetX = Math.cos(angle) * r;
+            const randOffsetZ = Math.sin(angle) * r;
 
             positions.set([origin.x + randOffsetX, origin.y, origin.z + randOffsetZ], i * 3);
             velocities.set([
@@ -125,10 +127,19 @@ export class FireParticleEmitter {
 
         for (let i = 0; i < particleCount; i++) {
 
-            let randOffsetX = (Math.random() * smokeSize) - smokeSize/2;
-            let randOffsetZ = (Math.random() * smokeSize) - smokeSize/2;
+            //let randOffsetX = (Math.random() * smokeSize) - smokeSize/2;
+            //let randOffsetZ = (Math.random() * smokeSize) - smokeSize/2;
 
-            positions.set([origin.x + randOffsetX, origin.y + startOffset.y, origin.z + randOffsetZ], i * 3);
+            const angle = Math.random() * Math.PI * 2; // Random angle between 0 and 2π
+            const r = Math.sqrt(Math.random()) * smokeSize; // Random radius with sqrt for uniform distribution
+            const randOffsetX = Math.cos(angle) * r;
+            const randOffsetZ = Math.sin(angle) * r;
+
+            positions.set([
+                origin.x + randOffsetX,
+                origin.y + startOffset.y,
+                origin.z + randOffsetZ
+            ], i * 3);
             velocities.set([
                 (Math.random() * 1) - 0.5,
                 Math.random() * 4,
