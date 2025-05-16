@@ -44,7 +44,7 @@ export default class GameScene extends THREE.Scene {
         //this.addVegetation();    
         this.addFireParticleEmitter();
         
-        this.precipitationSystem = new PrecipitationSystem(this, 1000, PrecipitationType.Snow, 1);
+        this.precipitationSystem = new PrecipitationSystem(this, 1000, PrecipitationType.Rain, 1);
     }
 
     public switchSky(skyType: SkyType): void {

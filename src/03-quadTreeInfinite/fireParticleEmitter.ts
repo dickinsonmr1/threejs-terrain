@@ -12,7 +12,7 @@ export class FireParticleEmitter {
     constructor(scene: THREE.Scene) {
                 
         this.fireParticles = this.createFireParticles(3);
-        this.smokeParticles = this.createSmokeParticles(2, new THREE.Vector3(0, 3, 0));
+        this.smokeParticles = this.createSmokeParticles(2.5, new THREE.Vector3(0, 3, 0));
         scene.add(this.fireParticles);
         scene.add(this.smokeParticles);
     }    
@@ -38,7 +38,7 @@ export class FireParticleEmitter {
             positions.set([origin.x + randOffsetX, origin.y, origin.z + randOffsetZ], i * 3);
             velocities.set([
                 (Math.random() * 0.2) - 0.1,
-                Math.random() * 2.0,
+                Math.random() * 3.0,
                 (Math.random() * 0.2) - 0.1,
             ], i * 3);
             lifetimes[i] = Math.random() * lifetimeMax;
@@ -82,9 +82,13 @@ export class FireParticleEmitter {
                         v_color = vec3(1.0, 0.5, 0.0);
                         v_opacity = 1.0;
                     }
+                    
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    gl_PointSize = 1.25 * (300.0 / -mvPosition.z) * (1.0 - lifeProgress);
+                    // scale with perspective, shrink with time                                    
 
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                    gl_PointSize = 15.0 * (1.0 - lifeProgress); // Shrink with time
+
                 }
             `,
             fragmentShader: `
@@ -142,7 +146,7 @@ export class FireParticleEmitter {
             ], i * 3);
             velocities.set([
                 (Math.random() * 1) - 0.5,
-                Math.random() * 4,
+                Math.random() * 2 + 2,
                 (Math.random() * 1) - 0.5,
             ], i * 3);
             lifetimes[i] = Math.random() * lifetimeMax;
@@ -193,8 +197,11 @@ export class FireParticleEmitter {
                         v_opacity = 0.25;
                     }
 
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                    gl_PointSize = lifeProgress * 25.0; // grow with time
+                    gl_PointSize = (50.0 / -mvPosition.z) * lifeProgress * 25.0;
+                    // scale with perspective, grow with time                                    
                 }
             `,
             fragmentShader: `
