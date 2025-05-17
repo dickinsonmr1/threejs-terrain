@@ -98,6 +98,10 @@ export class FireParticleEmitter {
                 varying vec3 v_color;
 
                 void main() {
+
+                    float dist = length(gl_PointCoord - vec2(0.5)); // distance from center of point
+                    if (dist > 0.5) discard; // discard outside circle
+
                     // Render particle with fading opacity
                     gl_FragColor = vec4(v_color, v_opacity);
                 }
@@ -211,6 +215,10 @@ export class FireParticleEmitter {
                 varying vec3 v_color;
 
                 void main() {
+
+                    float dist = length(gl_PointCoord - vec2(0.5)); // distance from center of point
+                    if (dist > 0.5) discard; // discard outside circle
+
                     // Render particle with fading opacity
                     gl_FragColor = vec4(v_color, v_opacity);
                 }
