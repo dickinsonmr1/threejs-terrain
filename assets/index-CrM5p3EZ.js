@@ -1,4 +1,4 @@
-var hc=Object.defineProperty;var uc=(i,t,e)=>t in i?hc(i,t,{enumerable:!0,configurable:!0,writable:!0,value:e}):i[t]=e;var Mt=(i,t,e)=>uc(i,typeof t!="symbol"?t+"":t,e);(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))n(r);new MutationObserver(r=>{for(const s of r)if(s.type==="childList")for(const a of s.addedNodes)a.tagName==="LINK"&&a.rel==="modulepreload"&&n(a)}).observe(document,{childList:!0,subtree:!0});function e(r){const s={};return r.integrity&&(s.integrity=r.integrity),r.referrerPolicy&&(s.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?s.credentials="include":r.crossOrigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function n(r){if(r.ep)return;r.ep=!0;const s=e(r);fetch(r.href,s)}})();const dc="1",fc="2025-05-16T20:44:05.360Z";document.getElementById("build-info").innerText=`Build: ${dc} - ${fc}`;/**
+var hc=Object.defineProperty;var uc=(i,t,e)=>t in i?hc(i,t,{enumerable:!0,configurable:!0,writable:!0,value:e}):i[t]=e;var Mt=(i,t,e)=>uc(i,typeof t!="symbol"?t+"":t,e);(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))n(r);new MutationObserver(r=>{for(const s of r)if(s.type==="childList")for(const a of s.addedNodes)a.tagName==="LINK"&&a.rel==="modulepreload"&&n(a)}).observe(document,{childList:!0,subtree:!0});function e(r){const s={};return r.integrity&&(s.integrity=r.integrity),r.referrerPolicy&&(s.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?s.credentials="include":r.crossOrigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function n(r){if(r.ep)return;r.ep=!0;const s=e(r);fetch(r.href,s)}})();const dc="1",fc="2025-05-17T13:46:02.030Z";document.getElementById("build-info").innerText=`Build: ${dc} - ${fc}`;/**
  * @license
  * Copyright 2010-2024 Three.js Authors
  * SPDX-License-Identifier: MIT
@@ -4681,6 +4681,10 @@ void main() {
                 varying vec3 v_color;
 
                 void main() {
+
+                    float dist = length(gl_PointCoord - vec2(0.5)); // distance from center of point
+                    if (dist > 0.5) discard; // discard outside circle
+
                     // Render particle with fading opacity
                     gl_FragColor = vec4(v_color, v_opacity);
                 }
@@ -4735,6 +4739,10 @@ void main() {
                 varying vec3 v_color;
 
                 void main() {
+
+                    float dist = length(gl_PointCoord - vec2(0.5)); // distance from center of point
+                    if (dist > 0.5) discard; // discard outside circle
+
                     // Render particle with fading opacity
                     gl_FragColor = vec4(v_color, v_opacity);
                 }
