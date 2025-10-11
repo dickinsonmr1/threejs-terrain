@@ -1,21 +1,18 @@
 
-attribute float velocity;
-
+// per primitive
 uniform float uTime;
 uniform float uVelocity;
-
 uniform vec3 uCameraPosition;
 uniform float uRainSpawnY;
-
 uniform float dropletSize;
 
-uniform float uLifetime;
+// per verfex
+attribute float velocity;
 
+// per fragment
 varying float vIsReset;
-
 varying float vAlpha;
 varying float vVelocity;
-
 varying float vAngle;     // rotation to apply in fragment
 varying float vPointSize; // pass point size to fragment if desired
 
@@ -23,7 +20,7 @@ void main() {
                            
     vec3 newPosition = position;
                     
-    newPosition.y -= uVelocity * uTime; // Update position based on velocity and time
+    newPosition.y -= uVelocity * velocity * uTime; // Update position based on velocity and time
     newPosition.y = mod(newPosition.y, uRainSpawnY); // scale into range of 0->uRainSpawnY
     /*
         // Detect recent reset (optional, for visuals)

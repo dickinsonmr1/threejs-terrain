@@ -50,7 +50,7 @@ export class PrecipitationSystem {
             positions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
             positions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY + PrecipitationSystem.maxY; // y position
             positions[i * 3 + 2] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // z position
-            velocities[i] = 0.5 //Math.random() * 0.5 + 0.5; // random velocity
+            velocities[i] = Math.random() + 0.5; // random velocity
         }
 
         // Set the positions as the attribute of the geometry
