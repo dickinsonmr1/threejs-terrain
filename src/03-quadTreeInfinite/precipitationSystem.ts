@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+import vertexShader from './rain.vert?raw';
+import fragmentShader from './rain.frag?raw';
+
 export enum PrecipitationType {
     None = 0,
     Rain = 1,
@@ -14,7 +17,6 @@ export class PrecipitationSystem {
     rainGeometry: THREE.BufferGeometry;
     private static maxY: number = 500;
 
-    private velocityY: number;
     private clouds: THREE.Mesh[] = [];
     private billboardClouds: THREE.Group = new THREE.Group;
 
@@ -32,7 +34,7 @@ export class PrecipitationSystem {
         
         this.uniforms = {
             uTime: { value: 0.0 },
-            uVelocity: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 50.0},
+            uVelocity: { value: precipitationType == PrecipitationType.Rain ? 500.0 : 50.0},
             blueColor: { value: precipitationType == PrecipitationType.Rain ? 0.8 : 0.6},
             uCameraPosition: { value: new THREE.Vector3(0, 0, 0) },
             uRainSpawnY: {value: PrecipitationSystem.maxY },
@@ -45,16 +47,14 @@ export class PrecipitationSystem {
 
         for (let i = 0; i < PrecipitationSystem.rainCount; i++) {
             positions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
-            positions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY; // y position
+            positions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY + PrecipitationSystem.maxY; // y position
             positions[i * 3 + 2] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // z position
-            velocities[i] = 0.75;//Math.random() * 0.5 + 0.5; // random velocity
+            velocities[i] = Math.random() * 0.5 + 0.5; // random velocity
         }
 
         // Set the positions as the attribute of the geometry
         this.rainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.rainGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
-
-        this.velocityY = precipitationType == PrecipitationType.Rain ? 0.5 : 0.1;
 
         var textureName = precipitationType == PrecipitationType.Rain ? 'assets/weather/rain_8x8.png' : 'assets/weather/snow.png';
         var sprite = new THREE.TextureLoader().load( textureName );
@@ -62,7 +62,7 @@ export class PrecipitationSystem {
 
         sprite.wrapS = THREE.ClampToEdgeWrapping;
         sprite.wrapT = THREE.ClampToEdgeWrapping;
-        sprite.repeat.set(1, 1); // Ensure texture isn't repeated
+        //sprite.repeat.set(1, 1); // Ensure texture isn't repeated
 
         /*
         const rainMaterial = new THREE.PointsMaterial({
@@ -80,88 +80,8 @@ export class PrecipitationSystem {
         this.rainMaterial = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
 
-            vertexShader: `
-                attribute float velocity;
-
-                uniform float uTime;
-                uniform float uVelocity;
-
-                uniform vec3 uCameraPosition;
-                uniform float uRainSpawnY;
-
-                uniform float dropletSize;
-                
-                varying float vIsReset;
-
-                varying float vAlpha;
-                varying float vVelocity;
-
-                void main() {                                    
-                    vec3 newPosition = position;
-
-                    /*
-                    float seed = dot(newPosition.xz, vec2(12.9898, 78.233));
-                    float randX = (fract(sin(seed) * 43758.5453) * 2.0 - 1.0) * 20.0;
-                    float randZ = (fract(sin(seed + 1.0) * 43758.5453) * 2.0 - 1.0) * 20.0;
-                    
-                    float y = mod(position.y - uTime * velocity, uRainSpawnY);
-                    newPosition = vec3(uCameraPosition.x + randX, y, uCameraPosition.z + randZ);
-                    */
-                                    
-                    newPosition.y -= velocity * uVelocity * uTime; // Update position based on velocity and time
-                    newPosition.y = mod(newPosition.y, uRainSpawnY); // Update position based on velocity and time
-
-                    float t = (uTime * uVelocity + position.y) / uRainSpawnY;
-                    float wraps = floor(t);
-                    float frac = fract(t);
-
-                    /*
-                        // Detect recent reset (optional, for visuals)
-                        vIsReset = step(frac, 0.05);
-                        
-                        // usage of mix: false, true, boolean
-                        newPosition.x = mix(position.x, position.x + uCameraPosition.x, vIsReset);
-                        newPosition.z = mix(position.z, position.z + uCameraPosition.z, vIsReset);
-                    */
-
-                    // view-space transform
-                    vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0);
-                    gl_Position = projectionMatrix * mvPosition;
-
-                    // Proper size attenuation based on distance to camera
-                    float dist = -mvPosition.z; // camera-space depth
-                    float attenuation = clamp(200.0 / dist, 0.0, 1.0);
-                    gl_PointSize = dropletSize * attenuation;                    
-                    
-                    vVelocity = velocity;
-                    vAlpha = 1.0 - frac;
-                }
-            `,
-            fragmentShader: `            
-                uniform float blueColor;
-
-                varying float vAlpha;
-                varying float vVelocity;
-
-                void main() {
-
-                    // Convert gl_PointCoord from [0,1] to centered [-1,1]
-                    vec2 uv = gl_PointCoord * 2.0 - 1.0;
-
-                    
-                    uv.x *= 15.0;  // Stretch vertically for line-like streak
-                    //uv.y *= 2.5;  // stretch horizontally
-                    float r = length(uv);
-                    if (r > 1.0) discard;
-
-                    // soft vertical fade
-                    //float alpha = smoothstep(0.8, 0.0, abs(uv.x)) * vAlpha;
-                    float alpha = 0.3;
-
-                    //gl_FragColor = vec4(0.5, 0.5, blueColor, 0.5); // Light blue raindrops
-                    gl_FragColor = vec4(0.6, 0.7, 1.0, alpha);
-                }
-            `,
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
             transparent: true,
             blending: THREE.AdditiveBlending,
             depthWrite: false
