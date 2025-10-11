@@ -32,11 +32,10 @@ export class PrecipitationSystem {
         
         this.uniforms = {
             uTime: { value: 0.0 },
-            uFallSpeed: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 50.0},
+            uVelocity: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 50.0},
             blueColor: { value: precipitationType == PrecipitationType.Rain ? 0.8 : 0.6},
-            rainAreaCenter: { value: new THREE.Vector3(0, 0, 0) },
-            initialRainHeight: {value: PrecipitationSystem.maxY },
-            rainRadius: { value: 500 },
+            uSpawnOffset: { value: new THREE.Vector3(0, 0, 0) },
+            uRainSpawnY: {value: PrecipitationSystem.maxY },
             dropletSize: { value: precipitationType == PrecipitationType.Rain ? 3 : 4},
         };
 
@@ -84,48 +83,38 @@ export class PrecipitationSystem {
                 attribute float velocity;
 
                 uniform float uTime;
-                uniform float uFallSpeed;
-                uniform vec3 rainAreaCenter;
-                uniform float initialRainHeight;
-                uniform float rainRadius;
+                uniform float uVelocity;
+
+                uniform vec3 uSpawnOffset;
+                uniform float uRainSpawnY;
+
                 uniform float dropletSize;
-
-                float random(vec2 st) {
-                    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
-                }
-
-                void main() {
-                    
-                    //float newY = position.y - velocity * uFallSpeed * uTime;
-                    //if(newY <= 0.0)
-                        //newY = mod(newY, 200.0);
                 
+                varying float vIsReset;
+
+                void main() {                                    
                     vec3 newPosition = position;
                                     
-                    newPosition.y -= velocity * uFallSpeed * uTime; // Update position based on velocity and time
-                    newPosition.y = mod(newPosition.y, initialRainHeight); // Update position based on velocity and time
+                    newPosition.y -= velocity * uVelocity * uTime; // Update position based on velocity and time
+                    newPosition.y = mod(newPosition.y, uRainSpawnY); // Update position based on velocity and time
+
+                    float t = (uTime * uVelocity + position.y) / uRainSpawnY;
+                    float wraps = floor(t);
+                    float frac = fract(t);
+
+                    // Detect recent reset (optional, for visuals)
+                    vIsReset = step(frac, 0.05);
                     
-                    /*
-                    if (newPosition.y >= initialRainHeight - 5.0) {
-                        //newPosition.y += 100.0; // Reset position when it falls below threshold
-                        //newPosition.y = initialRainHeight;
+                    // false, true, boolean
+                    newPosition.x = mix(position.x, position.x + uSpawnOffset.x, vIsReset);
+                    newPosition.z = mix(position.z, position.z + uSpawnOffset.z, vIsReset);
 
-                        float angle = random(vec2(newPosition.x, newPosition.z)) * 6.283185;
-                        float radius = random(vec2(newPosition.y, newPosition.z)) * rainRadius;
-                        newPosition.x = rainAreaCenter.x + cos(angle) * radius;
-                        newPosition.z = rainAreaCenter.z + sin(angle) * radius;
-                    }
-                    */
-
-                    newPosition.x += rainAreaCenter.x;
-                    newPosition.z += rainAreaCenter.z;
-
-                    // Size attenuation
-                    //float size = 5.0 / -newPosition.z;
-                    //gl_PointSize = size;
-                            
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
                     gl_PointSize = dropletSize; // Size of each raindrop / snowflake
+
+                    // Size attenuation
+                    // float size = 1.0 / -newPosition.z;
+                    // gl_PointSize = size;                            
                 }
             `,
             fragmentShader: `            
@@ -220,7 +209,8 @@ export class PrecipitationSystem {
     update(clock: THREE.Clock, camera: THREE.Camera): void {
 
         //this.rainMaterial.uniforms['uTime'].value += clock.getDelta();
-        this.rainMaterial.uniforms['rainAreaCenter'].value.copy(camera.position);
+        //this.rainMaterial.uniforms['rainAreaCenter'].value.copy(camera.position);
+        this.rainMaterial.uniforms['uSpawnOffset'].value.copy(camera.position);
         this.rainMaterial.uniforms['uTime'].value += 0.5 / 60.0;
         if(this.rainMaterial.uniforms['uTime'].value >= 5)
             this.rainMaterial.uniforms['uTime'].value = 0;
