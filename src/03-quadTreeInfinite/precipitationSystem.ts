@@ -36,7 +36,7 @@ export class PrecipitationSystem {
             blueColor: { value: precipitationType == PrecipitationType.Rain ? 0.8 : 0.6},
             uSpawnOffset: { value: new THREE.Vector3(0, 0, 0) },
             uRainSpawnY: {value: PrecipitationSystem.maxY },
-            dropletSize: { value: precipitationType == PrecipitationType.Rain ? 3 : 4},
+            dropletSize: { value: precipitationType == PrecipitationType.Rain ? 50 : 6},
         };
 
         // Create an array to hold the positions of the raindrops
@@ -79,6 +79,7 @@ export class PrecipitationSystem {
 
         this.rainMaterial = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
+
             vertexShader: `
                 attribute float velocity;
 
@@ -92,6 +93,9 @@ export class PrecipitationSystem {
                 
                 varying float vIsReset;
 
+                varying float vAlpha;
+                varying float vVelocity;
+
                 void main() {                                    
                     vec3 newPosition = position;
                                     
@@ -102,32 +106,57 @@ export class PrecipitationSystem {
                     float wraps = floor(t);
                     float frac = fract(t);
 
+                    /*
                     // Detect recent reset (optional, for visuals)
                     vIsReset = step(frac, 0.05);
                     
-                    // false, true, boolean
+                    // usage of mix: false, true, boolean
                     newPosition.x = mix(position.x, position.x + uSpawnOffset.x, vIsReset);
                     newPosition.z = mix(position.z, position.z + uSpawnOffset.z, vIsReset);
+                    */
 
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-                    gl_PointSize = dropletSize; // Size of each raindrop / snowflake
+                    vVelocity = velocity;
+                    vAlpha = 1.0 - frac;
 
-                    // Size attenuation
-                    // float size = 1.0 / -newPosition.z;
-                    // gl_PointSize = size;                            
+                     // view-space transform
+                    vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0);
+                    gl_Position = projectionMatrix * mvPosition;
+
+                    // Proper size attenuation based on distance to camera
+                    float dist = -mvPosition.z; // camera-space depth
+                    float attenuation = clamp(200.0 / dist, 0.0, 1.0);
+                    gl_PointSize = 20.0 * attenuation;                    
                 }
             `,
             fragmentShader: `            
                 uniform float blueColor;
 
+                varying float vAlpha;
+                varying float vVelocity;
+
                 void main() {
-                    gl_FragColor = vec4(0.5, 0.5, blueColor, 0.5); // Light blue raindrops
+
+                    // Convert gl_PointCoord from [0,1] to centered [-1,1]
+                    vec2 uv = gl_PointCoord * 2.0 - 1.0;
+
+                    
+                    uv.x *= 100.0;  // Stretch vertically for line-like streak
+                    //uv.y *= 100.0;  // stretch horizontally
+                    float r = length(uv);
+
+                    // soft vertical fade
+                    float alpha = smoothstep(1.2, 0.0, abs(uv.x)) * vAlpha;
+                    
+
+                    if (r > 1.0) discard;
+                    
+                    //gl_FragColor = vec4(0.5, 0.5, blueColor, 0.5); // Light blue raindrops
+                    gl_FragColor = vec4(0.6, 0.7, 1.0, alpha);
                 }
             `,
             transparent: false,
-
         });
-
+        
         const rain = new THREE.Points(this.rainGeometry, this.rainMaterial);
         rain.frustumCulled = false;
         scene.add(rain);          
