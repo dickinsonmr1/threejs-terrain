@@ -24,7 +24,7 @@ void main() {
     // vertical fade (so ends are softer)
     float vfade = smoothstep(1.2, 0.0, abs(r.x));
     // small radial falloff to soften edges
-    float rfade = smoothstep(1.0, 0.3, radial);
+    float rfade = smoothstep(1.2, 0.3, radial);
 
     float alpha = vAlpha * vfade * rfade * 0.6; // 0.6 global brightness
 

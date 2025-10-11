@@ -9,6 +9,8 @@ uniform float uRainSpawnY;
 
 uniform float dropletSize;
 
+uniform float uLifetime;
+
 varying float vIsReset;
 
 varying float vAlpha;
@@ -17,16 +19,12 @@ varying float vVelocity;
 varying float vAngle;     // rotation to apply in fragment
 varying float vPointSize; // pass point size to fragment if desired
 
-void main() {                                    
+void main() {             
+                           
     vec3 newPosition = position;
                     
     newPosition.y -= uVelocity * uTime; // Update position based on velocity and time
-    newPosition.y = mod(newPosition.y, uRainSpawnY); // Update position based on velocity and time
-
-    float t = (uTime * uVelocity + position.y) / uRainSpawnY;
-    float wraps = floor(t);
-    float frac = fract(t);
-
+    newPosition.y = mod(newPosition.y, uRainSpawnY); // scale into range of 0->uRainSpawnY
     /*
         // Detect recent reset (optional, for visuals)
         vIsReset = step(frac, 0.05);
@@ -42,11 +40,14 @@ void main() {
     
     // Proper size attenuation based on distance to camera
     float dist = -mvPosition.z; // camera-space depth
-    float attenuation = clamp(200.0 / dist, 0.0, 1.0);
+    float attenuation = clamp(100.0 / dist, 0.0, 1.0);
     gl_PointSize = dropletSize * attenuation;                    
     
     vVelocity = velocity;
-    vAlpha = 1.0 - frac;
+
+    //float t = (uTime * uVelocity + position.y) / uRainSpawnY;
+    //float frac = fract(t);
+    vAlpha = 0.3;// - frac;
                         
     // ---- compute screen-space direction of world up (0,1,0) at this particle ----
     // clip space for worldPos

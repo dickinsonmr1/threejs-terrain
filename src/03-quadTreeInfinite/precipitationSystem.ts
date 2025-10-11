@@ -34,11 +34,12 @@ export class PrecipitationSystem {
         
         this.uniforms = {
             uTime: { value: 0.0 },
-            uVelocity: { value: precipitationType == PrecipitationType.Rain ? 500.0 : 50.0},
+            uVelocity: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 50.0},
             blueColor: { value: precipitationType == PrecipitationType.Rain ? 0.8 : 0.6},
             uCameraPosition: { value: new THREE.Vector3(0, 0, 0) },
             uRainSpawnY: {value: PrecipitationSystem.maxY },
             dropletSize: { value: precipitationType == PrecipitationType.Rain ? 50 : 6},
+            uLifetime: { value: 3000 },
         };
 
         // Create an array to hold the positions of the raindrops
@@ -49,7 +50,7 @@ export class PrecipitationSystem {
             positions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
             positions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY + PrecipitationSystem.maxY; // y position
             positions[i * 3 + 2] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // z position
-            velocities[i] = Math.random() * 0.5 + 0.5; // random velocity
+            velocities[i] = 0.5 //Math.random() * 0.5 + 0.5; // random velocity
         }
 
         // Set the positions as the attribute of the geometry
