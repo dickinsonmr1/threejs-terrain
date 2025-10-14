@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import vertexShader from './rain.vert?raw';
 import fragmentShader from './rain.frag?raw';
 import { InstancedMeshClouds } from './instancedMeshClouds';
+import { transcode } from 'buffer';
 
 export enum PrecipitationType {
     None = 0,
@@ -16,25 +17,24 @@ export class PrecipitationSystem {
 
     private static maxY: number = 500;
 
-    private static rainCount: number = 50000;
-    rainGeometry?: THREE.BufferGeometry;
+    private static rainCount: number = 100000;
+    private rainGeometry?: THREE.BufferGeometry;
+    private rainUniforms: any;
+    private rainMaterial?: THREE.ShaderMaterial;
 
-    private static cloudCount: number = 50000;
-    cloudGeometry?: THREE.BufferGeometry;
-    
+
+    private static cloudCount: number = 1000;
+    private cloudGeometry?: THREE.BufferGeometry;
+    private cloudUniforms: any;
+    private cloudMaterial?: THREE.ShaderMaterial;
+
+    private cloudTexture: THREE.Texture;
 
     private clouds: THREE.Mesh[] = [];
     private billboardClouds: THREE.Group = new THREE.Group;
     private instancedMeshClouds?: InstancedMeshClouds;
 
     private flash?: THREE.PointLight;
-
-    private cloudTexture: THREE.Texture;
-
-    uniforms: any;
-    rainMaterial?: THREE.ShaderMaterial;
-
-    cloudMaterial?: THREE.ShaderMaterial;
 
     constructor(scene: THREE.Scene, private mapSize: number, precipitationType: PrecipitationType, horizontalScale: number) {
 
@@ -65,7 +65,7 @@ export class PrecipitationSystem {
 
         // Define the number of raindrops
         
-        this.uniforms = {
+        this.rainUniforms = {
             uTime: { value: 0.0 },
             uVelocity: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 50.0},
             blueColor: { value: precipitationType == PrecipitationType.Rain ? 0.8 : 0.6},
@@ -112,7 +112,7 @@ export class PrecipitationSystem {
         */
 
         this.rainMaterial = new THREE.ShaderMaterial({
-            uniforms: this.uniforms,
+            uniforms: this.rainUniforms,
 
             vertexShader: vertexShader,
             fragmentShader: fragmentShader,
@@ -197,6 +197,21 @@ export class PrecipitationSystem {
         
         this.cloudGeometry = new THREE.BufferGeometry();
 
+        const cloudTexture = new THREE.TextureLoader().load('assets/weather/cloud-128x128.png');
+        cloudTexture.wrapS = cloudTexture.wrapT = THREE.RepeatWrapping;
+        cloudTexture.minFilter = THREE.LinearMipmapLinearFilter;
+        cloudTexture.magFilter = THREE.LinearFilter;
+        cloudTexture.colorSpace = THREE.SRGBColorSpace;
+
+        this.cloudUniforms = {
+            uTexture: { value: cloudTexture},
+            //uTime: { value: 0.0 },
+            //uCameraPosition: { value: new THREE.Vector3(0, 0, 0) },
+            //uRainSpawnY: {value: PrecipitationSystem.maxY },            
+            //uLifetime: { value: 3000 },
+            dropletSize: { value: 200.0 }
+        };
+
         
         // Create an array to hold the positions of the raindrops
         let cloudPositions = new Float32Array(PrecipitationSystem.cloudCount * 3);
@@ -212,6 +227,45 @@ export class PrecipitationSystem {
         // Set the positions as the attribute of the geometry
         this.cloudGeometry.setAttribute('position', new THREE.BufferAttribute(cloudPositions, 3));
         //this.cloudGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
+
+        this.cloudMaterial = new THREE.ShaderMaterial({
+            
+            uniforms: this.cloudUniforms,            
+            vertexShader: `
+
+                //uniform sampler2D uTexture;
+                uniform float dropletSize;
+                varying vec2 vUv;
+
+                void main() {                   
+                    vUv = uv; // pass texture coordinates to fragment shader                 
+                    vec3 newPosition = position;
+                                                       
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+                    gl_PointSize = dropletSize; // Size of each raindrop / snowflake
+
+                    // Size attenuation
+                    // float size = 1.0 / -newPosition.z;
+                    // gl_PointSize = size;                            
+                }
+            `,
+            fragmentShader: `            
+                
+                uniform sampler2D uTexture;
+                varying vec2 vUv;
+
+                void main() {
+                    //gl_FragColor = vec4(0.1, 0.1, 0.1, 0.1);
+
+                    vec4 color = texture2D(uTexture, gl_PointCoord);
+                    //if (color.a < 0.05) discard; // optional transparency threshold
+                    gl_FragColor = color;
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
 
         // points clouds
         const cloudPoints = new THREE.Points(this.cloudGeometry, this.cloudMaterial);
