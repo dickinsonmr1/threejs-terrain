@@ -14,7 +14,6 @@ export default class GameScene extends THREE.Scene {
     sky!: Sky;
     water!: Water;
     quadTree!: QuadTree;
-    camera: THREE.Camera;
     totalNodes: number = 0;
 
     terrainGeneratorParams: TerrainGeneratorParams;
@@ -25,11 +24,9 @@ export default class GameScene extends THREE.Scene {
     fireParticleEmitter!: FireParticleEmitter;
 
     clock: THREE.Clock = new THREE.Clock();
-    
-    constructor(camera: THREE.Camera) {
+   
+    constructor(public readonly camera: THREE.Camera, public readonly renderer: THREE.WebGLRenderer) {
         super();
-
-        this.camera = camera;
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
         this.simplexNoiseGenerator = new SimplexNoiseGenerator(this.terrainGeneratorParams)

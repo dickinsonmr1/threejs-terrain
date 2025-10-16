@@ -4,6 +4,7 @@ import vertexShader from './rain.vert?raw';
 import fragmentShader from './rain.frag?raw';
 import { InstancedMeshClouds } from './instancedMeshClouds';
 import { transcode } from 'buffer';
+import GameScene from './gameScene';
 
 export enum PrecipitationType {
     None = 0,
@@ -23,7 +24,7 @@ export class PrecipitationSystem {
     private rainMaterial?: THREE.ShaderMaterial;
 
 
-    private static cloudCount: number = 1000;
+    private static cloudCount: number = 10000;
     private cloudGeometry?: THREE.BufferGeometry;
     private cloudUniforms: any;
     private cloudMaterial?: THREE.ShaderMaterial;
@@ -123,6 +124,7 @@ export class PrecipitationSystem {
         
         const rain = new THREE.Points(this.rainGeometry, this.rainMaterial);
         rain.frustumCulled = false;
+        rain.renderOrder = 2; // draw after clouds
         scene.add(rain);   
         
     }
@@ -197,11 +199,18 @@ export class PrecipitationSystem {
         
         this.cloudGeometry = new THREE.BufferGeometry();
 
-        const cloudTexture = new THREE.TextureLoader().load('assets/weather/cloud-128x128.png');
+        const cloudTexture = new THREE.TextureLoader().load('assets/weather/cloud-32x32.png');
         cloudTexture.wrapS = cloudTexture.wrapT = THREE.RepeatWrapping;
         cloudTexture.minFilter = THREE.LinearMipmapLinearFilter;
         cloudTexture.magFilter = THREE.LinearFilter;
         cloudTexture.colorSpace = THREE.SRGBColorSpace;
+
+        const size = new THREE.Vector2();
+
+        let gameScene = <GameScene>scene;
+        gameScene.renderer.getSize(size); // CSS pixels
+        const dpr = gameScene.renderer.getPixelRatio();
+        const viewportHeightPx = size.y * dpr; // actual pixel height
 
         this.cloudUniforms = {
             uTexture: { value: cloudTexture},
@@ -209,67 +218,104 @@ export class PrecipitationSystem {
             //uCameraPosition: { value: new THREE.Vector3(0, 0, 0) },
             //uRainSpawnY: {value: PrecipitationSystem.maxY },            
             //uLifetime: { value: 3000 },
-            dropletSize: { value: 200.0 }
+            uScale: { value: window.innerHeight / 2 }, // used for attenuation scaling
+            uViewportHeight: { value: viewportHeightPx },
+            uDarkness: { value: 0.4 }, // 0 = white, 1 = very dark
         };
 
         
         // Create an array to hold the positions of the raindrops
         let cloudPositions = new Float32Array(PrecipitationSystem.cloudCount * 3);
-        //const velocities = new Float32Array(PrecipitationSystem.rainCount); // velocity for each raindrop
+        const cloudSizes = new Float32Array(PrecipitationSystem.cloudCount); // random size for each cloud
 
         for (let i = 0; i < PrecipitationSystem.rainCount; i++) {
             cloudPositions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
             cloudPositions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY + PrecipitationSystem.maxY; // y position
             cloudPositions[i * 3 + 2] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // z position
-            //velocities[i] = Math.random() + 0.5; // random velocity
+            cloudSizes[i] = Math.random() * 200 + 200; // random cloud size
         }
 
         // Set the positions as the attribute of the geometry
         this.cloudGeometry.setAttribute('position', new THREE.BufferAttribute(cloudPositions, 3));
-        //this.cloudGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
+        this.cloudGeometry.setAttribute('aSize', new THREE.BufferAttribute(cloudSizes, 1));
 
         this.cloudMaterial = new THREE.ShaderMaterial({
             
             uniforms: this.cloudUniforms,            
             vertexShader: `
 
-                //uniform sampler2D uTexture;
-                uniform float dropletSize;
                 varying vec2 vUv;
+                uniform float uScale;
+
+                uniform float uViewportHeight; // in pixels (typically renderer.domElement.height * devicePixelRatio)
+                attribute float aSize;         // size in world units (or interpret as desired)
+                varying float vAlpha;      
+                varying float vSeed;          
 
                 void main() {                   
                     vUv = uv; // pass texture coordinates to fragment shader                 
-                    vec3 newPosition = position;
-                                                       
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-                    gl_PointSize = dropletSize; // Size of each raindrop / snowflake
+                                        
+                   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    float dist = max(0.0001, -mvPosition.z); // distance in camera space
 
-                    // Size attenuation
-                    // float size = 1.0 / -newPosition.z;
-                    // gl_PointSize = size;                            
+                    // projectionMatrix[1][1] = 1.0 / tan(fov/2)
+                    float worldToNDC = projectionMatrix[1][1];
+                    float pixelsPerWorldUnit = worldToNDC * (uViewportHeight * 0.5);
+
+                    // final size attenuation in pixels
+                    float size = aSize * pixelsPerWorldUnit / dist;
+
+                    gl_PointSize = clamp(size, 1.0, 200.0);
+                    gl_Position = projectionMatrix * mvPosition;
+
+                    vAlpha = 1.0; 
                 }
             `,
             fragmentShader: `            
-                
                 uniform sampler2D uTexture;
-                varying vec2 vUv;
+                varying float vSeed;
+                varying float vAlpha;
+                uniform float uDarkness;
+
+                // hash-like function for subtle per-particle variation
+                float rand(float n) { return fract(sin(n) * 43758.5453123); }
 
                 void main() {
-                    //gl_FragColor = vec4(0.1, 0.1, 0.1, 0.1);
+                    vec2 uv = gl_PointCoord;
 
-                    vec4 color = texture2D(uTexture, gl_PointCoord);
-                    //if (color.a < 0.05) discard; // optional transparency threshold
-                    gl_FragColor = color;
+                    // make circular fade mask (soft edges)
+                    float distToCenter = length(uv - 0.5);
+                    float edgeFade = smoothstep(0.5, 0.25, distToCenter); // 1.0 at center, 0.0 at edge
+
+                    // sample texture (optional; could use white if you prefer)
+                    vec4 texColor = texture2D(uTexture, uv);
+
+                    // random brightness and softness variation
+                    float variation = mix(0.8, 1.2, rand(vSeed));
+                    float softness = mix(0.8, 1.5, rand(vSeed * 2.0));
+
+                    // simulate light falloff from top-left (fake lighting)
+                    float lighting = clamp(0.7 + (uv.y - 0.5) * 0.4, 0.6, 1.0);
+
+                    // Darken overall color
+                    vec3 baseColor = texColor.rgb * lighting * variation;
+                    baseColor = mix(baseColor, vec3(0.05, 0.05, 0.08), uDarkness); // mix toward dark grey-blue
+
+                    float alpha = texColor.a * edgeFade * vAlpha;
+                    if (alpha < 0.05) discard;
+
+                    gl_FragColor = vec4(baseColor, alpha);
                 }
             `,
             transparent: true,
-            blending: THREE.AdditiveBlending,
+            blending: THREE.NormalBlending,
             depthWrite: false
         });
 
         // points clouds
         const cloudPoints = new THREE.Points(this.cloudGeometry, this.cloudMaterial);
         cloudPoints.frustumCulled = false;
+        cloudPoints.renderOrder = 1; // draw before rain
         scene.add(cloudPoints);          
     }
 

@@ -16,7 +16,15 @@ camera.far = 10000;
 camera.position.set(0, 50, 0);
 camera.updateProjectionMatrix();
 
-const scene = new GameScene(camera);
+const renderer = new THREE.WebGLRenderer({
+  //antialias: true,
+  //logarithmicDepthBuffer: true
+});
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild(renderer.domElement);
+
+const scene = new GameScene(camera, renderer);
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
@@ -36,14 +44,6 @@ const settings = {
     azimuth: 0.25,
   }
 };
-
-const renderer = new THREE.WebGLRenderer({
-  //antialias: true,
-  //logarithmicDepthBuffer: true
-});
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild(renderer.domElement);
 
 // https://threejs.org/examples/#misc_controls_pointerlock
 
