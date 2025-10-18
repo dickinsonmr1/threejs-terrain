@@ -221,6 +221,8 @@ export class PrecipitationSystem {
             uScale: { value: window.innerHeight / 2 }, // used for attenuation scaling
             uViewportHeight: { value: viewportHeightPx },
             uDarkness: { value: 0.4 }, // 0 = white, 1 = very dark
+            uTime: { value: 0.0 },
+            uWind: { value: new THREE.Vector2(100.0, 100.0) }, // XZ direction (wind speed)
         };
 
         
@@ -245,17 +247,25 @@ export class PrecipitationSystem {
             vertexShader: `
 
                 varying vec2 vUv;
-                uniform float uScale;
+                //uniform float uScale;
+
+                uniform float uTime;
+                uniform vec2 uWind;
 
                 uniform float uViewportHeight; // in pixels (typically renderer.domElement.height * devicePixelRatio)
                 attribute float aSize;         // size in world units (or interpret as desired)
                 varying float vAlpha;      
                 varying float vSeed;          
 
-                void main() {                   
+                void main() {            
+                
+                    // Wind movement — offset clouds in XZ
+                    vec3 pos = position;
+                    pos.xz += uWind * uTime;
+
                     vUv = uv; // pass texture coordinates to fragment shader                 
                                         
-                   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
                     float dist = max(0.0001, -mvPosition.z); // distance in camera space
 
                     // projectionMatrix[1][1] = 1.0 / tan(fov/2)
@@ -369,5 +379,11 @@ export class PrecipitationSystem {
 
         if(this.instancedMeshClouds)
             this.instancedMeshClouds.update(camera);
+
+        if(this.cloudMaterial) {
+            this.cloudMaterial.uniforms['uTime'].value += 0.5 / 60.0;
+            if(this.cloudMaterial.uniforms['uTime'].value >= 10)
+                this.cloudMaterial.uniforms['uTime'].value = 0;
+        }
     }
 }
