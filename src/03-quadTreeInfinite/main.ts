@@ -9,6 +9,8 @@ import { SkyType } from '../shared/skyType';
 import Stats from 'three/addons/libs/stats.module.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import GameScene from './gameScene';
+import nipplejs from 'nipplejs';
+import { Console } from 'console';
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.near = 1;
@@ -104,6 +106,70 @@ let pointerLockControls = initializePointerLock(camera, document);//canvas);
 if(pointerLockControls)
   scene.add(pointerLockControls?.object);
 
+
+// on-screen joysticks
+let joystickManager : nipplejs.JoystickManager = nipplejs.create({
+    zone: document.getElementById('joystickContainerDynamic')!,
+    mode: 'static',
+    dynamicPage: true,
+    position: { left: '20%', bottom: '20%' },
+    color: 'blue',
+    restOpacity: 0.25
+});
+joystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
+
+  turboOn = true;
+  if(output.vector.y > 0.1) {
+      velocity.z = -moveSpeed * Math.abs(output.vector.y);
+  }
+  else if(output.vector.y < -0.1) {
+      velocity.z = moveSpeed* Math.abs(output.vector.y);
+  }
+  else {
+    velocity.z = 0;
+  }
+
+  if(output.vector.x > 0.1) {
+      velocity.x = moveSpeed * Math.abs(output.vector.x);
+  }
+  else if(output.vector.x < -0.1) {
+      velocity.x = -moveSpeed * Math.abs(output.vector.x);
+  }
+  else {
+    velocity.x = 0;
+  }
+  console.log('test');
+});
+
+joystickManager.on('end',  () => {
+  turboOn = false;
+  velocity.x = 0;
+  velocity.y = 0;
+  velocity.z = 0
+});
+
+const zone = document.getElementById('joystickContainerDynamic');
+if (zone) {
+    zone.style.display = 'block';
+}
+
+const el = document.getElementById("canvas")!;
+el.addEventListener("touchstart", handleStart);
+el.addEventListener("touchend", handleEnd);
+el.addEventListener("touchcancel", handleCancel);
+el.addEventListener("touchmove", handleMove);
+
+function handleStart() {  
+}
+function handleEnd() {  
+}
+function handleCancel() {  
+}
+function handleMove() {  
+}
+
+// movement
+
 const moveSpeed = 1;
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
@@ -174,7 +240,8 @@ function moveCamera() {
 
 // https://lil-gui.georgealways.com/
 const gui = new GUI();
-
+gui.title('Debug');
+gui.close();
 gui.add( document, 'title' );
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
 gui.add(scene.children, 'length').name('Scene Children Count').listen();

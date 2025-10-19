@@ -42,20 +42,26 @@
   </head>
   <body>
     <div id="build-info" ></div>
+	<div id="joystickContainerDynamic"></div>
 	<div id="blocker">
-			<div id="instructions">
-				<p style="font-size:36px">
-					Click to start terrain sandbox
-				</p>
-				<p>
-					Move: WASD / Arrow Keys<br/>          
-					Turbo: Move + Shift<br/>          
-					Elevation: QZ<br/>
-					<br/>
-					Look: MOUSE
-				</p>
-			</div>
+		<div id="instructions">
+			<p style="font-size:36px">
+				Click or tap to start terrain sandbox
+			</p>
+			<p>
+				KEYBOARD/MOUSE CONTROLS:<br/>
+				Move: WASD / Arrow Keys<br/>          
+				Turbo: Move + Shift<br/>          
+				Elevation: QZ<br/>				
+				Look: MOUSE<br/>
+				<br/>
+				TOUCH CONTROLS:<br/>
+				Left pad: Move<br/>
+				Right pad: Look<br/>
+			</p>
 		</div>
+	</div>
+	
 	<script type="module" src="/src/03-quadTreeInfinite/global.ts"></script>
     <script type="module" src="/src/03-quadTreeInfinite/main.ts"></script>	
   </body>
