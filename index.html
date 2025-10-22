@@ -39,24 +39,31 @@
 				font-size: 14px;
 			}
 		</style>
-    <script type="module" crossorigin src="/threejs-terrain/assets/index-CA4Owmwj.js"></script>
+    <script type="module" crossorigin src="/threejs-terrain/assets/index-BvLzI7Dl.js"></script>
     <link rel="stylesheet" crossorigin href="/threejs-terrain/assets/index-Cz4zGhbH.css">
   </head>
   <body>
+	<div id="canvas"></div>
     <div id="build-info" ></div>
+	<div id="joystickContainerDynamic"></div>
 	<div id="blocker">
-			<div id="instructions">
-				<p style="font-size:36px">
-					Click to start terrain sandbox
-				</p>
-				<p>
-					Move: WASD / Arrow Keys<br/>          
-					Turbo: Move + Shift<br/>          
-					Elevation: QZ<br/>
-					<br/>
-					Look: MOUSE
-				</p>
-			</div>
-		</div>	
+		<div id="instructions">
+			<p style="font-size:36px">
+				Click or tap to start terrain sandbox
+			</p>
+			<p>
+				KEYBOARD/MOUSE CONTROLS:<br/>
+				Move: WASD / Arrow Keys<br/>          
+				Turbo: Move + Shift<br/>          
+				Elevation: QZ<br/>				
+				Look: MOUSE<br/>
+				<br/>
+				TOUCH CONTROLS:<br/>
+				Left pad: Move<br/>
+				Right pad: Look<br/>
+			</p>
+		</div>
+	</div>
+		
   </body>
 </html>
