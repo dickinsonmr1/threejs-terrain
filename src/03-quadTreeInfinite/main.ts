@@ -12,6 +12,8 @@ import GameScene from './gameScene';
 import nipplejs from 'nipplejs';
 import { Console } from 'console';
 
+//const isMobile = 'ontouchstart' in window;
+
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.near = 1;
 camera.far = 10000;
@@ -27,6 +29,14 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
 
 const scene = new GameScene(camera, renderer);
+
+const pitchObject = new THREE.Group();
+pitchObject.add(camera);
+
+const yawObject = new THREE.Group();
+yawObject.add(pitchObject);
+
+scene.add(yawObject);
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
@@ -52,6 +62,8 @@ const settings = {
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
+let touchScreenRequested = false;
+
 function initializePointerLock(camera: THREE.Camera, document: Document): PointerLockControls | null {
 
   const isPointerLockSupported = 
@@ -66,8 +78,9 @@ function initializePointerLock(camera: THREE.Camera, document: Document): Pointe
 
   let isPointerLockRequested = false;
   
+  
   instructions!.addEventListener( 'click', async () => {
-    if(!isPointerLockRequested) {
+    if(!isPointerLockRequested && !touchScreenRequested) {
       try {
         isPointerLockRequested = true;
         pointerLockControls.lock();
@@ -107,17 +120,22 @@ if(pointerLockControls)
   scene.add(pointerLockControls?.object);
 
 
+///////////////////////////////////////////////
 // on-screen joysticks
-let joystickManager : nipplejs.JoystickManager = nipplejs.create({
-    zone: document.getElementById('joystickContainerDynamic')!,
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+// LEFT
+///////////////////////////////////////////////
+
+let leftJoystickManager : nipplejs.JoystickManager = nipplejs.create({
+    zone: document.getElementById('leftJoystickContainerDynamic')!,
     mode: 'static',
     dynamicPage: true,
     position: { left: '20%', bottom: '20%' },
     color: 'blue',
     restOpacity: 0.25
 });
-joystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
-
+leftJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
   turboOn = true;
   if(output.vector.y > 0.1) {
       velocity.z = -moveSpeed * Math.abs(output.vector.y);
@@ -141,35 +159,92 @@ joystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.Joysti
   console.log('test');
 });
 
-joystickManager.on('end',  () => {
+leftJoystickManager.on('end',  () => {
   turboOn = false;
   velocity.x = 0;
   velocity.y = 0;
   velocity.z = 0
 });
 
-const zone = document.getElementById('joystickContainerDynamic');
-if (zone) {
-    zone.style.display = 'block';
+const leftZone = document.getElementById('rightJoystickContainerDynamic');
+if (leftZone) {
+    leftZone.style.display = 'block';
 }
 
-const el = document.getElementById("canvas")!;
-el.addEventListener("touchstart", handleStart);
-el.addEventListener("touchend", handleEnd);
-el.addEventListener("touchcancel", handleCancel);
-el.addEventListener("touchmove", handleMove);
+///////////////////////////////////////////////
+// RIGHT
+///////////////////////////////////////////////
+let rightJoystickManager : nipplejs.JoystickManager = nipplejs.create({
+    zone: document.getElementById('rightJoystickContainerDynamic')!,
+    mode: 'static',
+    dynamicPage: true,
+    position: { right: '20%', bottom: '20%' },
+    color: 'blue',
+    restOpacity: 0.25
+});
+rightJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
+  
+  const lookSpeed = 1;
+  const deltaX = (output.vector?.x ?? 0) * lookSpeed * 0.1;
+  const deltaY = (output.vector?.y ?? 0) * lookSpeed * 0.1;
 
-function handleStart() {  
+  // Yaw (Y-axis rotation)  
+  //pointerLockControls!.object.rotation.y -= deltaX;
+  // yaw -= deltaX;
+  yawObject.rotation.y -= deltaX;
+
+  // Pitch (X-axis rotation)\  
+  //pointerLockControls!.object.rotation.x -= deltaY;
+  // pitch -= deltaY;
+  pitchObject.rotation.x -= deltaY;
+
+  // clamp pitch to avoid flipping
+  const limit = Math.PI / 2 - 0.1;
+  //pointerLockControls!.object.rotation.x = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pointerLockControls!.object.rotation.x));
+  //pitch = Math.max(-limit, Math.min(limit, pitch));
+  pitchObject.rotation.x = Math.max(-limit, Math.min(limit, pitchObject.rotation.x));
+
+  //pointerLockControls!.object.rotation.z = 0;
+
+   // Build quaternion from yaw (Y) and pitch (X), no roll
+  //const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+  //const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
+  //const q = new THREE.Quaternion().multiplyQuaternions(qYaw, qPitch);
+  pitchObject.rotation.z = 0;
+  yawObject.rotation.z = 0;
+
+  //pointerLockControls!.object.quaternion.copy(q);
+});
+
+rightJoystickManager.on('end',  () => {
+  
+});
+
+const rightZone = document.getElementById('rightJoystickContainerDynamic');
+if (rightZone) {
+    rightZone.style.display = 'block';
 }
-function handleEnd() {  
-}
-function handleCancel() {  
-}
-function handleMove() {  
-}
+
+
+
+const el = document.getElementById("blocker")!;
+el.addEventListener("touchstart", (touchEvent) => {
+  touchScreenRequested = true;
+  //alert("touch start!")
+  instructions!.style.display = 'none';
+  blocker!.style.display = 'none';
+});
+el.addEventListener("touchend", (touchEvent) => {
+  //alert("touch end!")
+});
+el.addEventListener("touchcancel", (touchEvent) => {
+  //alert("touch cancel!")
+});
+el.addEventListener("touchmove", (touchEvent) => {
+  //alert("touch move!")
+});
 
 // movement
-
 const moveSpeed = 1;
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
@@ -232,10 +307,29 @@ document.addEventListener('keyup', (event) => {
 });
 
 function moveCamera() {
+  
     let multiplier = turboOn ? 10 : 1;
     let temp = velocity.clone();
     direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
     camera.position.add(direction);
+  
+    /*
+    // todo: fix me
+    const forward = new THREE.Vector3();
+    const right = new THREE.Vector3();
+
+    yawObject.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+    velocity.set(0, 0, 0);
+    velocity.addScaledVector(forward, -this.moveZ * this.moveSpeed * delta);
+    velocity.addScaledVector(right, this.moveX * this.moveSpeed * delta);
+
+    yawObject.position.add(this.velocity);
+    */
 }
 
 // https://lil-gui.georgealways.com/
