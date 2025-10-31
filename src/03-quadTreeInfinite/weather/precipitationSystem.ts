@@ -4,7 +4,7 @@ import vertexShader from './rain.vert?raw';
 import fragmentShader from './rain.frag?raw';
 import { InstancedMeshClouds } from './instancedMeshClouds';
 import { transcode } from 'buffer';
-import GameScene from './gameScene';
+import GameScene from '../gameScene';
 
 export enum PrecipitationType {
     None = 0,

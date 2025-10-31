@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
 import { VegetationMeshGenerator } from './vegetationMeshGenerator';
 
 export class Node {
@@ -115,7 +115,7 @@ export class Node {
     
         geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
     
-        var material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: false, depthTest: true, depthWrite: false } );
+        var material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false } );
         //material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
     
         this.vegetationBillboards = new THREE.Points( geometry, material );

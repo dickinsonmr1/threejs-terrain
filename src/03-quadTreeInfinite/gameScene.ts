@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 import { Sky, Water } from 'three/examples/jsm/Addons.js';
 import { SkyType } from '../shared/skyType';
-import { QuadTree } from './quadtree';
+import { QuadTree } from './terrain/quadtree';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
-import { VegetationMeshGenerator } from './vegetationMeshGenerator';
-import { PrecipitationSystem, PrecipitationType } from './precipitationSystem';
+import { VegetationMeshGenerator } from './terrain/vegetationMeshGenerator';
+import { PrecipitationSystem, PrecipitationType } from './weather/precipitationSystem';
 import { FireParticleEmitter } from './fireParticleEmitter';
 
 export default class GameScene extends THREE.Scene {
@@ -48,15 +48,14 @@ export default class GameScene extends THREE.Scene {
         if(skyType == SkyType.Shader) {
             this.sky.visible = true;
             this.background = null;          
-          }
-          else {
+        }
+        else {
             this.sky.visible = false;
             this.background = this.skyTexture;
-          }
+        }
     }
 
     private addSkybox() {
-
         const textureLoader = new THREE.TextureLoader();
         this.skyTexture = textureLoader.load(
           'assets/industrial_sunset_puresky.jpg',
@@ -72,7 +71,6 @@ export default class GameScene extends THREE.Scene {
     }
 
     private addShaderSky() {
-
         this.sky = new Sky();
         this.sky.scale.setScalar( 450000 );
         
@@ -146,8 +144,7 @@ export default class GameScene extends THREE.Scene {
         this.quadTree.updateMeshes(this);
     }
 
-    private addVegetation() {
-        
+    private addVegetation() {        
         // add vegetation
         const geometry = new THREE.BoxGeometry(1, 3, 1);
         const material = new THREE.MeshStandardMaterial({color: 0x00ff00});
@@ -162,12 +159,10 @@ export default class GameScene extends THREE.Scene {
     }
 
     private addFireParticleEmitter() {
-
         this.fireParticleEmitter = new FireParticleEmitter(this);
     }
 
-    public update(lockCameraToTerrain: boolean): void {
-                
+    public update(lockCameraToTerrain: boolean): void {                
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);
         this.totalNodes = this.quadTree.getTotalNodeCount();

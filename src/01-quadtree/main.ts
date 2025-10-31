@@ -2,7 +2,6 @@
 // demo 01: quadtree from height map
 // **********************************************************
 
-import './style.css'
 import * as THREE from 'three'
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import GUI from 'lil-gui';
@@ -15,7 +14,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
 import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
 import { TerrainLodSettings } from '../02-chunk/terrainLodSettings';
-import { QuadTree } from '../03-quadTreeInfinite/quadtree';
+import { QuadTree } from '../03-quadTreeInfinite/terrain/quadtree';
 
 const scene = new THREE.Scene();
 

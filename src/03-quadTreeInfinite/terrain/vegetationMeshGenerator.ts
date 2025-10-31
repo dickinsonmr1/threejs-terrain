@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import alea from 'alea';
-import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
-import { SeededRandom } from '../shared/seededRandom';
+import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
+import { SeededRandom } from '../../shared/seededRandom';
 
 export class VegetationMeshGenerator {
 

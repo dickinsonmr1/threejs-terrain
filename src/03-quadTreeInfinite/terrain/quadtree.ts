@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 import { Node } from './node';
-import { MeshGenerator } from '../shared/meshGenerator';
-import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
-import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
-import '../shared/threeExtensions'; // Import the extensions
+import { MeshGenerator } from '../../shared/meshGenerator';
+import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
+import { TerrainGeneratorParams } from '../../shared/terrainGeneratorParams';
+import '../../shared/threeExtensions'; // Import the extensions
 import { VegetationMeshGenerator } from './vegetationMeshGenerator';
 
 export class QuadTree {
