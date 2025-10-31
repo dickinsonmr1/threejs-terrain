@@ -4,7 +4,7 @@ import { SkyType } from '../shared/skyType';
 import { QuadTree } from './terrain/quadtree';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
-import { VegetationMeshGenerator } from './terrain/vegetationMeshGenerator';
+import { TreeGenerator } from './terrain/treeGenerator';
 import { PrecipitationSystem, PrecipitationType } from './weather/precipitationSystem';
 import { FireParticleEmitter } from './fireParticleEmitter';
 
@@ -18,7 +18,7 @@ export default class GameScene extends THREE.Scene {
 
     terrainGeneratorParams: TerrainGeneratorParams;
     simplexNoiseGenerator: SimplexNoiseGenerator;
-    vegetationMeshGenerator: VegetationMeshGenerator;
+    vegetationMeshGenerator: TreeGenerator;
 
     precipitationSystem: PrecipitationSystem;
     fireParticleEmitter!: FireParticleEmitter;
@@ -30,7 +30,7 @@ export default class GameScene extends THREE.Scene {
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
         this.simplexNoiseGenerator = new SimplexNoiseGenerator(this.terrainGeneratorParams)
-        this.vegetationMeshGenerator = new VegetationMeshGenerator(this, this.simplexNoiseGenerator);
+        this.vegetationMeshGenerator = new TreeGenerator(this, this.simplexNoiseGenerator);
 
         this.addSkybox();
         this.addShaderSky();
@@ -142,20 +142,6 @@ export default class GameScene extends THREE.Scene {
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);
-    }
-
-    private addVegetation() {        
-        // add vegetation
-        const geometry = new THREE.BoxGeometry(1, 3, 1);
-        const material = new THREE.MeshStandardMaterial({color: 0x00ff00});
-
-        const mesh1 = new THREE.Mesh(geometry, material);
-        let boxPositionY = this.simplexNoiseGenerator.getHeightFromNoiseFunction(0, 0);
-
-        mesh1.position.set(0, boxPositionY, 0);
-        this.add(mesh1);
-
-        // TODO: generate by node
     }
 
     private addFireParticleEmitter() {

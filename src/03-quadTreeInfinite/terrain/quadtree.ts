@@ -4,7 +4,7 @@ import { MeshGenerator } from '../../shared/meshGenerator';
 import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
 import { TerrainGeneratorParams } from '../../shared/terrainGeneratorParams';
 import '../../shared/threeExtensions'; // Import the extensions
-import { VegetationMeshGenerator } from './vegetationMeshGenerator';
+import { TreeGenerator } from './treeGenerator';
 
 export class QuadTree {
 
@@ -12,7 +12,7 @@ export class QuadTree {
     root: Node;
     bounds: THREE.Box2;
     simplexNoiseGenerator: SimplexNoiseGenerator;
-    vegetationMeshGenerator: VegetationMeshGenerator;
+    vegetationMeshGenerator: TreeGenerator;
 
     highDetailShaderMaterial: THREE.Material;
     lowDetailShaderMaterial: THREE.Material;
@@ -28,7 +28,7 @@ export class QuadTree {
 
     constructor(bounds: THREE.Box2,
         simplexNoiseGenerator: SimplexNoiseGenerator,
-        vegetationMeshGenerator: VegetationMeshGenerator,
+        vegetationMeshGenerator: TreeGenerator,
         terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, isWireFrame: boolean) 
     {
         this.bounds = bounds;
@@ -94,8 +94,11 @@ export class QuadTree {
             if(node.mesh != null) 
                 node.mesh!.visible = false;
 
-            if(node.vegetationBillboards != null) 
-                node.vegetationBillboards!.visible = false;
+            if(node.grassBillboards != null) 
+                node.grassBillboards!.visible = false;
+
+            if(node.grassInstancedMesh != null) 
+                node.grassInstancedMesh!.visible = false;
 
             //if(node.instancedMesh != null) 
                 //node.instancedMesh!.visible = false;
@@ -138,7 +141,7 @@ export class QuadTree {
                 node.mesh!.visible = true;                
             }
 
-            if(!node.vegetationBillboards) {
+            if(!node.grassBillboards) {
 
                 //if(node.lod > this.minLODForDetails)
                 if(nodeSize <= this.MIN_NODE_SIZE) {
@@ -148,13 +151,33 @@ export class QuadTree {
                         10,  // yMin
                         30, // yMax
                         10000);
-                    scene.add(node.vegetationBillboards!);
+                    scene.add(node.grassBillboards!);
                 }
             }
             else {
                 //if(node.lod > this.minLODForDetails)
                 if(nodeSize <= this.MIN_NODE_SIZE) {
-                    node.vegetationBillboards!.visible = true;
+                    node.grassBillboards!.visible = true;
+                }
+            }
+            
+            if(!node.grassInstancedMesh) {
+
+                //if(node.lod > this.minLODForDetails)
+                if(nodeSize <= this.MIN_NODE_SIZE) {
+                    node.generateGrassInstancedMesh('assets/billboard_grass_32x32.png',
+                        this.simplexNoiseGenerator,
+                        node.bounds,
+                        10,  // yMin
+                        30, // yMax
+                        10000);
+                    scene.add(node.grassInstancedMesh!);
+                }
+            }
+            else {
+                //if(node.lod > this.minLODForDetails)
+                if(nodeSize <= this.MIN_NODE_SIZE) {
+                    node.grassInstancedMesh!.visible = true;
                 }
             }
             

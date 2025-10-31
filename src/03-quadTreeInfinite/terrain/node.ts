@@ -1,13 +1,17 @@
 import * as THREE from 'three'
 import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
-import { VegetationMeshGenerator } from './vegetationMeshGenerator';
+import { TreeGenerator } from './treeGenerator';
 
 export class Node {
 
     children: Node[] = [];
 
     mesh?: THREE.Mesh;
-    vegetationBillboards?: THREE.Points;
+    grassBillboards?: THREE.Points;
+
+    grassInstancedMesh?: THREE.InstancedMesh;
+    grassInstancedMeshCounter: number = 0;
+    
     instancedTreeMesh?: THREE.InstancedMesh;
     
     constructor(public bounds: THREE.Box2, private lod: number) {
@@ -60,7 +64,8 @@ export class Node {
             x.merge(scene);
 
             x.mesh?.disposeMeshAndRemoveFromScene(scene);     
-            x.vegetationBillboards?.disposeAndRemoveFromScene(scene);
+            x.grassBillboards?.disposeAndRemoveFromScene(scene);
+            x.grassInstancedMesh?.disposeMeshAndRemoveFromScene(scene);
             x.instancedTreeMesh?.disposeMeshAndRemoveFromScene(scene);
         });   
         this.children.length = 0;  
@@ -96,7 +101,6 @@ export class Node {
     }
 
     public generateGrassBillboards(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
-
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
     
@@ -116,12 +120,81 @@ export class Node {
         geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
     
         var material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false } );
-        //material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
+        material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
     
-        this.vegetationBillboards = new THREE.Points( geometry, material );
+        this.grassBillboards = new THREE.Points( geometry, material );
     }
 
-    public generateTreeModels(vegetationMeshGenerator: VegetationMeshGenerator) {
-        this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 50);        
+    public generateGrassInstancedMesh(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
+   
+        const plane = new THREE.PlaneGeometry(3);
+
+        const sprite = new THREE.TextureLoader().load( textureName );
+        sprite.colorSpace = THREE.SRGBColorSpace;
+    
+        const material = new THREE.ShaderMaterial({
+            vertexShader: /* glsl */`            
+            uniform sampler2D uTexture;
+
+            varying vec2 vUv;
+
+            void main() {
+                    vUv = uv;
+
+                    vec4 worldPosition = instanceMatrix * vec4(position, 1.0);
+
+                    //vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+                    vec4 projectedPosition = projectionMatrix * modelViewMatrix * worldPosition;
+
+                    gl_Position = projectedPosition;
+                }
+                `,
+            fragmentShader: `
+                uniform sampler2D uTexture;
+
+                varying vec2 vUv;
+
+                void main() {
+
+                    //gl_FragColor = vec4(1, 1, 1, 1);//textureColor;
+
+                    vec4 textureColor = texture2D(uTexture, vUv);                  
+                    if(textureColor.a < 0.8)  
+                        discard;
+
+                    //gl_FragColor = vec4(textureColor.r, textureColor.g, textureColor.b, 0.2);
+                    gl_FragColor = textureColor;
+
+                }
+            `,
+            uniforms: {
+                uTexture: {value: sprite }                    
+            },
+            transparent: true        
+        });
+
+        this.grassInstancedMesh = new THREE.InstancedMesh(plane.clone(), material, maxCount);
+        
+        const dummy = new THREE.Object3D();
+        for ( let i = 0; i < maxCount; i ++ ) {
+    
+            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * Math.random();
+            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * Math.random();
+    
+            let elevation = simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
+            if(elevation > yMin && elevation < yMax) {
+                
+                dummy.position.set(x, elevation, z);
+                dummy.rotation.y = Math.random() * Math.PI * 2;
+                dummy.updateMatrix();
+                this.grassInstancedMesh.setMatrixAt(this.grassInstancedMeshCounter++, dummy.matrix);
+            }
+        }    
+
+        console.log(`grass instancedmesh count for node: ${this.grassInstancedMesh.count}`);
+    }
+
+    public generateTreeModels(vegetationMeshGenerator: TreeGenerator) {
+        this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 200);        
     }
 }

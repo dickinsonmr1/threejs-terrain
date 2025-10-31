@@ -4,7 +4,7 @@ import alea from 'alea';
 import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
 import { SeededRandom } from '../../shared/seededRandom';
 
-export class VegetationMeshGenerator {
+export class TreeGenerator {
 
     private vegetationNoise2D: NoiseFunction2D;
     //private geometry: THREE.BoxGeometry = new THREE.BoxGeometry(1, 200, 1);
@@ -66,7 +66,7 @@ export class VegetationMeshGenerator {
         }
         */
 
-        console.log(`vegetation instanced mesh count for node: ${instancedMesh.count}`);
+        console.log(`tree instanced mesh count for node: ${instancedMesh.count}`);
         instancedMesh.visible = true;
         return instancedMesh;
     }    
