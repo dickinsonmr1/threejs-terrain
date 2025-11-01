@@ -10,6 +10,7 @@ export class Node {
     grassBillboards?: THREE.Points;
 
     grassInstancedMesh?: THREE.InstancedMesh;
+    grassInstancedMeshMaterial?: THREE.ShaderMaterial;
     grassInstancedMeshCounter: number = 0;
     
     instancedTreeMesh?: THREE.InstancedMesh;
@@ -51,10 +52,10 @@ export class Node {
         this.children.push(lowerRight);
 
         console.log(`Splitting node with bounds: min(${this.bounds.min.x}, ${this.bounds.min.y}) -> max(${this.bounds.max.x}, ${this.bounds.max.y})`);
-        console.log(`Upper Left:  min(${upperLeft.bounds.min.x}, ${upperLeft.bounds.min.y}) -> max(${upperLeft.bounds.max.x}, ${upperLeft.bounds.max.y})`);
-        console.log(`Lower Left:  min(${lowerLeft.bounds.min.x}, ${lowerLeft.bounds.min.y}) -> max(${lowerLeft.bounds.max.x}, ${lowerLeft.bounds.max.y})`);
-        console.log(`Upper Right: min(${upperRight.bounds.min.x}, ${upperRight.bounds.min.y}) -> max(${upperRight.bounds.max.x}, ${upperRight.bounds.max.y})`);
-        console.log(`Upper Left:  min(${lowerRight.bounds.min.x}, ${lowerRight.bounds.min.y}) -> max(${lowerRight.bounds.max.x}, ${lowerRight.bounds.max.y})`);
+        console.log(`Upper Left  :  min(${upperLeft.bounds.min.x}, ${upperLeft.bounds.min.y}) -> max(${upperLeft.bounds.max.x}, ${upperLeft.bounds.max.y})`);
+        console.log(`Lower Left  :  min(${lowerLeft.bounds.min.x}, ${lowerLeft.bounds.min.y}) -> max(${lowerLeft.bounds.max.x}, ${lowerLeft.bounds.max.y})`);
+        console.log(`Upper Right :  min(${upperRight.bounds.min.x}, ${upperRight.bounds.min.y}) -> max(${upperRight.bounds.max.x}, ${upperRight.bounds.max.y})`);
+        console.log(`Upper Left  :  min(${lowerRight.bounds.min.x}, ${lowerRight.bounds.min.y}) -> max(${lowerRight.bounds.max.x}, ${lowerRight.bounds.max.y})`);
     }
 
     public merge(scene: THREE.Scene): void {
@@ -117,7 +118,7 @@ export class Node {
                 vertices.push( x, elevation, z);
         }
     
-        geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
     
         var material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false } );
         material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
@@ -127,26 +128,51 @@ export class Node {
 
     public generateGrassInstancedMesh(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
    
-        const plane = new THREE.PlaneGeometry(3);
+        const plane = new THREE.PlaneGeometry(5);
 
         const sprite = new THREE.TextureLoader().load( textureName );
         sprite.colorSpace = THREE.SRGBColorSpace;
     
-        const material = new THREE.ShaderMaterial({
+        this.grassInstancedMeshMaterial = new THREE.ShaderMaterial({
             vertexShader: /* glsl */`            
             uniform sampler2D uTexture;
+            uniform float uTime;
+            uniform float uWindStrength;
+            uniform vec2 uWindDirection;
 
             varying vec2 vUv;
 
             void main() {
                     vUv = uv;
 
-                    vec4 worldPosition = instanceMatrix * vec4(position, 1.0);
+                    // Billboard logic (face camera)
+                    vec3 up = vec3(0.0, 1.0, 0.0);
+                    vec3 cameraRight = vec3(modelViewMatrix[0][0], modelViewMatrix[1][0], modelViewMatrix[2][0]);
+                    vec3 cameraForward = vec3(modelViewMatrix[0][2], modelViewMatrix[1][2], modelViewMatrix[2][2]);
 
-                    //vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-                    vec4 projectedPosition = projectionMatrix * modelViewMatrix * worldPosition;
+                    // Vertex position before wind
+                    vec3 pos = position;
 
-                    gl_Position = projectedPosition;
+                    // Wind sway — only affect upper part of blade
+                    float swayFactor = smoothstep(0.0, 1.0, uv.y);
+                    float sway = sin((instanceMatrix[3].x + uTime) * 0.5 + instanceMatrix[3].z * 0.2) * uWindStrength;
+                    pos.x += sway * swayFactor * uWindDirection.x;
+                    pos.z += sway * swayFactor * uWindDirection.y;
+
+                    // Construct billboard position
+                    vec3 instancePosition = instanceMatrix[3].xyz;
+                    vec3 displaced =
+                        cameraRight * pos.x +
+                        up * pos.y +
+                        cameraForward * pos.z +
+                        instancePosition;
+                        
+                    gl_Position = projectionMatrix * viewMatrix * vec4(displaced, 1.0);
+
+                    //vec4 worldPosition = instanceMatrix * vec4(position, 1.0);
+                    //vec4 projectedPosition = projectionMatrix * modelViewMatrix * worldPosition;
+
+                    //gl_Position = projectedPosition;
                 }
                 `,
             fragmentShader: `
@@ -168,12 +194,15 @@ export class Node {
                 }
             `,
             uniforms: {
-                uTexture: {value: sprite }                    
+                uTexture: {value: sprite },
+                uTime: { value: 0 },
+                uWindStrength: { value: 0.5 },
+                uWindDirection: { value: new THREE.Vector2(1.0, 0.5) },                    
             },
             transparent: true        
         });
 
-        this.grassInstancedMesh = new THREE.InstancedMesh(plane.clone(), material, maxCount);
+        this.grassInstancedMesh = new THREE.InstancedMesh(plane.clone(), this.grassInstancedMeshMaterial, maxCount);
         
         const dummy = new THREE.Object3D();
         for ( let i = 0; i < maxCount; i ++ ) {
@@ -196,5 +225,10 @@ export class Node {
 
     public generateTreeModels(vegetationMeshGenerator: TreeGenerator) {
         this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 200);        
+    }
+
+    public update() {
+        if(this.grassInstancedMeshMaterial)
+            this.grassInstancedMeshMaterial!.uniforms["uTime"].value += 0.2;
     }
 }

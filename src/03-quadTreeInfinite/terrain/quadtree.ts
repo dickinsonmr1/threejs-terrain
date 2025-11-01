@@ -175,10 +175,11 @@ export class QuadTree {
                 }
             }
             else {
-                //if(node.lod > this.minLODForDetails)
+                //if(node.lod > this.minLODForDetails)                
                 if(nodeSize <= this.MIN_NODE_SIZE) {
                     node.grassInstancedMesh!.visible = true;
                 }
+                node.update();
             }
             
             if(!node.instancedTreeMesh) {
