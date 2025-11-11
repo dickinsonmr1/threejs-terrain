@@ -30,6 +30,12 @@ declare module 'three' {
   }
 }
 
+declare module 'three' {
+  interface Sprite {
+    disposeAndRemoveFromScene(scene: THREE.Scene): void;
+  }
+}
+
 // Add the method to the THREE.Group prototype
 THREE.Group.prototype.disposeGroupAndRemoveFromScene = function (
   this: THREE.Group,
@@ -128,3 +134,27 @@ THREE.Points.prototype.disposeAndRemoveFromScene = function (
   this.geometry = null as any;
   this.material = null as any;
 };
+
+
+
+  THREE.Sprite.prototype.disposeAndRemoveFromScene = function(
+    this: THREE.Sprite,
+    scene: THREE.Scene
+  ): void {
+
+    scene.remove(this);
+    
+    if (this.material) {
+      if (this.material.map) {
+          this.material.map.dispose(); // Dispose of the texture
+      }
+      this.material.dispose(); // Dispose of the material
+    }
+  
+    if(this.geometry)
+      this.geometry.dispose();    
+    
+    if(this.parent) {
+      this.parent.remove(this);
+    }
+  }

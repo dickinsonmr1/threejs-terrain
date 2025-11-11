@@ -129,7 +129,7 @@ export default class GameScene extends THREE.Scene {
 
     private addTerrain() {
        
-        this.quadTree = new QuadTree(
+        this.quadTree = new QuadTree(this,
             new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
             this.simplexNoiseGenerator,
             this.vegetationMeshGenerator,
@@ -137,7 +137,7 @@ export default class GameScene extends THREE.Scene {
             500, // minimum chunk size
             32, // vertices per chunk side
             100, // height factor
-            false, // isWireframe
+            true, // isWireframe
         );
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
