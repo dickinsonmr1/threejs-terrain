@@ -4,6 +4,18 @@ import { TreeGenerator } from './treeGenerator';
 
 export class Node {
 
+    lodColors: number[] = [
+        0x141414, // LOD 0 (far)
+        0x88cc44, // LOD 1
+        0xff00ff, // LOD 2
+        0x00ffff, // LOD 3
+        0xffffff, // LOD 4
+        0xff0000, // LOD 5
+        0x00ff00, // LOD 6
+        0x00ffff, // LOD 7
+        0xffffff, // LOD 8 (close)
+    ];
+
     children: Node[] = [];
 
     mesh?: THREE.Mesh;
@@ -17,17 +29,7 @@ export class Node {
     helperLabel?: THREE.Sprite;
     helperMesh?: THREE.Mesh;
     
-    constructor(private scene: THREE.Scene, public bounds: THREE.Box2, public lod: number) {
-
-        let center = bounds.getCenter(new THREE.Vector2);
-
-        /*
-        if(lod > 5) {
-            this.helperLabel = this.createTextLabel(`LOD ${lod} // (${center.x.toFixed(2)}, ${center.y.toFixed(2)})`, 'white', 512);
-            this.helperLabel.position.set(center.x, 20, center.y).add(new THREE.Vector3(0, 0.5, 0));
-            this.scene.add(this.helperLabel);
-        }
-        */
+    constructor(private scene: THREE.Scene, public bounds: THREE.Box2, public lod: number, public isDebug: boolean) {        
     }
 
     public split(scene: THREE.Scene): void {
@@ -37,25 +39,29 @@ export class Node {
         let upperLeft = new Node(scene, new THREE.Box2(
             new THREE.Vector2(this.bounds.min.x, this.bounds.min.y),
             center),
-            this.lod + 1
+            this.lod + 1,
+            this.isDebug
         );
 
         let lowerLeft = new Node(scene, new THREE.Box2(
             new THREE.Vector2(this.bounds.min.x, center.y),
             new THREE.Vector2(center.x, this.bounds.max.y)),
-            this.lod + 1
+            this.lod + 1,
+            this.isDebug
         );
 
         let upperRight = new Node(scene, new THREE.Box2(
             new THREE.Vector2(center.x, this.bounds.min.y),
             new THREE.Vector2(this.bounds.max.x, center.y)),
-            this.lod + 1
+            this.lod + 1,
+            this.isDebug
         );
 
         let lowerRight = new Node(scene, new THREE.Box2(
             center,
             new THREE.Vector2(this.bounds.max.x, this.bounds.max.y)),
-            this.lod + 1
+            this.lod + 1,
+            this.isDebug
         );
         
         this.children.push(upperLeft);
@@ -81,8 +87,11 @@ export class Node {
             x.grassBillboards?.disposeAndRemoveFromScene(scene);
             x.grassInstancedMesh?.disposeMeshAndRemoveFromScene(scene);
             x.instancedTreeMesh?.disposeMeshAndRemoveFromScene(scene);
-            x.helperLabel?.disposeAndRemoveFromScene(scene);
-            x.helperMesh?.disposeMeshAndRemoveFromScene(scene);
+
+            if(this.isDebug) {
+                x.helperLabel?.disposeAndRemoveFromScene(scene);
+                x.helperMesh?.disposeMeshAndRemoveFromScene(scene);
+            }
         });   
         this.children.length = 0;  
     }
@@ -250,22 +259,17 @@ export class Node {
     public generateDebugLabelAndMesh(): void {
         let center = this.bounds.getCenter(new THREE.Vector2);
 
-        //if(this.lod > 5) {
-            //this.helperLabel = this.createTextLabel(`LOD ${this.lod} // (${center.x.toFixed(2)}, ${center.y.toFixed(2)})`, 'white', 512);
-            this.helperLabel = this.createTextLabel(`${this.lod}`, 'white', 2);
-            //this.helperLabel = this.createTextLabel(`${this.lod}`, 'white', (9 - this.lod) * 1000);
-            this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));
+        this.helperLabel = this.createTextLabel(`${this.lod}`, new THREE.Color(this.lodColors[this.lod]), 1.0, 2);
+        this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));
 
-            const geometry = new THREE.CylinderGeometry(5, 5, this.lod * 100);
-            const material = new THREE.MeshStandardMaterial({color: 0xffff00, transparent: true, opacity: 0.2 });
+        const geometry = new THREE.CylinderGeometry(5, 5, this.lod * 100);
+        const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: true, opacity: 0.9 });
 
-            this.helperMesh = new THREE.Mesh(geometry, material);
-            this.helperMesh.position.copy(this.helperLabel!.position);
-            //this.scene.add(this.helperLabel);
-        //}
+        this.helperMesh = new THREE.Mesh(geometry, material);
+        this.helperMesh.position.copy(this.helperLabel!.position);
     }
     
-    private createTextLabel(text: string, color = 'white', scale = 0.5, fontSize = 64): THREE.Sprite {
+    private createTextLabel(text: string, color: THREE.Color, alpha: number = 1.0, scale = 0.5, fontSize = 64): THREE.Sprite {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d')!;
         ctx.font = `${fontSize}px Arial`;
@@ -281,7 +285,9 @@ export class Node {
 
         // Redefine font after resize (resizing clears canvas)
         ctx.font = `${fontSize}px Arial`;
-        ctx.fillStyle = color;
+        const fillStyleWithAlpha = `rgba(${color.r * 255}, ${color.g * 255}, ${color.b * 255}, ${alpha})`;
+
+        ctx.fillStyle = fillStyleWithAlpha;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 

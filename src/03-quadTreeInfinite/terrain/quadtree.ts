@@ -29,10 +29,10 @@ export class QuadTree {
     constructor(private scene: THREE.Scene, bounds: THREE.Box2,
         simplexNoiseGenerator: SimplexNoiseGenerator,
         vegetationMeshGenerator: TreeGenerator,
-        terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, isWireFrame: boolean) 
+        terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, private isDebug: boolean) 
     {
         this.bounds = bounds;
-        this.root = new Node(scene, bounds, this.maxLOD);
+        this.root = new Node(scene, bounds, this.maxLOD, isDebug);
         this.meshGenerator = new MeshGenerator();
         this.simplexNoiseGenerator = simplexNoiseGenerator;
         this.vegetationMeshGenerator = vegetationMeshGenerator;
@@ -43,8 +43,8 @@ export class QuadTree {
 
         this.heightFactor = heightFactor;
         
-        this.highDetailShaderMaterial = this.generateMaterial(4, heightFactor, isWireFrame);
-        this.lowDetailShaderMaterial = this.generateMaterial(1, heightFactor, isWireFrame);        
+        this.highDetailShaderMaterial = this.generateMaterial(4, heightFactor, isDebug);
+        this.lowDetailShaderMaterial = this.generateMaterial(1, heightFactor, isDebug);        
     }
 
     public insert(position2D: THREE.Vector2, scene: THREE.Scene) {
@@ -102,9 +102,13 @@ export class QuadTree {
             if(node.instancedTreeMesh != null)
                 node.instancedTreeMesh!.visible = false;
 
-            if(node.helperLabel != null)
-                node.helperLabel!.visible = false;
+            if(this.isDebug) {
+                if(node.helperLabel != null)
+                    node.helperLabel!.visible = false;
 
+                if(node.helperMesh != null)
+                    node.helperMesh!.visible = false;
+            }
             //if(node.instancedMesh != null) 
                 //node.instancedMesh!.visible = false;
 
@@ -194,22 +198,24 @@ export class QuadTree {
                 }
             }
         }
-           
-        if(!node.helperLabel && !node.helperMesh) {
-            //if(nodeSize <= this.MIN_NODE_ SIZE) {
-                //node.generateTreeModels(this.vegetationMeshGenerator);
-                node.generateDebugLabelAndMesh();
-                scene.add(node.helperLabel!);
-                scene.add(node.helperMesh!);
-                //scene.add(node.instancedTreeMesh!);
-            //}
-        }
-        else {
-            //if(nodeSize <= this.MIN_NODE_SIZE) {
-                node.helperLabel!.visible = true;
-                node.helperMesh!.visible = true;
-                //node.instancedTreeMesh!.visible = true;
-            //}
+         
+        if(this.isDebug) {
+            if(!node.helperLabel && !node.helperMesh) {
+                //if(nodeSize <= this.MIN_NODE_ SIZE) {
+                    //node.generateTreeModels(this.vegetationMeshGenerator);
+                    node.generateDebugLabelAndMesh();
+                    scene.add(node.helperLabel!);
+                    scene.add(node.helperMesh!);
+                    //scene.add(node.instancedTreeMesh!);
+                //}
+            }
+            else {
+                //if(nodeSize <= this.MIN_NODE_SIZE) {
+                    node.helperLabel!.visible = true;
+                    node.helperMesh!.visible = true;
+                    //node.instancedTreeMesh!.visible = true;
+                //}
+            }
         }
     }
     
