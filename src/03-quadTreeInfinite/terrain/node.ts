@@ -262,11 +262,22 @@ export class Node {
         this.helperLabel = this.createTextLabel(`${this.lod}`, new THREE.Color(this.lodColors[this.lod]), 1.0, 2);
         this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));
 
-        const geometry = new THREE.CylinderGeometry(5, 5, this.lod * 100);
-        const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: true, opacity: 0.9 });
+        //const geometry = new THREE.CylinderGeometry(5, 5, this.lod * 100);
+        //const geometry = new THREE.BoxGeometry(25, (8 - this.lod) * 100, 25);
+        // Compute width and depth from Box2
+        const width =  this.bounds.max.x -  this.bounds.min.x;
+        const depth =  this.bounds.max.y -  this.bounds.min.y; // using Y as depth
+        const height = 100; // fixed height in Z
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+        const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: true, opacity: 0.4 });
 
         this.helperMesh = new THREE.Mesh(geometry, material);
         this.helperMesh.position.copy(this.helperLabel!.position);
+        this.helperMesh.position.y -= 20;
+
+        //const centerPoint = new THREE.Vector2();
+        //this.bounds.getCenter(centerPoint);
+        this.helperMesh.position.set(center.x, height / 2, center.y);
     }
     
     private createTextLabel(text: string, color: THREE.Color, alpha: number = 1.0, scale = 0.5, fontSize = 64): THREE.Sprite {
