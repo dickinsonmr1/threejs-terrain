@@ -15,10 +15,11 @@ export default class GameScene extends THREE.Scene {
     water!: Water;
     quadTree!: QuadTree;
     totalNodes: number = 0;
+    maxLOD: number = 0;
 
     terrainGeneratorParams: TerrainGeneratorParams;
     simplexNoiseGenerator: SimplexNoiseGenerator;
-    vegetationMeshGenerator: TreeGenerator;
+    treeGenerator: TreeGenerator;
 
     precipitationSystem: PrecipitationSystem;
     fireParticleEmitter!: FireParticleEmitter;
@@ -30,7 +31,7 @@ export default class GameScene extends THREE.Scene {
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
         this.simplexNoiseGenerator = new SimplexNoiseGenerator(this.terrainGeneratorParams)
-        this.vegetationMeshGenerator = new TreeGenerator(this, this.simplexNoiseGenerator);
+        this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator);
 
         this.addSkybox();
         this.addShaderSky();
@@ -132,16 +133,17 @@ export default class GameScene extends THREE.Scene {
         this.quadTree = new QuadTree(this,
             new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
             this.simplexNoiseGenerator,
-            this.vegetationMeshGenerator,
+            this.treeGenerator,
             this.terrainGeneratorParams,
             500, // minimum chunk size
             32, // vertices per chunk side
             100, // height factor
-            true, // isWireframe
+            false, // debug?
         );
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);
+        this.maxLOD = this.quadTree.getCurrentMaxLOD(this.quadTree.root);
     }
 
     private addFireParticleEmitter() {
@@ -166,5 +168,7 @@ export default class GameScene extends THREE.Scene {
 
         if(this.fireParticleEmitter != null)
             this.fireParticleEmitter.update(this.clock);
+
+        this.maxLOD = this.quadTree.getCurrentMaxLOD(this.quadTree.root);
     }
 }

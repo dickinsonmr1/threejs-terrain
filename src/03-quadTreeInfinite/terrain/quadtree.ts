@@ -12,7 +12,7 @@ export class QuadTree {
     root: Node;
     bounds: THREE.Box2;
     simplexNoiseGenerator: SimplexNoiseGenerator;
-    vegetationMeshGenerator: TreeGenerator;
+    treeGenerator: TreeGenerator;
 
     highDetailShaderMaterial: THREE.Material;
     lowDetailShaderMaterial: THREE.Material;
@@ -28,14 +28,14 @@ export class QuadTree {
 
     constructor(private scene: THREE.Scene, bounds: THREE.Box2,
         simplexNoiseGenerator: SimplexNoiseGenerator,
-        vegetationMeshGenerator: TreeGenerator,
+        treeGenerator: TreeGenerator,
         terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, private isDebug: boolean) 
     {
         this.bounds = bounds;
         this.root = new Node(scene, bounds, this.maxLOD, isDebug);
         this.meshGenerator = new MeshGenerator();
         this.simplexNoiseGenerator = simplexNoiseGenerator;
-        this.vegetationMeshGenerator = vegetationMeshGenerator;
+        this.treeGenerator = treeGenerator;
         this.terrainGeneratorParams = terrainGeneratorParams;
         this.MIN_NODE_SIZE = minimumNodeSize;
 
@@ -44,13 +44,12 @@ export class QuadTree {
         this.heightFactor = heightFactor;
         
         this.highDetailShaderMaterial = this.generateMaterial(4, heightFactor, isDebug);
-        this.lowDetailShaderMaterial = this.generateMaterial(1, heightFactor, isDebug);        
+        this.lowDetailShaderMaterial = this.generateMaterial(1, heightFactor, isDebug); 
+        this.maxLOD = 0;       
     }
 
     public insert(position2D: THREE.Vector2, scene: THREE.Scene) {
-        this.insertAtNode(this.root, position2D, scene);
-
-        //this.maxLOD = this.root
+        this.insertAtNode(this.root, position2D, scene);     
     }
 
     private insertAtNode(node: Node, position2D: THREE.Vector2, scene: THREE.Scene) {
@@ -73,7 +72,17 @@ export class QuadTree {
             }
         }
     }
-        
+
+    public getCurrentMaxLOD(root: Node): number {
+        let max = 0;
+        function traverse(node: Node) {
+            if (node.lod > max) max = node.lod;
+            for (const child of node.children) traverse(child);
+        }
+        traverse(root);
+        return max;
+    }
+            
     public getTotalNodeCount(): number {
         return this.root.getTotalNodeCount();
     }
@@ -109,8 +118,6 @@ export class QuadTree {
                 if(node.helperMesh != null)
                     node.helperMesh!.visible = false;
             }
-            //if(node.instancedMesh != null) 
-                //node.instancedMesh!.visible = false;
 
             return;
         }
@@ -188,7 +195,7 @@ export class QuadTree {
             
             if(!node.instancedTreeMesh) {
                 if(nodeSize <= this.MIN_NODE_SIZE) {
-                    node.generateTreeModels(this.vegetationMeshGenerator);
+                    node.generateTreeModels(this.treeGenerator);
                     scene.add(node.instancedTreeMesh!);
                 }
             }
@@ -201,20 +208,13 @@ export class QuadTree {
          
         if(this.isDebug) {
             if(!node.helperLabel && !node.helperMesh) {
-                //if(nodeSize <= this.MIN_NODE_ SIZE) {
-                    //node.generateTreeModels(this.vegetationMeshGenerator);
-                    node.generateDebugLabelAndMesh();
-                    scene.add(node.helperLabel!);
-                    scene.add(node.helperMesh!);
-                    //scene.add(node.instancedTreeMesh!);
-                //}
+                node.generateDebugLabelAndMesh();
+                scene.add(node.helperLabel!);
+                scene.add(node.helperMesh!);
             }
             else {
-                //if(nodeSize <= this.MIN_NODE_SIZE) {
-                    node.helperLabel!.visible = true;
-                    node.helperMesh!.visible = true;
-                    //node.instancedTreeMesh!.visible = true;
-                //}
+                node.helperLabel!.visible = true;
+                node.helperMesh!.visible = true;
             }
         }
     }

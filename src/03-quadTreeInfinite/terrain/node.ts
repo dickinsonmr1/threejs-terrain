@@ -126,6 +126,9 @@ export class Node {
     }
 
     public generateGrassBillboards(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
+
+        // todo: move to new class sharing random seed with instanced mesh
+
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
     
@@ -139,7 +142,7 @@ export class Node {
     
             let elevation = simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
             if(elevation > yMin && elevation < yMax)
-                vertices.push( x, elevation, z);
+                vertices.push( x, elevation + 3, z);
         }
     
         geometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
@@ -152,6 +155,8 @@ export class Node {
 
     public generateGrassInstancedMesh(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
    
+        // todo: move to new class sharing random seed with billboard grass
+
         const plane = new THREE.PlaneGeometry(5);
 
         const sprite = new THREE.TextureLoader().load( textureName );
@@ -237,7 +242,7 @@ export class Node {
             let elevation = simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
             if(elevation > yMin && elevation < yMax) {
                 
-                dummy.position.set(x, elevation, z);
+                dummy.position.set(x, elevation + 3, z);
                 dummy.rotation.y = Math.random() * Math.PI * 2;
                 dummy.updateMatrix();
                 this.grassInstancedMesh.setMatrixAt(this.grassInstancedMeshCounter++, dummy.matrix);
@@ -262,9 +267,6 @@ export class Node {
         this.helperLabel = this.createTextLabel(`${this.lod}`, new THREE.Color(this.lodColors[this.lod]), 1.0, 2);
         this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));
 
-        //const geometry = new THREE.CylinderGeometry(5, 5, this.lod * 100);
-        //const geometry = new THREE.BoxGeometry(25, (8 - this.lod) * 100, 25);
-        // Compute width and depth from Box2
         const width =  this.bounds.max.x -  this.bounds.min.x;
         const depth =  this.bounds.max.y -  this.bounds.min.y; // using Y as depth
         const height = 100; // fixed height in Z
@@ -273,10 +275,6 @@ export class Node {
 
         this.helperMesh = new THREE.Mesh(geometry, material);
         this.helperMesh.position.copy(this.helperLabel!.position);
-        this.helperMesh.position.y -= 20;
-
-        //const centerPoint = new THREE.Vector2();
-        //this.bounds.getCenter(centerPoint);
         this.helperMesh.position.set(center.x, height / 2, center.y);
     }
     
