@@ -1,18 +1,17 @@
 import * as THREE from 'three'
 import { Node } from './node';
 import { MeshGenerator } from '../../shared/meshGenerator';
-import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from '../../shared/terrainSimplexNoiseGenerator';
 import { TerrainGeneratorParams } from '../../shared/terrainGeneratorParams';
 import '../../shared/threeExtensions'; // Import the extensions
 import { TreeGenerator } from './treeGenerator';
+import { GrassGenerator } from './grassGenerator';
 
 export class QuadTree {
 
     meshGenerator: MeshGenerator;
     root: Node;
     bounds: THREE.Box2;
-    simplexNoiseGenerator: SimplexNoiseGenerator;
-    treeGenerator: TreeGenerator;
 
     highDetailShaderMaterial: THREE.Material;
     lowDetailShaderMaterial: THREE.Material;
@@ -27,15 +26,15 @@ export class QuadTree {
     minLODForDetails: number = 3;
 
     constructor(private scene: THREE.Scene, bounds: THREE.Box2,
-        simplexNoiseGenerator: SimplexNoiseGenerator,
-        treeGenerator: TreeGenerator,
+        private terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator,
+        private treeGenerator: TreeGenerator,
+        private grassGenerator: GrassGenerator,
         terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, private isDebug: boolean) 
     {
         this.bounds = bounds;
         this.root = new Node(scene, bounds, this.maxLOD, isDebug);
         this.meshGenerator = new MeshGenerator();
-        this.simplexNoiseGenerator = simplexNoiseGenerator;
-        this.treeGenerator = treeGenerator;
+        
         this.terrainGeneratorParams = terrainGeneratorParams;
         this.MIN_NODE_SIZE = minimumNodeSize;
 
@@ -125,7 +124,7 @@ export class QuadTree {
             if(!node.mesh) {
                 let mesh = this.meshGenerator.createPlaneMeshFromNoise(
                     node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,                
-                    this.simplexNoiseGenerator,
+                    this.terrainSimplexNoiseGenerator,
                     nodeSize,
                     this.verticesPerChunk,
                     nodeSize <= this.MIN_NODE_SIZE ? this.highDetailShaderMaterial : this.lowDetailShaderMaterial,
@@ -160,12 +159,15 @@ export class QuadTree {
 
             if(!node.grassBillboards) {
                 if(nodeSize <= this.MIN_NODE_SIZE) {
+                    /*
                     node.generateGrassBillboards('assets/billboard_grass_32x32.png',
-                        this.simplexNoiseGenerator,
+                        this.terrainSimplexNoiseGenerator,
                         node.bounds,
                         10,  // yMin
                         30, // yMax
                         10000);
+                    */
+                    node.generateGrassBillboards2(this.grassGenerator);
                     scene.add(node.grassBillboards!);
                 }
             }
@@ -177,12 +179,15 @@ export class QuadTree {
             
             if(!node.grassInstancedMesh) {
                 if(nodeSize <= this.MIN_NODE_SIZE) {
+                    /*
                     node.generateGrassInstancedMesh('assets/billboard_grass_32x32.png',
-                        this.simplexNoiseGenerator,
+                        this.terrainSimplexNoiseGenerator,
                         node.bounds,
                         10,  // yMin
-                        30, // yMax
+                        30, // yMax                    
                         10000);
+                    */
+                    node.generateGrassInstancedMesh2(this.grassGenerator);
                     scene.add(node.grassInstancedMesh!);
                 }
             }
@@ -190,6 +195,7 @@ export class QuadTree {
                 if(nodeSize <= this.MIN_NODE_SIZE) {
                     node.grassInstancedMesh!.visible = true;
                 }
+                // TODO: move me if additional things need to call this method
                 node.update();
             }
             

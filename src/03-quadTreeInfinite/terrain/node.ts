@@ -1,6 +1,7 @@
 import * as THREE from 'three'
-import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from '../../shared/terrainSimplexNoiseGenerator';
 import { TreeGenerator } from './treeGenerator';
+import { GrassGenerator } from './grassGenerator';
 
 export class Node {
 
@@ -125,7 +126,7 @@ export class Node {
         return count;
     }
 
-    public generateGrassBillboards(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
+    public generateGrassBillboards(textureName: string, terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
 
         // todo: move to new class sharing random seed with instanced mesh
 
@@ -140,7 +141,7 @@ export class Node {
             const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * Math.random();
             const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * Math.random();
     
-            let elevation = simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
+            let elevation = terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
             if(elevation > yMin && elevation < yMax)
                 vertices.push( x, elevation + 3, z);
         }
@@ -153,7 +154,11 @@ export class Node {
         this.grassBillboards = new THREE.Points( geometry, material );
     }
 
-    public generateGrassInstancedMesh(textureName: string, simplexNoiseGenerator: SimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
+    public generateGrassBillboards2(grassGenerator: GrassGenerator) {
+        this.grassBillboards = grassGenerator.generateBillboardsForNode(this.bounds, 1000);
+    }
+
+    public generateGrassInstancedMesh(textureName: string, terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator, bounds: THREE.Box2, yMin: number, yMax: number, maxCount: number) {
    
         // todo: move to new class sharing random seed with billboard grass
 
@@ -239,7 +244,7 @@ export class Node {
             const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * Math.random();
             const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * Math.random();
     
-            let elevation = simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
+            let elevation = terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
             if(elevation > yMin && elevation < yMax) {
                 
                 dummy.position.set(x, elevation + 3, z);
@@ -252,13 +257,19 @@ export class Node {
         console.log(`grass instancedmesh count for node: ${this.grassInstancedMesh.count}`);
     }
 
+    public generateGrassInstancedMesh2(grassGenerator: GrassGenerator) {
+        this.grassInstancedMesh = grassGenerator.generateInstancedMeshForNode(this.bounds, 1000);
+    }
+
     public generateTreeModels(vegetationMeshGenerator: TreeGenerator) {
         this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 200);        
     }
 
     public update(): void {
-        if(this.grassInstancedMeshMaterial)
-            this.grassInstancedMeshMaterial!.uniforms["uTime"].value += 0.2;
+        if(this.grassInstancedMesh?.material) {
+            let shaderMaterial = this.grassInstancedMesh.material as THREE.ShaderMaterial;
+            shaderMaterial.uniforms["uTime"].value += 0.01;
+        }
     }
 
     public generateDebugLabelAndMesh(): void {

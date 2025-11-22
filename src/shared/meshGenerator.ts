@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { TerrainGeneratorParams } from '../02-chunk/terrainChunkManager';
-import { SimplexNoiseGenerator } from './simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from './terrainSimplexNoiseGenerator';
 
 export class MeshGenerator {
     constructor(){
@@ -8,7 +8,7 @@ export class MeshGenerator {
     }
 
     public createPlaneMeshFromNoise(offsetX: number, offsetY: number,
-        simplexNoiseGenerator: SimplexNoiseGenerator,
+        simplexNoiseGenerator: TerrainSimplexNoiseGenerator,
         planeSize: number, verticesPerSide: number, material: THREE.Material, meshRotation: number, params: TerrainGeneratorParams): THREE.Mesh {
 
         const planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize, verticesPerSide, verticesPerSide );

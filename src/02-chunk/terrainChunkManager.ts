@@ -4,7 +4,7 @@ import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { MeshGenerator } from '../shared/meshGenerator';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { TerrainGridParams } from './terrainGridParams';
-import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from '../shared/terrainSimplexNoiseGenerator';
 import { VegetationGenerator } from './vegetationGenerator';
 import { TerrainLodSettings } from './terrainLodSettings';
 
@@ -19,14 +19,14 @@ export class TerrainChunkManager {
 
     meshGenerator: MeshGenerator;
 
-    simplexNoiseGenerator: SimplexNoiseGenerator;
+    simplexNoiseGenerator: TerrainSimplexNoiseGenerator;
     vegetationNoiseGenerator: VegetationGenerator;
     
     terrainLodSettings: TerrainLodSettings;
 
     shaderMaterial: THREE.Material;
 
-    constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, terrainNoiseGenerator: SimplexNoiseGenerator,
+    constructor(scene: THREE.Scene, terrainGridParams: TerrainGridParams, terrainNoiseGenerator: TerrainSimplexNoiseGenerator,
       vegetationNoiseGenerator: VegetationGenerator, terrainLodSettings: TerrainLodSettings, isWireFrame: boolean) {
         this.scene = scene;
         this.isWireFrame = isWireFrame;

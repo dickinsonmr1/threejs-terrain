@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import alea from 'alea';
-import { SimplexNoiseGenerator } from '../../shared/simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from '../../shared/terrainSimplexNoiseGenerator';
 import { SeededRandom } from '../../shared/seededRandom';
 
 export class TreeGenerator {
@@ -16,7 +16,7 @@ export class TreeGenerator {
     private counter: number = 0;
     //private instancedMesh!: THREE.InstancedMesh;
     
-    constructor(scene: THREE.Scene, private simplexNoiseGenerator: SimplexNoiseGenerator) {
+    constructor(scene: THREE.Scene, private simplexNoiseGenerator: TerrainSimplexNoiseGenerator) {
         const prng = alea(500);
         this.vegetationNoise2D = createNoise2D(prng);
 

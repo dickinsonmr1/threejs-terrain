@@ -3,10 +3,11 @@ import { Sky, Water } from 'three/examples/jsm/Addons.js';
 import { SkyType } from '../shared/skyType';
 import { QuadTree } from './terrain/quadtree';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
-import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from '../shared/terrainSimplexNoiseGenerator';
 import { TreeGenerator } from './terrain/treeGenerator';
 import { PrecipitationSystem, PrecipitationType } from './weather/precipitationSystem';
 import { FireParticleEmitter } from './fireParticleEmitter';
+import { GrassGenerator } from './terrain/grassGenerator';
 
 export default class GameScene extends THREE.Scene {
 
@@ -18,8 +19,9 @@ export default class GameScene extends THREE.Scene {
     maxLOD: number = 0;
 
     terrainGeneratorParams: TerrainGeneratorParams;
-    simplexNoiseGenerator: SimplexNoiseGenerator;
+    simplexNoiseGenerator: TerrainSimplexNoiseGenerator;
     treeGenerator: TreeGenerator;
+    grassGenerator: GrassGenerator;
 
     precipitationSystem: PrecipitationSystem;
     fireParticleEmitter!: FireParticleEmitter;
@@ -30,8 +32,9 @@ export default class GameScene extends THREE.Scene {
         super();
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
-        this.simplexNoiseGenerator = new SimplexNoiseGenerator(this.terrainGeneratorParams)
+        this.simplexNoiseGenerator = new TerrainSimplexNoiseGenerator(this.terrainGeneratorParams)
         this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator);
+        this.grassGenerator = new GrassGenerator(this, this.simplexNoiseGenerator, 'assets/billboard_grass_32x32.png', 10, 30);
 
         this.addSkybox();
         this.addShaderSky();
@@ -132,8 +135,9 @@ export default class GameScene extends THREE.Scene {
        
         this.quadTree = new QuadTree(this,
             new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
-            this.simplexNoiseGenerator,
+            this.simplexNoiseGenerator,            
             this.treeGenerator,
+            this.grassGenerator,
             this.terrainGeneratorParams,
             500, // minimum chunk size
             32, // vertices per chunk side

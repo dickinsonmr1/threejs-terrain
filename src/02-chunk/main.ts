@@ -11,7 +11,7 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { TerrainChunkManager, TerrainGridParams } from '../02-chunk/terrainChunkManager';
 import { TerrainGeneratorParams } from '../shared/terrainGeneratorParams';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from '../shared/terrainSimplexNoiseGenerator';
 import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
 import { TerrainLodSettings } from '../02-chunk/terrainLodSettings';
 import { QuadTree } from '../03-quadTreeInfinite/terrain/quadtree';
@@ -145,7 +145,7 @@ scene.add(lodMesh);
 let terrainGridParams = new TerrainGridParams(32, 64, 5, Math.PI * 0);
 let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
 
-let simplexNoiseGenerator = new SimplexNoiseGenerator(terrainGeneratorParams);
+let simplexNoiseGenerator = new TerrainSimplexNoiseGenerator(terrainGeneratorParams);
 
 let vegetationGenerator = new VegetationGenerator(scene);
 

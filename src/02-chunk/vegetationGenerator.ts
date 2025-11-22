@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import alea from 'alea';
-import { SimplexNoiseGenerator } from '../shared/simplexNoiseGenerator';
+import { TerrainSimplexNoiseGenerator } from '../shared/terrainSimplexNoiseGenerator';
 import { TerrainChunk, TerrainLOD } from './terrainChunk';
 
 export class VegetationGenerator {
@@ -17,7 +17,7 @@ export class VegetationGenerator {
         this.vegetationNoise2D = createNoise2D(prng);
     }
 
-    generateForChunk(terrainChunk: TerrainChunk, terrainNoiseGenerator: SimplexNoiseGenerator) {
+    generateForChunk(terrainChunk: TerrainChunk, terrainNoiseGenerator: TerrainSimplexNoiseGenerator) {
 
         var instancedMesh2 = new THREE.InstancedMesh(this.geometry, this.material, 10);        
         //this.instancedMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
@@ -42,6 +42,6 @@ export class VegetationGenerator {
         }        
     }
 
-    generateForAllChunks(terrainChunks: TerrainChunk[], terrainNoiseGenerator: SimplexNoiseGenerator) { 
+    generateForAllChunks(terrainChunks: TerrainChunk[], terrainNoiseGenerator: TerrainSimplexNoiseGenerator) { 
     }
 }

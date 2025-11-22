@@ -2,7 +2,7 @@ import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
 import { TerrainGeneratorParams } from './terrainGeneratorParams';
 import alea from 'alea';
 
-export class SimplexNoiseGenerator {
+export class TerrainSimplexNoiseGenerator {
 
     private noise2D: NoiseFunction2D;
     private terrainGeneratorParams: TerrainGeneratorParams;
