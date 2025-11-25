@@ -21,6 +21,7 @@ export class GrassGenerator {
 
         this.sprite = new THREE.TextureLoader().load( textureName );
         this.sprite.colorSpace = THREE.SRGBColorSpace;
+        this.sprite.wrapS = this.sprite.wrapT = THREE.ClampToEdgeWrapping;
 
         this.pointsMaterial = new THREE.PointsMaterial( { size: 5, sizeAttenuation: true, map: this.sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false } );
         //this.pointsMaterial.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
@@ -60,12 +61,7 @@ export class GrassGenerator {
                         cameraForward * pos.z +
                         instancePosition;
                         
-                    gl_Position = projectionMatrix * viewMatrix * vec4(displaced, 1.0);
-
-                    //vec4 worldPosition = instanceMatrix * vec4(position, 1.0);
-                    //vec4 projectedPosition = projectionMatrix * modelViewMatrix * worldPosition;
-
-                    //gl_Position = projectedPosition;
+                    gl_Position = projectionMatrix * viewMatrix * vec4(displaced, 1.0);                    
                 }
                 `,
             fragmentShader: `
@@ -96,7 +92,17 @@ export class GrassGenerator {
             transparent: true        
         });
 
-        this.plane = new THREE.PlaneGeometry(5);        
+        this.plane = new THREE.PlaneGeometry(5);    
+        /* 
+        const uvs = new Float32Array([
+            0,0,
+            1,0,
+            1,1,
+            0,1,
+        ]);
+        this.plane.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));   
+        */
+        console.log(this.plane.attributes.uv);
     }
 
     public generateBillboardsForNode(bounds: THREE.Box2, maxCount: number): THREE.Points {
