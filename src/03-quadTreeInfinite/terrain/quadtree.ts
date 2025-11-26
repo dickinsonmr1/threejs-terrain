@@ -81,6 +81,17 @@ export class QuadTree {
         traverse(root);
         return max;
     }
+
+      public getQuadtreeMaxLOD(): number {
+        let max = 0;
+        let root = this.root;
+        function traverse(node: Node) {
+            if (node.lod > max) max = node.lod;
+            for (const child of node.children) traverse(child);
+        }
+        traverse(root);
+        return max;
+    }
             
     public getTotalNodeCount(): number {
         return this.root.getTotalNodeCount();
@@ -88,6 +99,23 @@ export class QuadTree {
 
     public updateMeshes(scene: THREE.Scene): void {
         this.generateMesh(this.root, scene);
+    }
+
+    private isHighLOD(node: Node) {
+        let maxLOD = this.getQuadtreeMaxLOD();
+        return node.lod >= maxLOD - 1;
+        //let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
+        //return nodeSize <= this.MIN_NODE_SIZE;
+    }
+
+    private isMediumLOD(node: Node) {
+        let maxLOD =  this.getQuadtreeMaxLOD();
+        return node.lod >= maxLOD - 2;
+    }
+    
+    private isLowLOD(node: Node) {
+        let maxLOD =  this.getQuadtreeMaxLOD();
+        return node.lod >= maxLOD - 3;
     }
 
     private generateMesh(node: Node, scene: THREE.Scene) {
@@ -157,58 +185,42 @@ export class QuadTree {
                 node.mesh!.visible = true;                
             }
 
-            if(!node.grassBillboards) {
-                if(nodeSize <= this.MIN_NODE_SIZE) {
-                    /*
-                    node.generateGrassBillboards('assets/billboard_grass_32x32.png',
-                        this.terrainSimplexNoiseGenerator,
-                        node.bounds,
-                        10,  // yMin
-                        30, // yMax
-                        10000);
-                    */
-                    node.generateGrassBillboards2(this.grassGenerator);
-                    scene.add(node.grassBillboards!);
-                }
-            }
-            else {
-                if(nodeSize <= this.MIN_NODE_SIZE) {
-                    node.grassBillboards!.visible = true;
-                }
-            }
-            
-            if(!node.grassInstancedMesh) {
-                if(nodeSize <= this.MIN_NODE_SIZE) {
-                    /*
-                    node.generateGrassInstancedMesh('assets/billboard_grass_32x32.png',
-                        this.terrainSimplexNoiseGenerator,
-                        node.bounds,
-                        10,  // yMin
-                        30, // yMax                    
-                        10000);
-                    */
+            if(this.isHighLOD(node)) {
+                if(!node.grassInstancedMesh) {
                     node.generateGrassInstancedMesh2(this.grassGenerator);
                     scene.add(node.grassInstancedMesh!);
                 }
+                else {
+                    node.grassInstancedMesh!.visible = true;
+                    node.update();
+                }
+                node.clearGrassBillboards();
+            }
+            else if(this.isMediumLOD(node)) {
+                if(!node.grassBillboards) {
+                    node.generateGrassBillboards2(this.grassGenerator);
+                    scene.add(node.grassBillboards!);
+                }
+                else {
+                    node.grassBillboards!.visible = true;
+                }
+                node.clearGrassInstancedMesh();
             }
             else {
-                if(nodeSize <= this.MIN_NODE_SIZE) {
-                    node.grassInstancedMesh!.visible = true;
-                }
-                // TODO: move me if additional things need to call this method
-                node.update();
+
             }
-            
-            if(!node.instancedTreeMesh) {
-                if(nodeSize <= this.MIN_NODE_SIZE) {
+
+            if(this.isMediumLOD(node) || this.isHighLOD(node)) {
+                if(!node.instancedTreeMesh) {                
                     node.generateTreeModels(this.treeGenerator);
                     scene.add(node.instancedTreeMesh!);
                 }
-            }
-            else {
-                if(nodeSize <= this.MIN_NODE_SIZE) {
+                else {
                     node.instancedTreeMesh!.visible = true;
                 }
+            }
+            else {
+                node.clearInstancedTreeMeshes();
             }
         }
          

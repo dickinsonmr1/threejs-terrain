@@ -78,6 +78,21 @@ export class Node {
         console.log(`----------------------------------------`);
     }
 
+    public clearGrassBillboards() {
+        if(this.grassBillboards != null)
+            this.grassBillboards?.disposeAndRemoveFromScene(this.scene);
+    }
+
+    public clearGrassInstancedMesh() {
+        if(this.grassInstancedMesh != null)
+            this.grassInstancedMesh?.disposeMeshAndRemoveFromScene(this.scene);
+    }
+
+    public clearInstancedTreeMeshes() {
+        if(this.instancedTreeMesh != null)
+            this.instancedTreeMesh?.disposeMeshAndRemoveFromScene(this.scene);
+    }
+
     public merge(scene: THREE.Scene): void {
         // fast
         this.children.forEach(x => 

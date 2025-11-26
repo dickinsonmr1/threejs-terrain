@@ -71,8 +71,9 @@ export class GrassGenerator {
 
                 void main() {
 
-                    gl_FragColor = vec4(1, 1, 1, 1);//textureColor;
-                    return;
+                    // for debugging
+                    //gl_FragColor = vec4(1, 1, 1, 1);//textureColor;
+                    //return;
 
                     vec4 textureColor = texture2D(uTexture, vUv);                  
                     if(textureColor.a < 0.8)  
@@ -92,7 +93,7 @@ export class GrassGenerator {
             transparent: true        
         });
 
-        this.plane = new THREE.PlaneGeometry(5);    
+        this.plane = new THREE.PlaneGeometry(5, 5);    
         /* 
         const uvs = new Float32Array([
             0,0,
@@ -119,7 +120,7 @@ export class GrassGenerator {
     
             let elevation = this.terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
             if(elevation > this.yMin && elevation < this.yMax)
-                vertices.push( x, elevation + 3, z);
+                vertices.push( x, elevation + 1, z);
         }    
         bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
                
