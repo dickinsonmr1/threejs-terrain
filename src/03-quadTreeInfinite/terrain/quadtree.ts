@@ -135,6 +135,9 @@ export class QuadTree {
             if(node.grassInstancedMesh != null) 
                 node.grassInstancedMesh!.visible = false;
 
+            if(node.treeBillboards != null)
+                node.treeBillboards!.visible = false;
+
             if(node.instancedTreeMesh != null)
                 node.instancedTreeMesh!.visible = false;
 
@@ -221,6 +224,20 @@ export class QuadTree {
             }
             else {
                 node.clearInstancedTreeMeshes();
+            }
+
+            
+            if(this.isMediumLOD(node) || this.isHighLOD(node)) {
+                if(!node.treeBillboards) {                
+                    node.generateTreeBillboards(this.treeGenerator);
+                    scene.add(node.treeBillboards!);
+                }
+                else {
+                    node.treeBillboards!.visible = true;
+                }
+            }
+            else {
+                node.clearTreeBillboards();
             }
         }
          

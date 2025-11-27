@@ -26,7 +26,9 @@ export class Node {
     grassInstancedMeshMaterial?: THREE.ShaderMaterial;
     grassInstancedMeshCounter: number = 0;
     
+    treeBillboards?: THREE.Points;
     instancedTreeMesh?: THREE.InstancedMesh;
+
     helperLabel?: THREE.Sprite;
     helperMesh?: THREE.Mesh;
     
@@ -93,6 +95,12 @@ export class Node {
             this.instancedTreeMesh?.disposeMeshAndRemoveFromScene(this.scene);
     }
 
+    
+    public clearTreeBillboards() {
+        if(this.treeBillboards != null)
+            this.treeBillboards?.disposeAndRemoveFromScene(this.scene);
+    }
+
     public merge(scene: THREE.Scene): void {
         // fast
         this.children.forEach(x => 
@@ -100,8 +108,11 @@ export class Node {
             x.merge(scene);
 
             x.mesh?.disposeMeshAndRemoveFromScene(scene);     
+
             x.grassBillboards?.disposeAndRemoveFromScene(scene);
             x.grassInstancedMesh?.disposeMeshAndRemoveFromScene(scene);
+
+            x.treeBillboards?.disposeAndRemoveFromScene(scene);
             x.instancedTreeMesh?.disposeMeshAndRemoveFromScene(scene);
 
             if(this.isDebug) {
@@ -149,8 +160,12 @@ export class Node {
         this.grassInstancedMesh = grassGenerator.generateInstancedMeshForNode(this.bounds, 10000);
     }
 
-    public generateTreeModels(vegetationMeshGenerator: TreeGenerator) {
-        this.instancedTreeMesh = vegetationMeshGenerator.generateForNode(this.bounds, this.mesh!, 200);        
+    public generateTreeBillboards(treeGenerator: TreeGenerator) {
+        this.treeBillboards = treeGenerator.generateBillboardsForNode(this.bounds, 200);
+    }
+
+    public generateTreeModels(treeGenerator: TreeGenerator) {
+        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode(this.bounds, 200);        
     }
 
     public update(): void {

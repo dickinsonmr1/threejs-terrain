@@ -33,8 +33,9 @@ export default class GameScene extends THREE.Scene {
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
         this.simplexNoiseGenerator = new TerrainSimplexNoiseGenerator(this.terrainGeneratorParams)
-        this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator);
+        
         this.grassGenerator = new GrassGenerator(this, this.simplexNoiseGenerator, 'assets/billboard_grass_32x32.png', 10, 30);
+        this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator, 'assets/tree_128x128.png', 30, 40);
 
         this.addSkybox();
         this.addShaderSky();

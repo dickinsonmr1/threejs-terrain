@@ -15,7 +15,9 @@ export class GrassGenerator {
 
     private sprite: THREE.Texture;
 
-    constructor(scene: THREE.Scene, private terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator, textureName: string, private yMin: number, private yMax: number) {
+    constructor(scene: THREE.Scene, private terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator,
+        textureName: string, private yMin: number, private yMax: number) {
+            
         const prng = alea(1000);
         this.vegetationNoise2D = createNoise2D(prng);
 

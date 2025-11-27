@@ -7,7 +7,9 @@ import { SeededRandom } from '../../shared/seededRandom';
 export class TreeGenerator {
 
     private vegetationNoise2D: NoiseFunction2D;
-    //private geometry: THREE.BoxGeometry = new THREE.BoxGeometry(1, 200, 1);
+
+    private sprite: THREE.Texture;
+    private pointsMaterial?: THREE.PointsMaterial;
 
     // TODO: generate number of radial segments based on node LOD in quadtree
     private geometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0.1, 5, 40, 6);
@@ -16,14 +18,50 @@ export class TreeGenerator {
     private counter: number = 0;
     //private instancedMesh!: THREE.InstancedMesh;
     
-    constructor(scene: THREE.Scene, private simplexNoiseGenerator: TerrainSimplexNoiseGenerator) {
+    constructor(scene: THREE.Scene, private simplexNoiseGenerator: TerrainSimplexNoiseGenerator,
+        textureName: string, private yMin: number, private yMax: number) {
+
         const prng = alea(500);
         this.vegetationNoise2D = createNoise2D(prng);
 
-        //this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, 1000);        
+        this.sprite = new THREE.TextureLoader().load( textureName );
+        this.sprite.colorSpace = THREE.SRGBColorSpace;
+        this.sprite.wrapS = this.sprite.wrapT = THREE.ClampToEdgeWrapping;
+
+        this.pointsMaterial = new THREE.PointsMaterial( { size: 50, sizeAttenuation: true, map: this.sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false } );        
     }
 
-    public generateForNode(bounds: THREE.Box2, terrainMesh: THREE.Mesh, maxCount: number) {
+    public generateBillboardsForNode(bounds: THREE.Box2, maxCount: number): THREE.Points {
+
+        let seededRandom = new SeededRandom(5000);
+        const bufferGeometry = new THREE.BufferGeometry();
+        const vertices = [];
+        
+        for (let i = 0; i < maxCount; i++) {
+    
+            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
+            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
+    
+            // todo: fix issue where lots of instanced meshes are generated at (0,0)
+            if(Math.abs(x) > 1 && Math.abs(z) > 1) {
+                var vegetationNoise = this.vegetationNoise2D(x, z);
+                if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
+                    
+                    let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
+                    if(elevation > this.yMin && elevation < this.yMax)     {
+                        vertices.push( x, elevation + 3, z);
+                    }
+                }            
+            }
+        }    
+        bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
+                
+        console.log(`tree billboards count for node: ${vertices.length / 3}`);
+        return new THREE.Points(bufferGeometry, this.pointsMaterial );
+
+    }
+
+    public generateInstancedMeshForNode(bounds: THREE.Box2, maxCount: number): THREE.InstancedMesh {
        
         let seededRandom = new SeededRandom(5000);
 
@@ -40,7 +78,7 @@ export class TreeGenerator {
                 if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
                     
                     let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
-                    if(elevation > 30 && elevation < 40)     {
+                    if(elevation > this.yMin && elevation < this.yMax)     {
                         const matrix = new THREE.Matrix4().setPosition(x, elevation + 8, z);
                         instancedMesh.setMatrixAt(this.counter++, matrix);
                     }
