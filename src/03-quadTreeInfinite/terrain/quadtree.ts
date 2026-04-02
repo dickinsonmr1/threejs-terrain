@@ -6,6 +6,7 @@ import { TerrainGeneratorParams } from '../../shared/terrainGeneratorParams';
 import '../../shared/threeExtensions'; // Import the extensions
 import { TreeGenerator } from './treeGenerator';
 import { GrassGenerator } from './grassGenerator';
+import { notEqual } from 'assert';
 
 export class QuadTree {
 
@@ -189,56 +190,24 @@ export class QuadTree {
             }
 
             if(this.isHighLOD(node)) {
-                if(!node.grassInstancedMesh) {
-                    node.generateGrassInstancedMesh2(this.grassGenerator);
-                    scene.add(node.grassInstancedMesh!);
-                }
-                else {
-                    node.grassInstancedMesh!.visible = true;
-                    node.update();
-                }
+                            
+                this.generateAndDisplayGrassInstancedMesh(node, scene);
                 node.clearGrassBillboards();
+
+                this.generateAndDisplayTreeInstancedMesh(node, scene);
+                node.clearTreeBillboards();
             }
             else if(this.isMediumLOD(node)) {
-                if(!node.grassBillboards) {
-                    node.generateGrassBillboards2(this.grassGenerator);
-                    scene.add(node.grassBillboards!);
-                }
-                else {
-                    node.grassBillboards!.visible = true;
-                }
+                
+                this.generateAndDisplayTreeBillboards(node, scene);
+                node.clearInstancedTreeMeshes();
+
+                this.generateAndDisplayGrassBillboards(node, scene);
                 node.clearGrassInstancedMesh();
             }
             else {
 
-            }
-
-            if(this.isMediumLOD(node) || this.isHighLOD(node)) {
-                if(!node.instancedTreeMesh) {                
-                    node.generateTreeModels(this.treeGenerator);
-                    scene.add(node.instancedTreeMesh!);
-                }
-                else {
-                    node.instancedTreeMesh!.visible = true;
-                }
-            }
-            else {
-                node.clearInstancedTreeMeshes();
-            }
-
-            
-            if(this.isMediumLOD(node) || this.isHighLOD(node)) {
-                if(!node.treeBillboards) {                
-                    node.generateTreeBillboards(this.treeGenerator);
-                    scene.add(node.treeBillboards!);
-                }
-                else {
-                    node.treeBillboards!.visible = true;
-                }
-            }
-            else {
-                node.clearTreeBillboards();
-            }
+            }        
         }
          
         if(this.isDebug) {
@@ -251,6 +220,49 @@ export class QuadTree {
                 node.helperLabel!.visible = true;
                 node.helperMesh!.visible = true;
             }
+        }
+    }
+
+    private generateAndDisplayGrassInstancedMesh(node: Node, scene: THREE.Scene) {
+
+        if(!node.grassInstancedMesh) {
+                node.generateGrassInstancedMesh2(this.grassGenerator);
+                scene.add(node.grassInstancedMesh!);
+            }
+            else {
+                node.grassInstancedMesh!.visible = true;
+                node.update();
+            }
+    }
+
+    private generateAndDisplayGrassBillboards(node: Node, scene: THREE.Scene) {
+        if(!node.grassBillboards) {
+            node.generateGrassBillboards2(this.grassGenerator);
+            scene.add(node.grassBillboards!);
+        }
+        else {
+            node.grassBillboards!.visible = true;
+            node.update();
+        }
+    }
+
+    private generateAndDisplayTreeInstancedMesh(node: Node, scene: THREE.Scene) {
+        if(!node.instancedTreeMesh) {                
+            node.generateTreeModels(this.treeGenerator);
+            scene.add(node.instancedTreeMesh!);
+        }
+        else {
+            node.instancedTreeMesh!.visible = true;
+        }
+    }
+
+    private generateAndDisplayTreeBillboards(node: Node, scene: THREE.Scene) {
+        if(!node.treeBillboards) {                
+            node.generateTreeBillboards(this.treeGenerator);
+            scene.add(node.treeBillboards!);
+        }
+        else {
+            node.treeBillboards!.visible = true;
         }
     }
     

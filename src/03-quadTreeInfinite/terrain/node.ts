@@ -94,7 +94,6 @@ export class Node {
         if(this.instancedTreeMesh != null)
             this.instancedTreeMesh?.disposeMeshAndRemoveFromScene(this.scene);
     }
-
     
     public clearTreeBillboards() {
         if(this.treeBillboards != null)
@@ -178,7 +177,7 @@ export class Node {
     public generateDebugLabelAndMesh(): void {
         let center = this.bounds.getCenter(new THREE.Vector2);
 
-        this.helperLabel = this.createTextLabel(`${this.lod}`, new THREE.Color(this.lodColors[this.lod]), 1.0, 2);
+        this.helperLabel = this.createTextLabel(`${this.lod} - ${this.instancedTreeMesh?.visible} / ${this.grassBillboards?.visible}`, new THREE.Color(this.lodColors[this.lod]), 1.0, 1);        
         this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));
 
         const width =  this.bounds.max.x -  this.bounds.min.x;
