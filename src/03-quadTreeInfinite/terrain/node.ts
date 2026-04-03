@@ -78,6 +78,9 @@ export class Node {
         console.log(`- Upper Right :  min(${upperRight.bounds.min.x}, ${upperRight.bounds.min.y}) -> max(${upperRight.bounds.max.x}, ${upperRight.bounds.max.y})`);
         console.log(`- Upper Left  :  min(${lowerRight.bounds.min.x}, ${lowerRight.bounds.min.y}) -> max(${lowerRight.bounds.max.x}, ${lowerRight.bounds.max.y})`);
         console.log(`----------------------------------------`);
+
+        this.helperMesh?.disposeMeshAndRemoveFromScene(scene);
+        //this.cleanUpMeshesAndObjects(scene);
     }
 
     public clearGrassBillboards() {
@@ -102,24 +105,27 @@ export class Node {
 
     public merge(scene: THREE.Scene): void {
         // fast
-        this.children.forEach(x => 
+        this.children.forEach(child => 
         {
-            x.merge(scene);
-
-            x.mesh?.disposeMeshAndRemoveFromScene(scene);     
-
-            x.grassBillboards?.disposeAndRemoveFromScene(scene);
-            x.grassInstancedMesh?.disposeMeshAndRemoveFromScene(scene);
-
-            x.treeBillboards?.disposeAndRemoveFromScene(scene);
-            x.instancedTreeMesh?.disposeMeshAndRemoveFromScene(scene);
-
-            if(this.isDebug) {
-                x.helperLabel?.disposeAndRemoveFromScene(scene);
-                x.helperMesh?.disposeMeshAndRemoveFromScene(scene);
-            }
+            child.cleanUpMeshesAndObjects(scene);            
         });   
         this.children.length = 0;  
+    }
+
+    private cleanUpMeshesAndObjects(scene: THREE.Scene) {
+            
+        this.mesh?.disposeMeshAndRemoveFromScene(scene);     
+
+        this.grassBillboards?.disposeAndRemoveFromScene(scene);
+        this.grassInstancedMesh?.disposeMeshAndRemoveFromScene(scene);
+
+        this.treeBillboards?.disposeAndRemoveFromScene(scene);
+        this.instancedTreeMesh?.disposeMeshAndRemoveFromScene(scene);
+
+        if(this.isDebug) {
+            this.helperLabel?.disposeAndRemoveFromScene(scene);
+            this.helperMesh?.disposeMeshAndRemoveFromScene(scene);
+        }
     }
 
     public getChildren(): Node[] {
@@ -175,10 +181,21 @@ export class Node {
     }
 
     public generateDebugLabelAndMesh(): void {
+
+        // cleanup in case these are still around
+        this.helperLabel?.disposeAndRemoveFromScene(this.scene);
+        this.helperMesh?.disposeMeshAndRemoveFromScene(this.scene);
+
         let center = this.bounds.getCenter(new THREE.Vector2);
 
-        this.helperLabel = this.createTextLabel(`${this.lod} - ${this.instancedTreeMesh?.visible} / ${this.grassBillboards?.visible}`, new THREE.Color(this.lodColors[this.lod]), 1.0, 1);        
-        this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));
+        this.helperLabel = this.createTextLabel(`${this.lod}`,//- ${this.instancedTreeMesh?.visible} / ${this.grassBillboards?.visible}`,
+            new THREE.Color(this.lodColors[this.lod]),
+            1.0,
+            0.5,
+            128
+        );        
+
+        this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));        
 
         const width =  this.bounds.max.x -  this.bounds.min.x;
         const depth =  this.bounds.max.y -  this.bounds.min.y; // using Y as depth
@@ -188,7 +205,7 @@ export class Node {
 
         this.helperMesh = new THREE.Mesh(geometry, material);
         this.helperMesh.position.copy(this.helperLabel!.position);
-        this.helperMesh.position.set(center.x, height / 2, center.y);
+        this.helperMesh.position.set(center.x, height / 2, -center.y);
     }
     
     private createTextLabel(text: string, color: THREE.Color, alpha: number = 1.0, scale = 0.5, fontSize = 64): THREE.Sprite {

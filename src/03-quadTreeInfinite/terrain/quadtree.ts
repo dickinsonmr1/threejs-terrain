@@ -111,6 +111,7 @@ export class QuadTree {
 
     private isMediumLOD(node: Node) {
         let maxLOD =  this.getQuadtreeMaxLOD();
+        //return !this.isHighLOD(node) && node.lod >= maxLOD - 2;
         return node.lod >= maxLOD - 2;
     }
     
@@ -198,12 +199,12 @@ export class QuadTree {
                 node.clearTreeBillboards();
             }
             else if(this.isMediumLOD(node)) {
-                
-                this.generateAndDisplayTreeBillboards(node, scene);
-                node.clearInstancedTreeMeshes();
 
                 this.generateAndDisplayGrassBillboards(node, scene);
                 node.clearGrassInstancedMesh();
+
+                this.generateAndDisplayTreeBillboards(node, scene);
+                node.clearInstancedTreeMeshes();
             }
             else {
 
@@ -211,15 +212,15 @@ export class QuadTree {
         }
          
         if(this.isDebug) {
-            if(!node.helperLabel && !node.helperMesh) {
+            if(!node.helperLabel || !node.helperMesh) {
                 node.generateDebugLabelAndMesh();
+                
                 scene.add(node.helperLabel!);
                 scene.add(node.helperMesh!);
             }
-            else {
-                node.helperLabel!.visible = true;
-                node.helperMesh!.visible = true;
-            }
+            
+            node.helperLabel!.visible = true;
+            node.helperMesh!.visible = true;            
         }
     }
 
