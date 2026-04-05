@@ -10,7 +10,7 @@ export class Node {
         0x88cc44, // LOD 1
         0xff00ff, // LOD 2
         0x00ffff, // LOD 3
-        0xffffff, // LOD 4
+        0xffff00, // LOD 4
         0xff0000, // LOD 5
         0x00ff00, // LOD 6
         0x00ffff, // LOD 7
