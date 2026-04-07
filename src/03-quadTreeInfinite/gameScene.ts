@@ -28,7 +28,7 @@ export default class GameScene extends THREE.Scene {
 
     clock: THREE.Clock = new THREE.Clock();
    
-    constructor(public readonly camera: THREE.Camera, public readonly renderer: THREE.WebGLRenderer) {
+    constructor(public readonly camera: THREE.Camera, public readonly renderer: THREE.WebGLRenderer, public isDebug: boolean) {
         super();
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
@@ -47,6 +47,11 @@ export default class GameScene extends THREE.Scene {
         this.addFireParticleEmitter();
         
         this.precipitationSystem = new PrecipitationSystem(this, 5000, PrecipitationType.Rain, 1);
+    }
+
+    public switchIsDebug(value: boolean) {
+        this.isDebug = value;
+        this.quadTree.isDebug = value;
     }
 
     public switchSky(skyType: SkyType): void {
@@ -143,7 +148,7 @@ export default class GameScene extends THREE.Scene {
             500, // minimum chunk size
             32, // vertices per chunk side
             100, // height factor
-            true, // debug?
+            this.isDebug // debug?
         );
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);

@@ -13,6 +13,7 @@ import nipplejs from 'nipplejs';
 import { Console } from 'console';
 
 //const isMobile = 'ontouchstart' in window;
+const isDebug: boolean = true;
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.near = 1;
@@ -28,7 +29,7 @@ renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
 
-const scene = new GameScene(camera, renderer);
+const scene = new GameScene(camera, renderer, isDebug);
 
 const pitchObject = new THREE.Group();
 pitchObject.add(camera);
@@ -337,6 +338,7 @@ const gui = new GUI();
 gui.title('Debug');
 gui.close();
 gui.add( document, 'title' );
+gui.add(scene, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
 gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();

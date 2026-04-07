@@ -30,7 +30,7 @@ export class QuadTree {
         private terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator,
         private treeGenerator: TreeGenerator,
         private grassGenerator: GrassGenerator,
-        terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, private isDebug: boolean) 
+        terrainGeneratorParams: TerrainGeneratorParams, minimumNodeSize: number, verticesPerChunk: number, heightFactor: number, public isDebug: boolean) 
     {
         this.bounds = bounds;
         this.root = new Node(scene, bounds, this.maxLOD, isDebug);
@@ -44,7 +44,7 @@ export class QuadTree {
         this.heightFactor = heightFactor;
         
         this.highDetailShaderMaterial = this.generateMaterial(4, heightFactor, isDebug);
-        this.lowDetailShaderMaterial = this.generateMaterial(1, heightFactor, isDebug); 
+        this.lowDetailShaderMaterial = this.generateMaterial(2, heightFactor, isDebug); 
         this.maxLOD = 0;       
     }
 
@@ -71,6 +71,11 @@ export class QuadTree {
                 node.merge(scene);   
             }
         }
+    }
+
+    public switchIsDebug(value: boolean) {
+        this.isDebug = value;
+        this.root.switchIsDebug(value);
     }
 
     public getCurrentMaxLOD(root: Node): number {
@@ -121,7 +126,7 @@ export class QuadTree {
     }
 
     private generateMesh(node: Node, scene: THREE.Scene) {
-        let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
+        
         if(node.children.length > 0){
             
             node.children.forEach(x => {
@@ -155,6 +160,8 @@ export class QuadTree {
         }
         else {
             if(!node.mesh) {
+                let nodeSize = node.bounds.getSize(new THREE.Vector2()).x;
+
                 let mesh = this.meshGenerator.createPlaneMeshFromNoise(
                     node.bounds.getCenter(new THREE.Vector2()).x, node.bounds.getCenter(new THREE.Vector2()).y,                
                     this.terrainSimplexNoiseGenerator,
@@ -165,7 +172,7 @@ export class QuadTree {
                     this.terrainGeneratorParams
                 );
 
-                mesh.receiveShadow = true;
+                mesh.receiveShadow = false;
 
                 //let meshDrawOffset = node.bounds.min;
                 let meshDrawOffset = node.bounds.getCenter(new THREE.Vector2());
@@ -271,11 +278,11 @@ export class QuadTree {
 
         const loader = new THREE.TextureLoader();
   
-        const texture1 = this.loadAndConfigureTexture(loader, "assets/sand.png", repeats);                
-        const texture2 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00.png", repeats);        
-        const texture3 = this.loadAndConfigureTexture(loader, "assets/stone.png", repeats);        
-        const texture4 = this.loadAndConfigureTexture(loader, "assets/stone.png", repeats);
-        const texture5 = this.loadAndConfigureTexture(loader, "assets/snow.png", repeats);
+        const texture1 = this.loadAndConfigureTexture(loader, "assets/sand_32x32.png", repeats);                
+        const texture2 = this.loadAndConfigureTexture(loader, "assets/tileable_grass_00_32x32.png", repeats);        
+        const texture3 = this.loadAndConfigureTexture(loader, "assets/stone_32x32.png", repeats);        
+        const texture4 = this.loadAndConfigureTexture(loader, "assets/stone_32x32.png", repeats);
+        const texture5 = this.loadAndConfigureTexture(loader, "assets/snow_32x32.png", repeats);
   
         return new THREE.ShaderMaterial({
             uniforms: {

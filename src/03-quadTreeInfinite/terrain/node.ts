@@ -83,6 +83,13 @@ export class Node {
         //this.cleanUpMeshesAndObjects(scene);
     }
 
+    public switchIsDebug(value: boolean) {
+        if(this.children.length > 0)
+            this.children.forEach(child => child.switchIsDebug(value));
+
+        this.isDebug = value;
+    }
+
     public clearGrassBillboards() {
         if(this.grassBillboards != null)
             this.grassBillboards?.disposeAndRemoveFromScene(this.scene);
@@ -180,6 +187,16 @@ export class Node {
         }
     }
 
+    private getGrassBillboardsCount() {
+        const grassBillboardsGeometry = this.grassBillboards?.geometry as THREE.BufferGeometry ?? null;
+        return grassBillboardsGeometry?.attributes.position.count ?? null;
+    }
+
+    private getTreeBillboardsCount() {
+        const treeBillboardsGeometry = this.treeBillboards?.geometry as THREE.BufferGeometry ?? null;
+        return treeBillboardsGeometry?.attributes.position.count ?? null;
+    }
+
     public generateDebugLabelAndMesh(): void {
 
         // cleanup in case these are still around
@@ -188,11 +205,11 @@ export class Node {
 
         let center = this.bounds.getCenter(new THREE.Vector2);
 
-        this.helperLabel = this.createTextLabel(`${this.lod}`,//- ${this.instancedTreeMesh?.visible} / ${this.grassBillboards?.visible}`,
+        this.helperLabel = this.createTextLabel(`LOD${this.lod} - G:${this.grassInstancedMesh?.count}/${this.getGrassBillboardsCount()} T:${this.instancedTreeMesh?.count}/${this.getTreeBillboardsCount()}`,
             new THREE.Color(this.lodColors[this.lod]),
             1.0,
             0.5,
-            128
+            96
         );        
 
         this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));        

@@ -49,7 +49,7 @@ export class TreeGenerator {
                     
                     let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
                     if(elevation > this.yMin && elevation < this.yMax)     {
-                        vertices.push( x, elevation + 3, z);
+                        vertices.push(x, elevation + 3, z);
                     }
                 }            
             }
@@ -59,6 +59,29 @@ export class TreeGenerator {
         console.log(`tree billboards count for node: ${vertices.length / 3}`);
         return new THREE.Points(bufferGeometry, this.pointsMaterial );
 
+    }
+
+    public generateBillboardsForNode2(bounds: THREE.Box2, spacing: number, threshold: number = 0.8) : THREE.Points {
+        
+        const bufferGeometry = new THREE.BufferGeometry();
+        const vertices = [];
+
+        for (let x = bounds.min.x; x < bounds.max.x; x += spacing) {
+            for (let z = bounds.min.y; z < bounds.max.y; z += spacing) {
+
+
+                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
+                
+                if (elevation > threshold) {
+                    vertices.push(x, elevation + 3, z);
+                }
+            }
+        }
+
+        bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
+                
+        console.log(`tree billboards count for node: ${vertices.length / 3}`);
+        return new THREE.Points(bufferGeometry, this.pointsMaterial );
     }
 
     public generateInstancedMeshForNode(bounds: THREE.Box2, maxCount: number): THREE.InstancedMesh {
@@ -73,7 +96,7 @@ export class TreeGenerator {
             const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
     
             // todo: fix issue where lots of instanced meshes are generated at (0,0)
-            if(Math.abs(x) > 1 && Math.abs(z) > 1) {
+            //if(Math.abs(x) > 1 && Math.abs(z) > 1) {
                 var vegetationNoise = this.vegetationNoise2D(x, z);
                 if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
                     
@@ -83,7 +106,7 @@ export class TreeGenerator {
                         instancedMesh.setMatrixAt(this.counter++, matrix);
                     }
                 }            
-            }
+            //}
         }
        
        /*
