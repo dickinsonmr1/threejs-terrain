@@ -125,18 +125,31 @@ export class TreeGenerator {
         var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, maxCount);        
 
         var breakNow: boolean = false;
-        for (let x = bounds.min.x; x < bounds.max.x; x += spacing) {
-            for (let z = bounds.min.y; z < bounds.max.y; z += spacing) {
+        
+        //var startX = bounds.min.x - Math.abs(bounds.min.x) % spacing;        
+        //var startZ = bounds.min.y - Math.abs(bounds.min.y) % spacing;
+
+        var startX = Math.floor(bounds.min.x / spacing) * spacing;
+        var endX = Math.floor(bounds.max.x / spacing) * spacing;
+
+        var startZ = Math.floor(bounds.min.y / spacing) * spacing;
+        var endZ = Math.floor(bounds.max.y / spacing) * spacing;
+
+        for (let x = startX; x < endX; x += spacing) {
+            for (let z = startZ; z < endZ; z += spacing) {
 
                 let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, z);       
                 
                 if (elevation > threshold) {
                     //const matrix = new THREE.Matrix4().setPosition(x + meshDrawOffset.x, elevation + 8, z + meshDrawOffset.y);
-                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 8, -z);
+                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 20, -z);
                     this.counter++;
                     instancedMesh.setMatrixAt(this.counter, matrix);
-                    //color.set(Math.random() * 0xffffff);
-                    instancedMesh.setColorAt(this.counter, color);
+                    if(x == startX)
+                        instancedMesh.setColorAt(this.counter, new THREE.Color('white'));
+                    else
+                        instancedMesh.setColorAt(this.counter, color);
+                    
                 }
                 if(this.counter > maxCount)
                     breakNow = true;
