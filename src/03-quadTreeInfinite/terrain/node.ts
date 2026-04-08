@@ -173,11 +173,12 @@ export class Node {
     }
 
     public generateTreeBillboards(treeGenerator: TreeGenerator) {
-        this.treeBillboards = treeGenerator.generateBillboardsForNode(this.bounds, 200);
+        //this.treeBillboards = treeGenerator.generateBillboardsForNode(this.bounds, 2000);
+        this.treeBillboards = treeGenerator.generateBillboardsForNode2(this.bounds, 100, 0.8);
     }
 
     public generateTreeModels(treeGenerator: TreeGenerator) {
-        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode(this.bounds, 200);        
+        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode2(this.bounds, 1000, 100, new THREE.Color(this.lodColors[this.lod]), 0.8);        
     }
 
     public update(): void {
@@ -205,7 +206,8 @@ export class Node {
 
         let center = this.bounds.getCenter(new THREE.Vector2);
 
-        this.helperLabel = this.createTextLabel(`LOD${this.lod} - G:${this.grassInstancedMesh?.count}/${this.getGrassBillboardsCount()} T:${this.instancedTreeMesh?.count}/${this.getTreeBillboardsCount()}`,
+        //this.helperLabel = this.createTextLabel(`LOD${this.lod} - G:${this.grassInstancedMesh?.count}/${this.getGrassBillboardsCount()} T:${this.instancedTreeMesh?.count}/${this.getTreeBillboardsCount()}`,
+        this.helperLabel = this.createTextLabel(`${this.lod}`,
             new THREE.Color(this.lodColors[this.lod]),
             1.0,
             0.5,
@@ -214,8 +216,8 @@ export class Node {
 
         this.helperLabel.position.set(center.x, 200, -center.y).add(new THREE.Vector3(0, 0.5, 0));        
 
-        const width =  this.bounds.max.x -  this.bounds.min.x;
-        const depth =  this.bounds.max.y -  this.bounds.min.y; // using Y as depth
+        const width = this.bounds.max.x - this.bounds.min.x;
+        const depth = this.bounds.max.y - this.bounds.min.y; // using Y as depth
         const height = 100; // fixed height in Z
         const geometry = new THREE.BoxGeometry(width, height, depth);
         const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: true, opacity: 0.4 });

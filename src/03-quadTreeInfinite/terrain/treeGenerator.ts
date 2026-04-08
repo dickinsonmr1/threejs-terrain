@@ -14,7 +14,8 @@ export class TreeGenerator {
     // TODO: generate number of radial segments based on node LOD in quadtree
     private geometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0.1, 5, 40, 6);
 
-    private material: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({color: 0x00ff00});
+
+    private material: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ vertexColors: false});
     private counter: number = 0;
     //private instancedMesh!: THREE.InstancedMesh;
     
@@ -32,7 +33,7 @@ export class TreeGenerator {
     }
 
     public generateBillboardsForNode(bounds: THREE.Box2, maxCount: number): THREE.Points {
-
+        //console.log(`generateBillboardsForNode for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
         let seededRandom = new SeededRandom(5000);
         const bufferGeometry = new THREE.BufferGeometry();
         const vertices = [];
@@ -62,22 +63,23 @@ export class TreeGenerator {
     }
 
     public generateBillboardsForNode2(bounds: THREE.Box2, spacing: number, threshold: number = 0.8) : THREE.Points {
-        
+        //console.log(`generateBillboardsForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
+
         const bufferGeometry = new THREE.BufferGeometry();
         const vertices = [];
 
+        let meshDrawOffset = bounds.getCenter(new THREE.Vector2());
+
         for (let x = bounds.min.x; x < bounds.max.x; x += spacing) {
             for (let z = bounds.min.y; z < bounds.max.y; z += spacing) {
-
-
-                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
-                
+        //for (let x = bounds.min.x + meshDrawOffset.x; x < bounds.max.x + meshDrawOffset.x; x += spacing) {
+            //for (let z = bounds.min.y + meshDrawOffset.y; z < bounds.max.y + meshDrawOffset.y; z += spacing) {
+                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);                       
                 if (elevation > threshold) {
-                    vertices.push(x, elevation + 3, z);
+                    vertices.push(x + meshDrawOffset.x, elevation + 3, z);
                 }
             }
         }
-
         bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
                 
         console.log(`tree billboards count for node: ${vertices.length / 3}`);
@@ -85,7 +87,7 @@ export class TreeGenerator {
     }
 
     public generateInstancedMeshForNode(bounds: THREE.Box2, maxCount: number): THREE.InstancedMesh {
-       
+        //console.log(`generateInstancedMeshForNode for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
         let seededRandom = new SeededRandom(5000);
 
         this.counter = 0;
@@ -96,7 +98,7 @@ export class TreeGenerator {
             const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
     
             // todo: fix issue where lots of instanced meshes are generated at (0,0)
-            //if(Math.abs(x) > 1 && Math.abs(z) > 1) {
+            if(Math.abs(x) > 1 && Math.abs(z) > 1) {
                 var vegetationNoise = this.vegetationNoise2D(x, z);
                 if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
                     
@@ -106,27 +108,47 @@ export class TreeGenerator {
                         instancedMesh.setMatrixAt(this.counter++, matrix);
                     }
                 }            
-            //}
+            }
+        }
+
+        console.log(`tree instanced mesh count for node: ${instancedMesh.count}`);
+        instancedMesh.visible = true;
+        return instancedMesh;
+    }    
+
+    public generateInstancedMeshForNode2(bounds: THREE.Box2, maxCount: number, spacing: number, color: THREE.Color, threshold: number = 0.8): THREE.InstancedMesh {
+
+        let meshDrawOffset = bounds.getCenter(new THREE.Vector2());
+
+        console.log(`generateInstancedMeshForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
+        this.counter = 0; 
+        var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, maxCount);        
+
+        var breakNow: boolean = false;
+        for (let x = bounds.min.x; x < bounds.max.x; x += spacing) {
+            for (let z = bounds.min.y; z < bounds.max.y; z += spacing) {
+
+                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, z);       
+                
+                if (elevation > threshold) {
+                    //const matrix = new THREE.Matrix4().setPosition(x + meshDrawOffset.x, elevation + 8, z + meshDrawOffset.y);
+                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 8, -z);
+                    this.counter++;
+                    instancedMesh.setMatrixAt(this.counter, matrix);
+                    //color.set(Math.random() * 0xffffff);
+                    instancedMesh.setColorAt(this.counter, color);
+                }
+                if(this.counter > maxCount)
+                    breakNow = true;
+
+                if(breakNow) 
+                    break;
+            }
+            if(breakNow)
+                break;
         }
        
-       /*
-        for (let i = 0; i < terrainMesh!.geometry.attributes.position.count; i++) {
-
-            const x = bounds.min.x + terrainMesh!.geometry.attributes.position.getX(i);
-            const y = -bounds.min.y - terrainMesh!.geometry.attributes.position.getY(-i);
-            
-            var vegetationNoise = this.vegetationNoise2D(x, y);
-            if(vegetationNoise > 0.0 && vegetationNoise < 1.01){
-                
-                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, y);       
-                if(elevation > 30 && elevation < 40) {
-                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 8, -y);
-                    instancedMesh.setMatrixAt(this.counter++, matrix);
-                }
-            }               
-        }
-        */
-
+        instancedMesh.instanceColor!.needsUpdate = true;
         console.log(`tree instanced mesh count for node: ${instancedMesh.count}`);
         instancedMesh.visible = true;
         return instancedMesh;

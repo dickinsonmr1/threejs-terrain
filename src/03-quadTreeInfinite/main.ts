@@ -336,7 +336,7 @@ function moveCamera() {
 // https://lil-gui.georgealways.com/
 const gui = new GUI();
 gui.title('Debug');
-gui.close();
+//gui.close();
 gui.add( document, 'title' );
 gui.add(scene, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));

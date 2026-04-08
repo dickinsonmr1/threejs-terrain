@@ -140,12 +140,13 @@ export default class GameScene extends THREE.Scene {
     private addTerrain() {
        
         this.quadTree = new QuadTree(this,
-            new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
+            //new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
+            new THREE.Box2(new THREE.Vector2(-500, -500), new THREE.Vector2(500, 500)), // world bounds
             this.simplexNoiseGenerator,            
             this.treeGenerator,
             this.grassGenerator,
             this.terrainGeneratorParams,
-            500, // minimum chunk size
+            250, // minimum chunk size
             32, // vertices per chunk side
             100, // height factor
             this.isDebug // debug?
