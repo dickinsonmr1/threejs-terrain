@@ -178,7 +178,12 @@ export class Node {
     }
 
     public generateTreeModels(treeGenerator: TreeGenerator) {
-        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode2(this.bounds, 1000, 100, new THREE.Color(this.lodColors[this.lod]), 0.8);        
+        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode2(this.bounds,
+            10000,  // max count
+            10,     // spacing
+            new THREE.Color(this.lodColors[this.lod]),
+            30,     // lower elevation bound
+            60);    // higher elevation bound
     }
 
     public update(): void {

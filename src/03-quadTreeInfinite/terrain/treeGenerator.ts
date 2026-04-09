@@ -116,7 +116,9 @@ export class TreeGenerator {
         return instancedMesh;
     }    
 
-    public generateInstancedMeshForNode2(bounds: THREE.Box2, maxCount: number, spacing: number, color: THREE.Color, threshold: number = 0.8): THREE.InstancedMesh {
+    public generateInstancedMeshForNode2(bounds: THREE.Box2, maxCount: number, spacing: number, color: THREE.Color, lowerElevationBound: number, higherElevationBound: number): THREE.InstancedMesh {
+
+        const cellSize = spacing;
 
         let meshDrawOffset = bounds.getCenter(new THREE.Vector2());
 
@@ -125,30 +127,29 @@ export class TreeGenerator {
         var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, maxCount);        
 
         var breakNow: boolean = false;
-        
-        //var startX = bounds.min.x - Math.abs(bounds.min.x) % spacing;        
-        //var startZ = bounds.min.y - Math.abs(bounds.min.y) % spacing;
+                
+        var startX = bounds.min.x - Math.abs(bounds.min.x) % cellSize;        
+        //var startX = Math.floor(bounds.min.x / cellSize) * cellSize;
+        var endX = Math.floor(bounds.max.x / cellSize) * cellSize;
 
-        var startX = Math.floor(bounds.min.x / spacing) * spacing;
-        var endX = Math.floor(bounds.max.x / spacing) * spacing;
+        var startZ = bounds.min.y - Math.abs(bounds.min.y) % cellSize;
+        //var startZ = Math.floor(bounds.min.y / cellSize) * cellSize;
+        var endZ = Math.floor(bounds.max.y / cellSize) * cellSize;
 
-        var startZ = Math.floor(bounds.min.y / spacing) * spacing;
-        var endZ = Math.floor(bounds.max.y / spacing) * spacing;
-
-        for (let x = startX; x < endX; x += spacing) {
-            for (let z = startZ; z < endZ; z += spacing) {
+        for (let x = startX + 1; x < endX; x += cellSize) {
+            for (let z = startZ + 1; z < endZ; z += cellSize) {
 
                 let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, z);       
                 
-                if (elevation > threshold) {
-                    //const matrix = new THREE.Matrix4().setPosition(x + meshDrawOffset.x, elevation + 8, z + meshDrawOffset.y);
-                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 20, -z);
+                if (elevation > lowerElevationBound && elevation < higherElevationBound) {
+
+                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 15, -z);
                     this.counter++;
                     instancedMesh.setMatrixAt(this.counter, matrix);
-                    if(x == startX)
-                        instancedMesh.setColorAt(this.counter, new THREE.Color('white'));
-                    else
-                        instancedMesh.setColorAt(this.counter, color);
+                    //if(z == 0.0)// && z > 0.0)
+                        //instancedMesh.setColorAt(this.counter, new THREE.Color('red'));
+                    //else    
+                    instancedMesh.setColorAt(this.counter, color);
                     
                 }
                 if(this.counter > maxCount)
@@ -159,9 +160,11 @@ export class TreeGenerator {
             }
             if(breakNow)
                 break;
+
+            
         }
-       
-        instancedMesh.instanceColor!.needsUpdate = true;
+        instancedMesh.count = this.counter;
+        //instancedMesh.instanceColor!.needsUpdate = true;
         console.log(`tree instanced mesh count for node: ${instancedMesh.count}`);
         instancedMesh.visible = true;
         return instancedMesh;
