@@ -35,7 +35,7 @@ export default class GameScene extends THREE.Scene {
         this.simplexNoiseGenerator = new TerrainSimplexNoiseGenerator(this.terrainGeneratorParams)
         
         this.grassGenerator = new GrassGenerator(this, this.simplexNoiseGenerator, 'assets/billboard_grass_32x32.png', 10, 30);
-        this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator, 'assets/tree_128x128.png', 30, 40);
+        this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator, 'assets/tree_white_128x128.png', 30, 40);
 
         this.addSkybox();
         this.addShaderSky();
@@ -141,7 +141,7 @@ export default class GameScene extends THREE.Scene {
        
         this.quadTree = new QuadTree(this,
             //new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
-            new THREE.Box2(new THREE.Vector2(-500, -500), new THREE.Vector2(500, 500)), // world bounds
+            new THREE.Box2(new THREE.Vector2(-5000, -5000), new THREE.Vector2(5000, 5000)), // world bounds
             this.simplexNoiseGenerator,            
             this.treeGenerator,
             this.grassGenerator,

@@ -174,7 +174,12 @@ export class Node {
 
     public generateTreeBillboards(treeGenerator: TreeGenerator) {
         //this.treeBillboards = treeGenerator.generateBillboardsForNode(this.bounds, 2000);
-        this.treeBillboards = treeGenerator.generateBillboardsForNode2(this.bounds, 100, 0.8);
+        this.treeBillboards = treeGenerator.generateBillboardsForNode2(
+            this.bounds,
+            10,     // spacing
+            new THREE.Color(this.lodColors[this.lod]),
+            30,     // lower elevation bound
+            60);    // higher elevation bound
     }
 
     public generateTreeModels(treeGenerator: TreeGenerator) {
