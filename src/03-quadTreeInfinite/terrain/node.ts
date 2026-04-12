@@ -174,7 +174,7 @@ export class Node {
 
     public generateTreeBillboards(treeGenerator: TreeGenerator) {
         //this.treeBillboards = treeGenerator.generateBillboardsForNode(this.bounds, 2000);
-        this.treeBillboards = treeGenerator.generateBillboardsForNode2(
+        this.treeBillboards = treeGenerator.generateBillboardsForNode(
             this.isDebug,
             this.bounds,
             10,     // spacing
@@ -184,7 +184,7 @@ export class Node {
     }
 
     public generateTreeModels(treeGenerator: TreeGenerator) {
-        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode2(
+        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode(
             this.isDebug,
             this.bounds,
             10000,  // max count

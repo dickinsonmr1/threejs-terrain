@@ -15,7 +15,7 @@ import { Console } from 'console';
 //const isMobile = 'ontouchstart' in window;
 
 const settings = {  
-  isDebug: true,
+  isDebug: false,
   lockCameraToTerrain: true,
   yCameraOffsetFromTerrain: 5,
   skyType: SkyType.Skybox,
@@ -280,6 +280,9 @@ document.addEventListener('keydown', (event) => {
         case 'ShiftLeft':
         case 'ShiftRight':
           turboOn = true;
+          break;
+        case 'KeyL':
+          settings.lockCameraToTerrain = true;
           break;
     }
 });

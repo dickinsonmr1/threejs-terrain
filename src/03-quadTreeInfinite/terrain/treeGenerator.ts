@@ -32,7 +32,7 @@ export class TreeGenerator {
         this.pointsMaterial = new THREE.PointsMaterial( { size: 50, sizeAttenuation: true, map: this.sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false, vertexColors: true } );        
     }
 
-    public generateBillboardsForNode2(isDebug: boolean, bounds: THREE.Box2, spacing: number, color: THREE.Color, lowerElevationBound: number, higherElevationBound: number) : THREE.Points {
+    public generateBillboardsForNode(isDebug: boolean, bounds: THREE.Box2, spacing: number, color: THREE.Color, lowerElevationBound: number, higherElevationBound: number) : THREE.Points {
         //console.log(`generateBillboardsForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
         const cellSize = spacing;
 
@@ -70,7 +70,7 @@ export class TreeGenerator {
         return new THREE.Points(bufferGeometry, this.pointsMaterial );
     }
 
-    public generateInstancedMeshForNode2(isDebug: boolean, bounds: THREE.Box2, maxCount: number, spacing: number, debugColor: THREE.Color, lowerElevationBound: number, higherElevationBound: number): THREE.InstancedMesh {
+    public generateInstancedMeshForNode(isDebug: boolean, bounds: THREE.Box2, maxCount: number, spacing: number, debugColor: THREE.Color, lowerElevationBound: number, higherElevationBound: number): THREE.InstancedMesh {
 
         const cellSize = spacing;
         console.log(`generateInstancedMeshForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
