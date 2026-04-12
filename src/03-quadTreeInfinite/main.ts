@@ -13,7 +13,24 @@ import nipplejs from 'nipplejs';
 import { Console } from 'console';
 
 //const isMobile = 'ontouchstart' in window;
-const isDebug: boolean = true;
+
+const settings = {  
+  isDebug: true,
+  lockCameraToTerrain: true,
+  yCameraOffsetFromTerrain: 5,
+  skyType: SkyType.Skybox,
+  sky: {
+    turbidity: 10.0,
+    rayleigh: 2,
+    mieCoefficient: 0.005,
+    mieDirectionalG: 0.8,
+    luminance: 1,
+  },
+  sun: {
+    inclination: 0.31,
+    azimuth: 0.25,
+  }
+};
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.near = 1;
@@ -29,35 +46,17 @@ renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
 
-const scene = new GameScene(camera, renderer, isDebug);
+const scene = new GameScene(camera, renderer, settings);
 
 const pitchObject = new THREE.Group();
 pitchObject.add(camera);
-
 const yawObject = new THREE.Group();
 yawObject.add(pitchObject);
-
 scene.add(yawObject);
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
 
-const settings = {  
-  lockCameraToTerrain: false,
-  yCameraOffsetFromTerrain: 5,
-  skyType: SkyType.Skybox,
-  sky: {
-    turbidity: 10.0,
-    rayleigh: 2,
-    mieCoefficient: 0.005,
-    mieDirectionalG: 0.8,
-    luminance: 1,
-  },
-  sun: {
-    inclination: 0.31,
-    azimuth: 0.25,
-  }
-};
 
 // https://threejs.org/examples/#misc_controls_pointerlock
 
@@ -271,9 +270,11 @@ document.addEventListener('keydown', (event) => {
             velocity.x = moveSpeed;
             break;
         case 'KeyQ': // Up
+            settings.lockCameraToTerrain = false;
             velocity.y = moveSpeed;
             break;
         case 'KeyZ': // down
+            settings.lockCameraToTerrain = false;
             velocity.y = -moveSpeed;
             break;
         case 'ShiftLeft':
@@ -339,25 +340,24 @@ const gui = new GUI();
 gui.title('Debug');
 //gui.close();
 gui.add( document, 'title' );
-gui.add(scene, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
+gui.add(settings, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
 gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
 
-
-const quadTreeFolder = gui.addFolder('Quadtree');
-quadTreeFolder.add(scene, 'totalNodes').name('Total Nodes').listen();
-
 const cameraFolder = gui.addFolder('Camera');
+cameraFolder.add(settings, 'lockCameraToTerrain').name('Lock Camera To Terrain?').listen();
+cameraFolder.add(settings, 'yCameraOffsetFromTerrain', -100, 100, 0.5).name('Locked Camera Offset').listen();
 cameraFolder.add(camera.position, 'x', scene.quadTree.bounds.min.x, scene.quadTree.bounds.max.x).listen();
 cameraFolder.add(camera.position, 'y', 0, 10000).listen();
 cameraFolder.add(camera.position, 'z', scene.quadTree.bounds.min.y, scene.quadTree.bounds.max.y).listen();
 cameraFolder.add(camera, 'far', 0, 1000000, 10).listen();
-cameraFolder.add(settings, 'lockCameraToTerrain').name('Lock Camera To Terrain?').listen();
-cameraFolder.add(settings, 'yCameraOffsetFromTerrain', -100, 100, 0.5).name('Locked Camera Offset').listen();
 cameraFolder.open();
+
+const quadTreeFolder = gui.addFolder('Quadtree');
+quadTreeFolder.add(scene, 'totalNodes').name('Total Nodes').listen();
 
 const onShaderChange = () => {
   //for (let k in settings.sky) {

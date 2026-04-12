@@ -28,7 +28,7 @@ export default class GameScene extends THREE.Scene {
 
     clock: THREE.Clock = new THREE.Clock();
    
-    constructor(public readonly camera: THREE.Camera, public readonly renderer: THREE.WebGLRenderer, public isDebug: boolean) {
+    constructor(public readonly camera: THREE.Camera, public readonly renderer: THREE.WebGLRenderer, public settings: any) {
         super();
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
@@ -50,7 +50,7 @@ export default class GameScene extends THREE.Scene {
     }
 
     public switchIsDebug(value: boolean) {
-        this.isDebug = value;
+        this.settings.isDebug = value;
         this.quadTree.isDebug = value;
     }
 
@@ -149,7 +149,7 @@ export default class GameScene extends THREE.Scene {
             250, // minimum chunk size
             32, // vertices per chunk side
             100, // height factor
-            this.isDebug // debug?
+            this.settings.isDebug // debug?
         );
           
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);

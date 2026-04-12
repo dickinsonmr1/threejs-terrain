@@ -175,6 +175,7 @@ export class Node {
     public generateTreeBillboards(treeGenerator: TreeGenerator) {
         //this.treeBillboards = treeGenerator.generateBillboardsForNode(this.bounds, 2000);
         this.treeBillboards = treeGenerator.generateBillboardsForNode2(
+            this.isDebug,
             this.bounds,
             10,     // spacing
             new THREE.Color(this.lodColors[this.lod]),
@@ -183,7 +184,9 @@ export class Node {
     }
 
     public generateTreeModels(treeGenerator: TreeGenerator) {
-        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode2(this.bounds,
+        this.instancedTreeMesh = treeGenerator.generateInstancedMeshForNode2(
+            this.isDebug,
+            this.bounds,
             10000,  // max count
             10,     // spacing
             new THREE.Color(this.lodColors[this.lod]),

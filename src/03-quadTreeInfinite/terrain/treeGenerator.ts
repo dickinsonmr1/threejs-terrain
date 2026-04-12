@@ -12,7 +12,7 @@ export class TreeGenerator {
     private pointsMaterial?: THREE.PointsMaterial;
 
     // TODO: generate number of radial segments based on node LOD in quadtree
-    private geometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0.1, 5, 40, 6);
+    private geometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0.1, 5, 25, 6);
 
 
     private material: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ vertexColors: false});
@@ -32,45 +32,13 @@ export class TreeGenerator {
         this.pointsMaterial = new THREE.PointsMaterial( { size: 50, sizeAttenuation: true, map: this.sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false, vertexColors: true } );        
     }
 
-    public generateBillboardsForNode(bounds: THREE.Box2, maxCount: number): THREE.Points {
-        //console.log(`generateBillboardsForNode for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
-        let seededRandom = new SeededRandom(5000);
-        const bufferGeometry = new THREE.BufferGeometry();
-        const vertices = [];
-        
-        for (let i = 0; i < maxCount; i++) {
-    
-            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
-            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
-    
-            // todo: fix issue where lots of instanced meshes are generated at (0,0)
-            if(Math.abs(x) > 1 && Math.abs(z) > 1) {
-                var vegetationNoise = this.vegetationNoise2D(x, z);
-                if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
-                    
-                    let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
-                    if(elevation > this.yMin && elevation < this.yMax)     {
-                        vertices.push(x, elevation + 3, z);
-                    }
-                }            
-            }
-        }    
-        bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
-                
-        console.log(`tree billboards count for node: ${vertices.length / 3}`);
-        return new THREE.Points(bufferGeometry, this.pointsMaterial );
-
-    }
-
-    public generateBillboardsForNode2(bounds: THREE.Box2, spacing: number, color: THREE.Color, lowerElevationBound: number, higherElevationBound: number) : THREE.Points {
+    public generateBillboardsForNode2(isDebug: boolean, bounds: THREE.Box2, spacing: number, color: THREE.Color, lowerElevationBound: number, higherElevationBound: number) : THREE.Points {
         //console.log(`generateBillboardsForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
         const cellSize = spacing;
 
         const bufferGeometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
-
-        let meshDrawOffset = bounds.getCenter(new THREE.Vector2());
 
         var startX = bounds.min.x - Math.abs(bounds.min.x) % cellSize;        
         //var startX = Math.floor(bounds.min.x / cellSize) * cellSize;
@@ -87,48 +55,22 @@ export class TreeGenerator {
                 if (elevation > lowerElevationBound && elevation < higherElevationBound) {
                     //vertices.push(x + meshDrawOffset.x, elevation + 3, -z);
                     vertices.push(x, elevation + 3, -z);
-                    colors.push(1, 1, 0);
+                    if(isDebug)                    
+                        colors.push(color.r, color.g, color.b);
+                    else
+                        colors.push(0, 1, 0);
                 }
             }
         }
         bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
-        //bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute( colors, 3 ));
+        //if(isDebug)
+        bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute( colors, 3 ));
                 
         console.log(`tree billboards count for node: ${vertices.length / 3}`);
         return new THREE.Points(bufferGeometry, this.pointsMaterial );
     }
 
-    public generateInstancedMeshForNode(bounds: THREE.Box2, maxCount: number): THREE.InstancedMesh {
-        //console.log(`generateInstancedMeshForNode for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
-        let seededRandom = new SeededRandom(5000);
-
-        this.counter = 0;
-        var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, maxCount);        
-        for ( let i = 0; i < maxCount; i ++ ) {
-    
-            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
-            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
-    
-            // todo: fix issue where lots of instanced meshes are generated at (0,0)
-            if(Math.abs(x) > 1 && Math.abs(z) > 1) {
-                var vegetationNoise = this.vegetationNoise2D(x, z);
-                if(vegetationNoise > 0.0 && vegetationNoise < 0.5){
-                    
-                    let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);       
-                    if(elevation > this.yMin && elevation < this.yMax)     {
-                        const matrix = new THREE.Matrix4().setPosition(x, elevation + 8, z);
-                        instancedMesh.setMatrixAt(this.counter++, matrix);
-                    }
-                }            
-            }
-        }
-
-        console.log(`tree instanced mesh count for node: ${instancedMesh.count}`);
-        instancedMesh.visible = true;
-        return instancedMesh;
-    }    
-
-    public generateInstancedMeshForNode2(bounds: THREE.Box2, maxCount: number, spacing: number, color: THREE.Color, lowerElevationBound: number, higherElevationBound: number): THREE.InstancedMesh {
+    public generateInstancedMeshForNode2(isDebug: boolean, bounds: THREE.Box2, maxCount: number, spacing: number, debugColor: THREE.Color, lowerElevationBound: number, higherElevationBound: number): THREE.InstancedMesh {
 
         const cellSize = spacing;
         console.log(`generateInstancedMeshForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
@@ -158,7 +100,10 @@ export class TreeGenerator {
                     //if(z == 0.0)// && z > 0.0)
                         //instancedMesh.setColorAt(this.counter, new THREE.Color('red'));
                     //else    
-                    instancedMesh.setColorAt(this.counter, color);
+                    if(isDebug)
+                        instancedMesh.setColorAt(this.counter, debugColor);
+                    else
+                        instancedMesh.setColorAt(this.counter, new THREE.Color('green'));
                     
                 }
                 if(this.counter > maxCount)
