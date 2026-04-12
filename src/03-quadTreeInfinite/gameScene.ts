@@ -161,14 +161,14 @@ export default class GameScene extends THREE.Scene {
         this.fireParticleEmitter = new FireParticleEmitter(this);
     }
 
-    public update(lockCameraToTerrain: boolean): void {                
+    public update(settings: any): void {                
         this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
         this.quadTree.updateMeshes(this);
         this.totalNodes = this.quadTree.getTotalNodeCount();
 
-        if(lockCameraToTerrain) {
+        if(settings.lockCameraToTerrain) {
 
-            let newCameraY = this.simplexNoiseGenerator.getHeightFromNoiseFunction(this.camera.position.x, -this.camera.position.z) + 2;
+            let newCameraY = this.simplexNoiseGenerator.getHeightFromNoiseFunction(this.camera.position.x, -this.camera.position.z) + settings.yCameraOffsetFromTerrain;
             this.camera.position.setY(newCameraY);
         }
 

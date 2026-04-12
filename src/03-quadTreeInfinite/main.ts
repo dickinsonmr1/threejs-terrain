@@ -44,6 +44,7 @@ document.body.appendChild(stats.dom)
 
 const settings = {  
   lockCameraToTerrain: false,
+  yCameraOffsetFromTerrain: 5,
   skyType: SkyType.Skybox,
   sky: {
     turbidity: 10.0,
@@ -344,7 +345,7 @@ gui.add(scene.children, 'length').name('Scene Children Count').listen();
 gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
 gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
 gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
-gui.add(settings, 'lockCameraToTerrain').name('Lock Camera To Terrain?').listen();
+
 
 const quadTreeFolder = gui.addFolder('Quadtree');
 quadTreeFolder.add(scene, 'totalNodes').name('Total Nodes').listen();
@@ -354,6 +355,8 @@ cameraFolder.add(camera.position, 'x', scene.quadTree.bounds.min.x, scene.quadTr
 cameraFolder.add(camera.position, 'y', 0, 10000).listen();
 cameraFolder.add(camera.position, 'z', scene.quadTree.bounds.min.y, scene.quadTree.bounds.max.y).listen();
 cameraFolder.add(camera, 'far', 0, 1000000, 10).listen();
+cameraFolder.add(settings, 'lockCameraToTerrain').name('Lock Camera To Terrain?').listen();
+cameraFolder.add(settings, 'yCameraOffsetFromTerrain', -100, 100, 0.5).name('Locked Camera Offset').listen();
 cameraFolder.open();
 
 const onShaderChange = () => {
@@ -411,7 +414,7 @@ function tick() {
   stats.update();
   requestAnimationFrame(tick);
 
-  scene.update(settings.lockCameraToTerrain);
+  scene.update(settings);
 }
 
 tick()
