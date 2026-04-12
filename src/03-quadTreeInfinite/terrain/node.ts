@@ -165,7 +165,11 @@ export class Node {
     }
 
     public generateGrassBillboards2(grassGenerator: GrassGenerator) {
-        this.grassBillboards = grassGenerator.generateBillboardsForNode(this.bounds, 10000);
+        this.grassBillboards = grassGenerator.generateBillboardsForNode(
+            this.isDebug,            
+            this.bounds,
+            2,     // spacing
+            new THREE.Color(this.lodColors[this.lod]));
     }
 
     public generateGrassInstancedMesh2(grassGenerator: GrassGenerator) {

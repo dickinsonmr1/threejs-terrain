@@ -108,24 +108,38 @@ export class GrassGenerator {
         console.log(this.plane.attributes.uv);
     }
 
-    public generateBillboardsForNode(bounds: THREE.Box2, maxCount: number): THREE.Points {
+    public generateBillboardsForNode(isDebug: boolean, bounds: THREE.Box2, spacing: number, color: THREE.Color): THREE.Points {
        
-        let seededRandom = new SeededRandom(5000);
+       const cellSize = spacing;
 
         const bufferGeometry = new THREE.BufferGeometry();
         const vertices = [];
+        const colors = [];
 
-        for (let i = 0; i < maxCount; i++) {
-    
-            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
-            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
-    
-            let elevation = this.terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
-            if(elevation > this.yMin && elevation < this.yMax)
-                vertices.push( x, elevation + 1, z);
-        }    
+        var startX = bounds.min.x - Math.abs(bounds.min.x) % cellSize;        
+        var endX = Math.floor(bounds.max.x / cellSize) * cellSize;
+
+        var startZ = bounds.min.y - Math.abs(bounds.min.y) % cellSize;
+        var endZ = Math.floor(bounds.max.y / cellSize) * cellSize;
+
+        for (let x = startX + 1; x < endX; x += cellSize) {
+            for (let z = startZ + 1; z < endZ; z += cellSize) {
+                let elevation = this.terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, z);                       
+                
+                if (elevation > this.yMin && elevation < this.yMax) {
+                    //vertices.push(x + meshDrawOffset.x, elevation + 3, -z);
+                    vertices.push(x, elevation + 1, -z);
+                    if(isDebug)                    
+                        colors.push(color.r, color.g, color.b);
+                    else
+                        colors.push(0, 1, 0);
+                }
+            }
+        }
+
         bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
-               
+        bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute( colors, 3 ));
+
         console.log(`grass billboards count for node: ${vertices.length / 3}`);
         return new THREE.Points(bufferGeometry, this.pointsMaterial );
     }    

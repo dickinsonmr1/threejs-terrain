@@ -33,7 +33,7 @@ export class TreeGenerator {
     }
 
     public generateBillboardsForNode(isDebug: boolean, bounds: THREE.Box2, spacing: number, color: THREE.Color, lowerElevationBound: number, higherElevationBound: number) : THREE.Points {
-        //console.log(`generateBillboardsForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
+        console.log(`generateBillboardsForNode for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
         const cellSize = spacing;
 
         const bufferGeometry = new THREE.BufferGeometry();
@@ -73,7 +73,7 @@ export class TreeGenerator {
     public generateInstancedMeshForNode(isDebug: boolean, bounds: THREE.Box2, maxCount: number, spacing: number, debugColor: THREE.Color, lowerElevationBound: number, higherElevationBound: number): THREE.InstancedMesh {
 
         const cellSize = spacing;
-        console.log(`generateInstancedMeshForNode2 for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
+        console.log(`generateInstancedMeshForNode for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
         this.counter = 0; 
         var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, maxCount);        
 
