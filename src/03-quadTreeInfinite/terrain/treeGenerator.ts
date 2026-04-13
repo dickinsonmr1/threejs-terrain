@@ -63,7 +63,6 @@ export class TreeGenerator {
             }
         }
         bufferGeometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
-        //if(isDebug)
         bufferGeometry.setAttribute('color', new THREE.Float32BufferAttribute( colors, 3 ));
                 
         console.log(`tree billboards count for node: ${vertices.length / 3}`);
@@ -97,9 +96,6 @@ export class TreeGenerator {
                     const matrix = new THREE.Matrix4().setPosition(x, elevation + 15, -z);
                     this.counter++;
                     instancedMesh.setMatrixAt(this.counter, matrix);
-                    //if(z == 0.0)// && z > 0.0)
-                        //instancedMesh.setColorAt(this.counter, new THREE.Color('red'));
-                    //else    
                     if(isDebug)
                         instancedMesh.setColorAt(this.counter, debugColor);
                     else
@@ -114,9 +110,8 @@ export class TreeGenerator {
             }
             if(breakNow)
                 break;
-
-            
         }
+        
         instancedMesh.count = this.counter;
         //instancedMesh.instanceColor!.needsUpdate = true;
         console.log(`tree instanced mesh count for node: ${instancedMesh.count}`);

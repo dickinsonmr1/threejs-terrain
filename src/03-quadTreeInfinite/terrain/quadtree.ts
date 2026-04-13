@@ -234,7 +234,7 @@ export class QuadTree {
     private generateAndDisplayGrassInstancedMesh(node: Node, scene: THREE.Scene) {
 
         if(!node.grassInstancedMesh) {
-                node.generateGrassInstancedMesh2(this.grassGenerator);
+                node.generateGrassInstancedMesh(this.grassGenerator);
                 scene.add(node.grassInstancedMesh!);
             }
             else {
@@ -245,7 +245,7 @@ export class QuadTree {
 
     private generateAndDisplayGrassBillboards(node: Node, scene: THREE.Scene) {
         if(!node.grassBillboards) {
-            node.generateGrassBillboards2(this.grassGenerator);
+            node.generateGrassBillboards(this.grassGenerator);
             scene.add(node.grassBillboards!);
         }
         else {

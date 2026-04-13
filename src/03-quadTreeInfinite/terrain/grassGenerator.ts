@@ -13,21 +13,29 @@ export class GrassGenerator {
     private plane: THREE.PlaneGeometry;    
     private instancedMeshMaterial?: THREE.ShaderMaterial;
 
-    private sprite: THREE.Texture;
+    private billboardSprite: THREE.Texture;
+    private instancedMeshSprite: THREE.Texture;
 
-    constructor(scene: THREE.Scene, private terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator,
-        textureName: string, private yMin: number, private yMax: number) {
+    constructor(scene: THREE.Scene,
+        private terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator,
+        billboardTextureName: string, 
+        instancedMeshTextureName: string,
+        private yMin: number, private yMax: number) {
             
         const prng = alea(1000);
         this.vegetationNoise2D = createNoise2D(prng);
 
-        this.sprite = new THREE.TextureLoader().load( textureName );
-        this.sprite.colorSpace = THREE.SRGBColorSpace;
-        this.sprite.wrapS = this.sprite.wrapT = THREE.ClampToEdgeWrapping;
+        this.billboardSprite = new THREE.TextureLoader().load( billboardTextureName );
+        this.billboardSprite.colorSpace = THREE.SRGBColorSpace;
+        this.billboardSprite.wrapS = this.billboardSprite.wrapT = THREE.ClampToEdgeWrapping;
 
-        this.pointsMaterial = new THREE.PointsMaterial( { size: 5, sizeAttenuation: true, map: this.sprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false } );
+        this.pointsMaterial = new THREE.PointsMaterial( { size: 5, sizeAttenuation: true, map: this.billboardSprite, alphaTest: 0.5, transparent: true, depthTest: true, depthWrite: false } );
         //this.pointsMaterial.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
         //this.pointsMaterial.color.setHSL( 1.0, 0.0, 0.0, THREE.SRGBColorSpace );
+
+        this.instancedMeshSprite = new THREE.TextureLoader().load( instancedMeshTextureName );
+        this.instancedMeshSprite.colorSpace = THREE.SRGBColorSpace;
+        this.instancedMeshSprite.wrapS = this.instancedMeshSprite.wrapT = THREE.ClampToEdgeWrapping;
 
         this.instancedMeshMaterial = new THREE.ShaderMaterial({
             vertexShader: /* glsl */`            
@@ -87,7 +95,7 @@ export class GrassGenerator {
                 }
             `,
             uniforms: {
-                uTexture: {value: this.sprite },
+                uTexture: {value: this.instancedMeshSprite },
                 uTime: { value: 0 },
                 uWindStrength: { value: 0.5 },
                 uWindDirection: { value: new THREE.Vector2(1.0, 0.5) },                    
@@ -108,10 +116,9 @@ export class GrassGenerator {
         console.log(this.plane.attributes.uv);
     }
 
-    public generateBillboardsForNode(isDebug: boolean, bounds: THREE.Box2, spacing: number, color: THREE.Color): THREE.Points {
+    public generateBillboardsForNode(isDebug: boolean, bounds: THREE.Box2, spacing: number, debugColor: THREE.Color): THREE.Points {
        
-       const cellSize = spacing;
-
+        const cellSize = spacing;
         const bufferGeometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
@@ -130,7 +137,7 @@ export class GrassGenerator {
                     //vertices.push(x + meshDrawOffset.x, elevation + 3, -z);
                     vertices.push(x, elevation + 1, -z);
                     if(isDebug)                    
-                        colors.push(color.r, color.g, color.b);
+                        colors.push(debugColor.r, debugColor.g, debugColor.b);
                     else
                         colors.push(0, 1, 0);
                 }
@@ -144,28 +151,50 @@ export class GrassGenerator {
         return new THREE.Points(bufferGeometry, this.pointsMaterial );
     }    
 
-    public generateInstancedMeshForNode(bounds: THREE.Box2, maxCount: number): THREE.InstancedMesh {
+    public generateInstancedMeshForNode(isDebug: boolean, bounds: THREE.Box2, maxCount: number, spacing: number, debugColor: THREE.Color): THREE.InstancedMesh {
        
-        const seededRandom = new SeededRandom(5000);
+        const cellSize = spacing;
         const instancedMesh = new THREE.InstancedMesh(this.plane.clone(), this.instancedMeshMaterial, maxCount);
         
         let grassInstancedMeshCounter = 0;
         const dummy = new THREE.Object3D();
-        for (let i = 0; i < maxCount; i++) {
-    
-            const x = bounds.min.x + bounds.getSize(new THREE.Vector2()).x * seededRandom.next();
-            const z = -bounds.min.y - bounds.getSize(new THREE.Vector2()).y * seededRandom.next();
-    
-            let elevation = this.terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, -z);
-            if(elevation > this.yMin && elevation < this.yMax) {
-                
-                dummy.position.set(x, elevation + 3, z);
-                dummy.rotation.y = Math.random() * Math.PI * 2;
-                dummy.updateMatrix();
-                instancedMesh.setMatrixAt(grassInstancedMeshCounter++, dummy.matrix);
+
+        var breakNow: boolean = false;
+
+        var startX = bounds.min.x - Math.abs(bounds.min.x) % cellSize;        
+        var endX = Math.floor(bounds.max.x / cellSize) * cellSize;
+        var startZ = bounds.min.y - Math.abs(bounds.min.y) % cellSize;
+        var endZ = Math.floor(bounds.max.y / cellSize) * cellSize;
+
+        for (let x = startX + 1; x < endX; x += cellSize) {
+            for (let z = startZ + 1; z < endZ; z += cellSize) {
+
+                let elevation = this.terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, z);
+                if(elevation > this.yMin && elevation < this.yMax) {
+                    
+                    dummy.position.set(x, elevation + 3, -z);
+                    dummy.rotation.y = Math.random() * Math.PI * 2;
+                    dummy.updateMatrix();
+
+                    grassInstancedMeshCounter++;
+                    instancedMesh.setMatrixAt(grassInstancedMeshCounter, dummy.matrix);
+                    if(isDebug)
+                        instancedMesh.setColorAt(grassInstancedMeshCounter, debugColor);
+                    else
+                        instancedMesh.setColorAt(grassInstancedMeshCounter, new THREE.Color('green'));
+                }
+
+                if(grassInstancedMeshCounter > maxCount)
+                    breakNow = true;
+
+                if(breakNow) 
+                    break;
             }
+            if(breakNow) 
+                break;
         }    
     
+        instancedMesh.count = grassInstancedMeshCounter;
         console.log(`grass instanced mesh count for node: ${grassInstancedMeshCounter}`);
         instancedMesh.visible = true;
         return instancedMesh;

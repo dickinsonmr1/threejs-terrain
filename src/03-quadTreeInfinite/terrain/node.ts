@@ -83,6 +83,10 @@ export class Node {
         //this.cleanUpMeshesAndObjects(scene);
     }
 
+    public getLevelOfDetailColor() {
+        return new THREE.Color(this.lodColors[this.lod]);
+    }
+
     public switchIsDebug(value: boolean) {
         if(this.children.length > 0)
             this.children.forEach(child => child.switchIsDebug(value));
@@ -164,16 +168,23 @@ export class Node {
         return count;
     }
 
-    public generateGrassBillboards2(grassGenerator: GrassGenerator) {
+    public generateGrassBillboards(grassGenerator: GrassGenerator) {
         this.grassBillboards = grassGenerator.generateBillboardsForNode(
             this.isDebug,            
             this.bounds,
-            2,     // spacing
-            new THREE.Color(this.lodColors[this.lod]));
+            1.5,     // spacing
+            this.getLevelOfDetailColor()
+        );
     }
 
-    public generateGrassInstancedMesh2(grassGenerator: GrassGenerator) {
-        this.grassInstancedMesh = grassGenerator.generateInstancedMeshForNode(this.bounds, 10000);
+    public generateGrassInstancedMesh(grassGenerator: GrassGenerator) {
+        this.grassInstancedMesh = grassGenerator.generateInstancedMeshForNode(
+            this.isDebug,
+            this.bounds,
+            10000,
+            1.5, 
+            this.getLevelOfDetailColor()
+        );
     }
 
     public generateTreeBillboards(treeGenerator: TreeGenerator) {
@@ -182,7 +193,7 @@ export class Node {
             this.isDebug,
             this.bounds,
             10,     // spacing
-            new THREE.Color(this.lodColors[this.lod]),
+            this.getLevelOfDetailColor(),
             30,     // lower elevation bound
             60);    // higher elevation bound
     }
@@ -193,7 +204,7 @@ export class Node {
             this.bounds,
             10000,  // max count
             10,     // spacing
-            new THREE.Color(this.lodColors[this.lod]),
+            this.getLevelOfDetailColor(),
             30,     // lower elevation bound
             60);    // higher elevation bound
     }
@@ -237,7 +248,7 @@ export class Node {
         const depth = this.bounds.max.y - this.bounds.min.y; // using Y as depth
         const height = 100; // fixed height in Z
         const geometry = new THREE.BoxGeometry(width, height, depth);
-        const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: true, opacity: 0.4 });
+        const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: true, opacity: 0.2 });
 
         this.helperMesh = new THREE.Mesh(geometry, material);
         this.helperMesh.position.copy(this.helperLabel!.position);
