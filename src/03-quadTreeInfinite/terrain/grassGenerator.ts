@@ -17,7 +17,7 @@ export class GrassGenerator {
     private instancedMeshSprite: THREE.Texture;
 
     constructor(scene: THREE.Scene,
-        private terrainSimplexNoiseGenerator: TerrainSimplexNoiseGenerator,
+        private simplexNoiseGenerator: TerrainSimplexNoiseGenerator,
         billboardTextureName: string, 
         instancedMeshTextureName: string,
         private yMin: number, private yMax: number) {
@@ -131,13 +131,14 @@ export class GrassGenerator {
 
         for (let x = startX + 1; x < endX; x += cellSize) {
             for (let z = startZ + 1; z < endZ; z += cellSize) {
-                let elevation = this.terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, z);                       
+                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, z);                       
                 
                 if (elevation > this.yMin && elevation < this.yMax) {
                     //vertices.push(x + meshDrawOffset.x, elevation + 3, -z);
                     vertices.push(x, elevation + 1, -z);
                     if(isDebug)                    
-                        colors.push(debugColor.r, debugColor.g, debugColor.b);
+                        //colors.push(debugColor.r, debugColor.g, debugColor.b);
+                        colors.push(1,0,0);
                     else
                         colors.push(0, 1, 0);
                 }
@@ -155,6 +156,7 @@ export class GrassGenerator {
        
         const cellSize = spacing;
         const instancedMesh = new THREE.InstancedMesh(this.plane.clone(), this.instancedMeshMaterial, maxCount);
+        //instancedMesh.frustumCulled = false;
         
         let grassInstancedMeshCounter = 0;
         const dummy = new THREE.Object3D();
@@ -169,15 +171,17 @@ export class GrassGenerator {
         for (let x = startX + 1; x < endX; x += cellSize) {
             for (let z = startZ + 1; z < endZ; z += cellSize) {
 
-                let elevation = this.terrainSimplexNoiseGenerator.getHeightFromNoiseFunction(x, z);
+                let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, z);
                 if(elevation > this.yMin && elevation < this.yMax) {
                     
-                    dummy.position.set(x, elevation + 3, -z);
-                    dummy.rotation.y = Math.random() * Math.PI * 2;
-                    dummy.updateMatrix();
+                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 3, -z);
+
+                    //dummy.position.set(x, elevation + 3, -z);
+                    //dummy.rotation.y = Math.random() * Math.PI * 2;
+                    //dummy.updateMatrix();
 
                     grassInstancedMeshCounter++;
-                    instancedMesh.setMatrixAt(grassInstancedMeshCounter, dummy.matrix);
+                    instancedMesh.setMatrixAt(grassInstancedMeshCounter, matrix);
                     if(isDebug)
                         instancedMesh.setColorAt(grassInstancedMeshCounter, debugColor);
                     else
@@ -195,6 +199,10 @@ export class GrassGenerator {
         }    
     
         instancedMesh.count = grassInstancedMeshCounter;
+        //instancedMesh.instanceMatrix.needsUpdate = true;
+        //instancedMesh.computeBoundingSphere();
+        //instancedMesh.boundingSphere!.radius *= 2; // safety margin
+        
         console.log(`grass instanced mesh count for node: ${grassInstancedMeshCounter}`);
         instancedMesh.visible = true;
         return instancedMesh;

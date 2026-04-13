@@ -146,7 +146,7 @@ export default class GameScene extends THREE.Scene {
        
         this.quadTree = new QuadTree(this,
             //new THREE.Box2(new THREE.Vector2(-50000, -50000), new THREE.Vector2(50000, 50000)), // world bounds
-            new THREE.Box2(new THREE.Vector2(-5000, -5000), new THREE.Vector2(5000, 5000)), // world bounds
+            new THREE.Box2(new THREE.Vector2(-1000, -1000), new THREE.Vector2(1000, 1000)), // world bounds
             this.simplexNoiseGenerator,            
             this.treeGenerator,
             this.grassGenerator,

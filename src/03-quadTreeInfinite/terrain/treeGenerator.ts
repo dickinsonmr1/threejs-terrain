@@ -15,7 +15,7 @@ export class TreeGenerator {
     private geometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0.1, 5, 25, 6);
 
 
-    private material: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ vertexColors: false});
+    private instancedMeshMaterial: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ vertexColors: false});
     private counter: number = 0;
     //private instancedMesh!: THREE.InstancedMesh;
     
@@ -74,7 +74,7 @@ export class TreeGenerator {
         const cellSize = spacing;
         console.log(`generateInstancedMeshForNode for node with bounds: min(${bounds.min.x}, ${bounds.min.y}) -> max(${bounds.max.x}, ${bounds.max.y})`);
         this.counter = 0; 
-        var instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.material, maxCount);        
+        const instancedMesh = new THREE.InstancedMesh(this.geometry.clone(), this.instancedMeshMaterial, maxCount);        
 
         var breakNow: boolean = false;
                 

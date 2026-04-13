@@ -120,10 +120,10 @@ export class QuadTree {
         return node.lod >= maxLOD - 2;
     }
     
-    private isLowLOD(node: Node) {
-        let maxLOD =  this.getQuadtreeMaxLOD();
-        return node.lod >= maxLOD - 3;
-    }
+    ///private isLowLOD(node: Node) {
+        //let maxLOD = this.getQuadtreeMaxLOD();
+        //return node.lod < maxLOD - 3;
+    //}
 
     private generateMesh(node: Node, scene: THREE.Scene) {
         
@@ -236,11 +236,11 @@ export class QuadTree {
         if(!node.grassInstancedMesh) {
                 node.generateGrassInstancedMesh(this.grassGenerator);
                 scene.add(node.grassInstancedMesh!);
-            }
-            else {
-                node.grassInstancedMesh!.visible = true;
-                node.update();
-            }
+        }
+        else {
+            node.grassInstancedMesh!.visible = true;
+            node.update();
+        }
     }
 
     private generateAndDisplayGrassBillboards(node: Node, scene: THREE.Scene) {
@@ -261,6 +261,7 @@ export class QuadTree {
         }
         else {
             node.instancedTreeMesh!.visible = true;
+            node.update();
         }
     }
 
@@ -271,6 +272,7 @@ export class QuadTree {
         }
         else {
             node.treeBillboards!.visible = true;
+            node.update();
         }
     }
     

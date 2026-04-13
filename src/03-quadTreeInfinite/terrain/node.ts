@@ -172,7 +172,7 @@ export class Node {
         this.grassBillboards = grassGenerator.generateBillboardsForNode(
             this.isDebug,            
             this.bounds,
-            1.5,     // spacing
+            3,     // spacing
             this.getLevelOfDetailColor()
         );
     }
@@ -182,7 +182,7 @@ export class Node {
             this.isDebug,
             this.bounds,
             10000,
-            1.5, 
+            3, 
             this.getLevelOfDetailColor()
         );
     }
@@ -248,7 +248,7 @@ export class Node {
         const depth = this.bounds.max.y - this.bounds.min.y; // using Y as depth
         const height = 100; // fixed height in Z
         const geometry = new THREE.BoxGeometry(width, height, depth);
-        const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: true, opacity: 0.2 });
+        const material = new THREE.MeshStandardMaterial({color: this.lodColors[this.lod], transparent: false, wireframe: true });
 
         this.helperMesh = new THREE.Mesh(geometry, material);
         this.helperMesh.position.copy(this.helperLabel!.position);
