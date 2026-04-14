@@ -15,7 +15,7 @@ import { Console } from 'console';
 //const isMobile = 'ontouchstart' in window;
 
 const settings = {  
-  isDebug: false,
+  isDebug: true,
   lockCameraToTerrain: true,
   yCameraOffsetFromTerrain: 5,
   skyType: SkyType.Skybox,

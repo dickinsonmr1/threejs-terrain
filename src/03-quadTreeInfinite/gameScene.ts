@@ -40,7 +40,7 @@ export default class GameScene extends THREE.Scene {
             15,
             25
         );
-        this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator, 'assets/tree_white_128x128.png', 30, 40);
+        this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator, 'assets/tree_outline_thin_128x128.png', 30, 40);
 
         this.addSkybox();
         this.addShaderSky();
