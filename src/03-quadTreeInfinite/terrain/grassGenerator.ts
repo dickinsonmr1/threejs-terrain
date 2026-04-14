@@ -1,13 +1,7 @@
 import * as THREE from 'three'
-import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
-import alea from 'alea';
 import { TerrainSimplexNoiseGenerator } from '../../shared/terrainSimplexNoiseGenerator';
-import { SeededRandom } from '../../shared/seededRandom';
 
 export class GrassGenerator {
-
-    private vegetationNoise2D: NoiseFunction2D;
-
     private pointsMaterial?: THREE.PointsMaterial;
 
     private plane: THREE.PlaneGeometry;    
@@ -22,10 +16,9 @@ export class GrassGenerator {
         instancedMeshTextureName: string,
         private yMin: number, private yMax: number) {
             
-        const prng = alea(1000);
-        this.vegetationNoise2D = createNoise2D(prng);
-
         this.billboardSprite = new THREE.TextureLoader().load( billboardTextureName );
+        this.billboardSprite.generateMipmaps = false;
+        this.billboardSprite.minFilter = THREE.LinearFilter;
         this.billboardSprite.colorSpace = THREE.SRGBColorSpace;
         this.billboardSprite.wrapS = this.billboardSprite.wrapT = THREE.ClampToEdgeWrapping;
 
@@ -159,8 +152,6 @@ export class GrassGenerator {
         //instancedMesh.frustumCulled = false;
         
         let grassInstancedMeshCounter = 0;
-        const dummy = new THREE.Object3D();
-
         var breakNow: boolean = false;
 
         var startX = bounds.min.x - Math.abs(bounds.min.x) % cellSize;        
@@ -168,24 +159,22 @@ export class GrassGenerator {
         var startZ = bounds.min.y - Math.abs(bounds.min.y) % cellSize;
         var endZ = Math.floor(bounds.max.y / cellSize) * cellSize;
 
+        const matrix = new THREE.Matrix4();
+        const greenColor = new THREE.Color('green');
+
         for (let x = startX + 1; x < endX; x += cellSize) {
             for (let z = startZ + 1; z < endZ; z += cellSize) {
 
                 let elevation = this.simplexNoiseGenerator.getHeightFromNoiseFunction(x, z);
                 if(elevation > this.yMin && elevation < this.yMax) {
-                    
-                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 3, -z);
-
-                    //dummy.position.set(x, elevation + 3, -z);
-                    //dummy.rotation.y = Math.random() * Math.PI * 2;
-                    //dummy.updateMatrix();
-
+                                        
+                    matrix.setPosition(x, elevation + 3, -z);
                     grassInstancedMeshCounter++;
                     instancedMesh.setMatrixAt(grassInstancedMeshCounter, matrix);
                     if(isDebug)
                         instancedMesh.setColorAt(grassInstancedMeshCounter, debugColor);
                     else
-                        instancedMesh.setColorAt(grassInstancedMeshCounter, new THREE.Color('green'));
+                        instancedMesh.setColorAt(grassInstancedMeshCounter, greenColor);
                 }
 
                 if(grassInstancedMeshCounter > maxCount)

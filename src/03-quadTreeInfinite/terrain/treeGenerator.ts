@@ -1,29 +1,18 @@
 import * as THREE from 'three'
-import { createNoise2D, NoiseFunction2D } from 'simplex-noise';
-import alea from 'alea';
 import { TerrainSimplexNoiseGenerator } from '../../shared/terrainSimplexNoiseGenerator';
-import { SeededRandom } from '../../shared/seededRandom';
 
 export class TreeGenerator {
-
-    private vegetationNoise2D: NoiseFunction2D;
-
     private sprite: THREE.Texture;
     private pointsMaterial?: THREE.PointsMaterial;
 
     // TODO: generate number of radial segments based on node LOD in quadtree
-    private geometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0.1, 5, 25, 6);
-
+    private geometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0.1, 5, 25, 4);
 
     private instancedMeshMaterial: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ vertexColors: false});
     private counter: number = 0;
-    //private instancedMesh!: THREE.InstancedMesh;
     
     constructor(scene: THREE.Scene, private simplexNoiseGenerator: TerrainSimplexNoiseGenerator,
         textureName: string, private yMin: number, private yMax: number) {
-
-        const prng = alea(500);
-        this.vegetationNoise2D = createNoise2D(prng);
 
         this.sprite = new THREE.TextureLoader().load( textureName );
         this.sprite.colorSpace = THREE.SRGBColorSpace;
@@ -86,6 +75,9 @@ export class TreeGenerator {
         //var startZ = Math.floor(bounds.min.y / cellSize) * cellSize;
         var endZ = Math.floor(bounds.max.y / cellSize) * cellSize;
 
+        const matrix = new THREE.Matrix4()
+        const greenColor = new THREE.Color('green');
+
         for (let x = startX + 1; x < endX; x += cellSize) {
             for (let z = startZ + 1; z < endZ; z += cellSize) {
 
@@ -93,13 +85,13 @@ export class TreeGenerator {
                 
                 if (elevation > lowerElevationBound && elevation < higherElevationBound) {
 
-                    const matrix = new THREE.Matrix4().setPosition(x, elevation + 15, -z);
+                    matrix.setPosition(x, elevation + 10, -z);
                     this.counter++;
                     instancedMesh.setMatrixAt(this.counter, matrix);
                     if(isDebug)
                         instancedMesh.setColorAt(this.counter, debugColor);
                     else
-                        instancedMesh.setColorAt(this.counter, new THREE.Color('green'));
+                        instancedMesh.setColorAt(this.counter, greenColor);
                     
                 }
                 if(this.counter > maxCount)
