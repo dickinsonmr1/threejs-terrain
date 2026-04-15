@@ -19,6 +19,12 @@ const settings = {
   lockCameraToTerrain: true,
   yCameraOffsetFromTerrain: 5,
   skyType: SkyType.Skybox,
+  terrain: {
+    mapWidth: 2500,
+    minimumChunkSize: 250,
+    verticesPerChunkSide: 32,
+    heightFactor: 100
+  },
   sky: {
     turbidity: 10.0,
     rayleigh: 2,
