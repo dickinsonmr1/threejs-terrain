@@ -11,6 +11,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import GameScene from './gameScene';
 import nipplejs from 'nipplejs';
 import { Console } from 'console';
+import { CameraRig } from '../shared/cameraRig';
 
 //const isMobile = 'ontouchstart' in window;
 
@@ -41,7 +42,7 @@ const settings = {
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.near = 1;
 camera.far = 100000;
-camera.position.set(0, 50, 0);
+camera.position.set(0, 0, 0);
 camera.updateProjectionMatrix();
 
 const renderer = new THREE.WebGLRenderer({
@@ -54,15 +55,16 @@ document.body.appendChild(renderer.domElement);
 
 const scene = new GameScene(camera, renderer, settings);
 
-const pitchObject = new THREE.Group();
-pitchObject.add(camera);
-const yawObject = new THREE.Group();
-yawObject.add(pitchObject);
-scene.add(yawObject);
+let cameraRig = new CameraRig(scene, camera);
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
 
+ window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
 // https://threejs.org/examples/#misc_controls_pointerlock
 
@@ -143,6 +145,8 @@ let leftJoystickManager : nipplejs.JoystickManager = nipplejs.create({
     restOpacity: 0.25
 });
 leftJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
+
+  //document.exitPointerLock();
   turboOn = true;
   if(output.vector.y > 0.1) {
       velocity.z = -moveSpeed * Math.abs(output.vector.y);
@@ -191,48 +195,24 @@ let rightJoystickManager : nipplejs.JoystickManager = nipplejs.create({
 });
 rightJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
   
-  const lookSpeed = 1;
-  const deltaX = (output.vector?.x ?? 0) * lookSpeed * 0.1;
-  const deltaY = (output.vector?.y ?? 0) * lookSpeed * 0.1;
+  if(!output.vector)
+    return;
 
-  // Yaw (Y-axis rotation)  
-  //pointerLockControls!.object.rotation.y -= deltaX;
-  // yaw -= deltaX;
-  yawObject.rotation.y -= deltaX;
+   //document.exitPointerLock();
 
-  // Pitch (X-axis rotation)\  
-  //pointerLockControls!.object.rotation.x -= deltaY;
-  // pitch -= deltaY;
-  pitchObject.rotation.x -= deltaY;
-
-  // clamp pitch to avoid flipping
-  const limit = Math.PI / 2 - 0.1;
-  //pointerLockControls!.object.rotation.x = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pointerLockControls!.object.rotation.x));
-  //pitch = Math.max(-limit, Math.min(limit, pitch));
-  pitchObject.rotation.x = Math.max(-limit, Math.min(limit, pitchObject.rotation.x));
-
-  //pointerLockControls!.object.rotation.z = 0;
-
-   // Build quaternion from yaw (Y) and pitch (X), no roll
-  //const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-  //const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
-  //const q = new THREE.Quaternion().multiplyQuaternions(qYaw, qPitch);
-  pitchObject.rotation.z = 0;
-  yawObject.rotation.z = 0;
-
-  //pointerLockControls!.object.quaternion.copy(q);
+   cameraRig.lookX = output.vector.x; // -1 to 1
+   cameraRig.lookY = output.vector.y; // -1 to 1
 });
 
 rightJoystickManager.on('end',  () => {
-  
+  cameraRig.lookX = 0;
+  cameraRig.lookY = 0;
 });
 
 const rightZone = document.getElementById('rightJoystickContainerDynamic');
 if (rightZone) {
     rightZone.style.display = 'block';
 }
-
-
 
 const el = document.getElementById("blocker")!;
 el.addEventListener("touchstart", (touchEvent) => {
@@ -318,36 +298,36 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
-function moveCamera() {
+
+function updateCamera() {
   
-    let multiplier = turboOn ? 10 : 1;
-    let temp = velocity.clone();
-    direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
-    camera.position.add(direction);
+  const now = performance.now();
+  const delta = (now - lastTime) / 1000;
+  lastTime = now;
   
-    /*
-    // todo: fix me
-    const forward = new THREE.Vector3();
-    const right = new THREE.Vector3();
+  let multiplier = turboOn ? 10 : 1;
+  let temp = velocity.clone();
+  direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
 
-    yawObject.getWorldDirection(forward);
-    forward.y = 0;
-    forward.normalize();
+  camera.position.add(direction);
 
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+  //cameraRig.moveRig(direction);
+  //cameraRig.update(delta);
+  //pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 
-    velocity.set(0, 0, 0);
-    velocity.addScaledVector(forward, -this.moveZ * this.moveSpeed * delta);
-    velocity.addScaledVector(right, this.moveX * this.moveSpeed * delta);
+  //yawObject.rotation.y = yaw;
+  //pitchObject.rotation.x = pitch;
 
-    yawObject.position.add(this.velocity);
-    */
+  //if(lookX == 0 && lookY == 0)
+    //return;
+
 }
 
 // https://lil-gui.georgealways.com/
 const gui = new GUI();
 gui.title('Debug');
-//gui.close();
+if(!settings.isDebug)
+  gui.close();
 gui.add( document, 'title' );
 gui.add(settings, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
 gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
@@ -363,6 +343,10 @@ cameraFolder.add(camera.position, 'x', scene.quadTree.bounds.min.x, scene.quadTr
 cameraFolder.add(camera.position, 'y', 0, 10000).listen();
 cameraFolder.add(camera.position, 'z', scene.quadTree.bounds.min.y, scene.quadTree.bounds.max.y).listen();
 cameraFolder.add(camera, 'far', 0, 1000000, 10).listen();
+cameraFolder.add(cameraRig.yawObject.rotation, 'y').name('yaw rotation y').listen();
+cameraFolder.add(cameraRig.pitchObject.rotation, 'x').name('pitch rotation x').listen();
+
+
 cameraFolder.open();
 
 const quadTreeFolder = gui.addFolder('Quadtree');
@@ -413,9 +397,11 @@ function switchSky(skyType: SkyType) {
   scene.switchSky(skyType);
 }
 
+let lastTime = performance.now();
+
 function tick() {
 
-  moveCamera();
+  updateCamera();
 
   //renderer.clear();
   renderer.render(scene, camera);
