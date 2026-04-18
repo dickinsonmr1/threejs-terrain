@@ -5,6 +5,7 @@ import fragmentShader from './rain.frag?raw';
 import { InstancedMeshClouds } from './instancedMeshClouds';
 import { transcode } from 'buffer';
 import GameScene from '../gameScene';
+import { CameraRig } from '../../shared/cameraRig';
 
 export enum PrecipitationType {
     None = 0,
@@ -329,10 +330,10 @@ export class PrecipitationSystem {
         scene.add(cloudPoints);          
     }
 
-    update(clock: THREE.Clock, camera: THREE.Camera): void {
+    update(clock: THREE.Clock, cameraRig: CameraRig): void {
 
         if(this.rainMaterial) {
-            this.rainMaterial.uniforms['uCameraPosition'].value.copy(camera.position);
+            this.rainMaterial.uniforms['uCameraPosition'].value.copy(cameraRig.getPosition());
             this.rainMaterial.uniforms['uTime'].value += 0.5 / 60.0;
             if(this.rainMaterial.uniforms['uTime'].value >= 5)
                 this.rainMaterial.uniforms['uTime'].value = 0;
@@ -378,7 +379,7 @@ export class PrecipitationSystem {
         });
 
         if(this.instancedMeshClouds)
-            this.instancedMeshClouds.update(camera);
+            this.instancedMeshClouds.update(cameraRig.getCamera());
 
         if(this.cloudMaterial) {
             this.cloudMaterial.uniforms['uTime'].value += 0.5 / 60.0;

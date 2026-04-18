@@ -13,13 +13,12 @@ export class CameraRig {
     lookX: number = 0;
     lookY: number = 0;
 
-    constructor(scene: THREE.Scene, public camera: THREE.Camera) {
+    constructor(private camera: THREE.Camera) {
         this.pitchObject = new THREE.Object3D();
         this.yawObject = new THREE.Object3D();
         
         this.yawObject.add(this.pitchObject);
         this.pitchObject.add(camera);
-        scene.add(this.yawObject);
     }
     
     private curve(v: number) {
@@ -30,6 +29,18 @@ export class CameraRig {
         this.yawObject.position.add(direction);
         this.pitchObject.position.copy(this.yawObject.position);
         this.camera.position.copy(this.yawObject.position);
+    }
+
+    lockToTerrain(newY: number) {
+        this.yawObject.position.setY(newY);
+    }
+
+    getPosition(): THREE.Vector3 {
+        return this.yawObject.position;
+    }
+
+    getCamera() {
+        return this.camera;
     }
 
     update(delta: number) {

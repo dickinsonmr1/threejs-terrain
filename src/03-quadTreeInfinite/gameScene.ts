@@ -8,6 +8,7 @@ import { TreeGenerator } from './terrain/treeGenerator';
 import { PrecipitationSystem, PrecipitationType } from './weather/precipitationSystem';
 import { FireParticleEmitter } from './fireParticleEmitter';
 import { GrassGenerator } from './terrain/grassGenerator';
+import { CameraRig } from '../shared/cameraRig';
 
 export default class GameScene extends THREE.Scene {
 
@@ -28,8 +29,10 @@ export default class GameScene extends THREE.Scene {
 
     clock: THREE.Clock = new THREE.Clock();
    
-    constructor(public readonly camera: THREE.Camera, public readonly renderer: THREE.WebGLRenderer, public settings: any) {
+    constructor(public readonly cameraRig: CameraRig, public readonly renderer: THREE.WebGLRenderer, public settings: any) {
         super();
+
+        this.add(cameraRig.yawObject);
 
         this.terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
         this.simplexNoiseGenerator = new TerrainSimplexNoiseGenerator(this.terrainGeneratorParams)
@@ -159,7 +162,7 @@ export default class GameScene extends THREE.Scene {
             this.settings.isDebug // debug?
         );
           
-        this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
+        this.quadTree.insert(new THREE.Vector2(this.cameraRig.getPosition().x, -this.cameraRig.getPosition().z), this);
         this.quadTree.updateMeshes(this);
         this.maxLOD = this.quadTree.getCurrentMaxLOD(this.quadTree.root);
     }
@@ -169,20 +172,20 @@ export default class GameScene extends THREE.Scene {
     }
 
     public update(settings: any): void {                
-        this.quadTree.insert(new THREE.Vector2(this.camera.position.x, -this.camera.position.z), this);
+        this.quadTree.insert(new THREE.Vector2(this.cameraRig.getPosition().x, -this.cameraRig.getPosition().z), this);
         this.quadTree.updateMeshes(this);
         this.totalNodes = this.quadTree.getTotalNodeCount();
 
         if(settings.lockCameraToTerrain) {
 
-            let newCameraY = this.simplexNoiseGenerator.getHeightFromNoiseFunction(this.camera.position.x, -this.camera.position.z) + settings.yCameraOffsetFromTerrain;
-            this.camera.position.setY(newCameraY);
+            let newCameraY = this.simplexNoiseGenerator.getHeightFromNoiseFunction(this.cameraRig.getPosition().x, -this.cameraRig.getPosition().z) + settings.yCameraOffsetFromTerrain;
+            this.cameraRig.lockToTerrain(newCameraY);
         }
 
         if(this.water !== null)    
             this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
 
-        this.precipitationSystem.update(this.clock, this.camera);
+        this.precipitationSystem.update(this.clock, this.cameraRig);
 
         if(this.fireParticleEmitter != null)
             this.fireParticleEmitter.update(this.clock);

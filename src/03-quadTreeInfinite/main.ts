@@ -12,6 +12,7 @@ import GameScene from './gameScene';
 import nipplejs from 'nipplejs';
 import { Console } from 'console';
 import { CameraRig } from '../shared/cameraRig';
+import { PointerLockControlsManager } from './pointerLockControlsManager';
 
 //const isMobile = 'ontouchstart' in window;
 
@@ -44,6 +45,7 @@ camera.near = 1;
 camera.far = 100000;
 camera.position.set(0, 0, 0);
 camera.updateProjectionMatrix();
+const cameraRig = new CameraRig(camera);
 
 const renderer = new THREE.WebGLRenderer({
   //antialias: true,
@@ -53,9 +55,8 @@ renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
 
-const scene = new GameScene(camera, renderer, settings);
+const scene = new GameScene(cameraRig, renderer, settings);
 
-let cameraRig = new CameraRig(scene, camera);
 
 const stats = new Stats();
 document.body.appendChild(stats.dom)
@@ -68,65 +69,11 @@ document.body.appendChild(stats.dom)
 
 // https://threejs.org/examples/#misc_controls_pointerlock
 
-const blocker = document.getElementById( 'blocker' );
-const instructions = document.getElementById( 'instructions' );
+const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
 
 let touchScreenRequested = false;
 
-function initializePointerLock(camera: THREE.Camera, document: Document): PointerLockControls | null {
-
-  const isPointerLockSupported = 
-  'requestPointerLock' in document.body || 
-  'webkitRequestPointerLock' in document.body || 
-  'mozRequestPointerLock' in document.body;
-
-  if (!isPointerLockSupported)
-    return null;
-
-  let pointerLockControls = new PointerLockControls( camera, document.body );
-
-  let isPointerLockRequested = false;
-  
-  
-  instructions!.addEventListener( 'click', async () => {
-    if(!isPointerLockRequested && !touchScreenRequested) {
-      try {
-        isPointerLockRequested = true;
-        pointerLockControls.lock();
-
-        setTimeout(() => {
-          isPointerLockRequested = false;
-        }, 2000);
-      }
-      catch(error) {
-        console.log('Error locking pointer:', error);
-      }
-    }
-  });
-
-  pointerLockControls.addEventListener( 'lock', async () => {
-    instructions!.style.display = 'none';
-    blocker!.style.display = 'none';
-  });
-  
-  pointerLockControls.addEventListener( 'unlock', async () => {
-    blocker!.style.display = 'block';
-    instructions!.style.display = '';
-  });
-  
-  
-  // Handle pointer lock errors
-  document.addEventListener('pointerlockerror', async (event) => {
-    //console.error('Pointer lock failed:', event);
-    console.log('Pointer lock failed:', event);
-  });
-
-  return pointerLockControls;
-}
-
-let pointerLockControls = initializePointerLock(camera, document);//canvas);
-if(pointerLockControls)
-  scene.add(pointerLockControls?.object);
 
 
 ///////////////////////////////////////////////
@@ -214,20 +161,44 @@ if (rightZone) {
     rightZone.style.display = 'block';
 }
 
-const el = document.getElementById("blocker")!;
-el.addEventListener("touchstart", (touchEvent) => {
+const pointerLockControlManager = new PointerLockControlsManager();
+
+if(!isMobile) {
+  let pointerLockControls = pointerLockControlManager.initializePointerLock(cameraRig, document);//canvas);
+  if(pointerLockControls && !touchScreenRequested)
+    scene.add(pointerLockControls?.object);
+}
+
+/*
+if (!isMobile) {
+    el.addEventListener("click", () => {
+
+    if(pointerLockControls && !touchScreenRequested)
+        scene.add(pointerLockControls?.object);
+
+        //canvas.requestPointerLock();
+    });
+} else {
+    //createPersistentJoysticks();
+}
+*/
+
+const blockerElement = document.getElementById( 'blocker' )!;
+const instructions = document.getElementById( 'instructions' )!;
+
+blockerElement.addEventListener("touchstart", (touchEvent) => {
   touchScreenRequested = true;
   //alert("touch start!")
   instructions!.style.display = 'none';
-  blocker!.style.display = 'none';
+  blockerElement!.style.display = 'none';
 });
-el.addEventListener("touchend", (touchEvent) => {
+blockerElement.addEventListener("touchend", (touchEvent) => {
   //alert("touch end!")
 });
-el.addEventListener("touchcancel", (touchEvent) => {
+blockerElement.addEventListener("touchcancel", (touchEvent) => {
   //alert("touch cancel!")
 });
-el.addEventListener("touchmove", (touchEvent) => {
+blockerElement.addEventListener("touchmove", (touchEvent) => {
   //alert("touch move!")
 });
 
@@ -308,11 +279,10 @@ function updateCamera() {
   let multiplier = turboOn ? 10 : 1;
   let temp = velocity.clone();
   direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
+  //camera.position.add(direction);
 
-  camera.position.add(direction);
-
-  //cameraRig.moveRig(direction);
-  //cameraRig.update(delta);
+  cameraRig.moveRig(direction);
+  cameraRig.update(delta);
   //pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 
   //yawObject.rotation.y = yaw;
