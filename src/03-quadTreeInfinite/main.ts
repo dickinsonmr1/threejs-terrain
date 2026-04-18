@@ -281,7 +281,7 @@ function updateCamera() {
   direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
   //camera.position.add(direction);
 
-  cameraRig.moveRig(direction);
+  cameraRig.moveRig(direction, pointerLockControlManager.isPointerLockActive());
   cameraRig.update(delta);
   //pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 

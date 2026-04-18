@@ -25,10 +25,12 @@ export class CameraRig {
       return v * Math.abs(v); // smoother near center
     }
 
-    moveRig(direction: THREE.Vector3) {
+    moveRig(direction: THREE.Vector3, pointerlockActive: boolean) {
         this.yawObject.position.add(direction);
-        this.pitchObject.position.copy(this.yawObject.position);
-        this.camera.position.copy(this.yawObject.position);
+        if(pointerlockActive) {
+            this.pitchObject.position.copy(this.yawObject.position);
+            this.camera.position.copy(this.yawObject.position);
+        }
     }
 
     lockToTerrain(newY: number) {
