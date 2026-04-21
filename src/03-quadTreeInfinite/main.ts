@@ -20,6 +20,8 @@ const settings = {
   isDebug: true,
   lockCameraToTerrain: true,
   yCameraOffsetFromTerrain: 5,
+  gamepadLookSensitivityX: 2,
+  gamepadLookSensitivityY: 1,
   skyType: SkyType.Skybox,
   terrain: {
     mapWidth: 2500,
@@ -114,7 +116,7 @@ leftJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.Jo
   else {
     velocity.x = 0;
   }
-  console.log('test');
+  console.log('leftJoystickManager on move');
 });
 
 leftJoystickManager.on('end',  () => {
@@ -147,8 +149,8 @@ rightJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.J
 
    //document.exitPointerLock();
 
-   cameraRig.lookX = output.vector.x; // -1 to 1
-   cameraRig.lookY = output.vector.y; // -1 to 1
+   cameraRig.lookX = output.vector.x * settings.gamepadLookSensitivityX; // -1 to 1
+   cameraRig.lookY = output.vector.y * settings.gamepadLookSensitivityY; // -1 to 1
 });
 
 rightJoystickManager.on('end',  () => {
@@ -278,7 +280,10 @@ function updateCamera() {
   
   let multiplier = turboOn ? 10 : 1;
   let temp = velocity.clone();
-  direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
+  if(!isMobile)
+    direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(camera.quaternion);
+  else
+    direction.copy(temp.multiplyScalar(multiplier)).applyQuaternion(cameraRig.yawObject.quaternion);
   //camera.position.add(direction);
 
   cameraRig.moveRig(direction, pointerLockControlManager.isPointerLockActive());
@@ -296,7 +301,7 @@ function updateCamera() {
 // https://lil-gui.georgealways.com/
 const gui = new GUI();
 gui.title('Debug');
-if(!settings.isDebug)
+if(!settings.isDebug || isMobile)
   gui.close();
 gui.add( document, 'title' );
 gui.add(settings, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
@@ -312,9 +317,17 @@ cameraFolder.add(settings, 'yCameraOffsetFromTerrain', -100, 100, 0.5).name('Loc
 cameraFolder.add(camera.position, 'x', scene.quadTree.bounds.min.x, scene.quadTree.bounds.max.x).listen();
 cameraFolder.add(camera.position, 'y', 0, 10000).listen();
 cameraFolder.add(camera.position, 'z', scene.quadTree.bounds.min.y, scene.quadTree.bounds.max.y).listen();
+cameraFolder.add(camera.quaternion, 'x').name('quaternion x').listen();
+cameraFolder.add(camera.quaternion, 'y').name('quaternion y').listen();
+cameraFolder.add(camera.quaternion, 'z').name('quaternion z').listen();
+cameraFolder.add(camera.quaternion, 'w').name('quaternion w').listen();
 cameraFolder.add(camera, 'far', 0, 1000000, 10).listen();
 cameraFolder.add(cameraRig.yawObject.rotation, 'y').name('yaw rotation y').listen();
 cameraFolder.add(cameraRig.pitchObject.rotation, 'x').name('pitch rotation x').listen();
+cameraFolder.add(velocity, 'x').name('velocity.x').listen();
+cameraFolder.add(velocity, 'y').name('velocity.y').listen();
+cameraFolder.add(velocity, 'z').name('velocity.z').listen();
+
 
 
 cameraFolder.open();
