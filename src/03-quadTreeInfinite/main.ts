@@ -13,6 +13,7 @@ import nipplejs from 'nipplejs';
 import { Console } from 'console';
 import { CameraRig } from '../shared/cameraRig';
 import { PointerLockControlsManager } from './pointerLockControlsManager';
+import { TouchScreenControlsManager } from '../shared/touchScreenControlsManager';
 
 //const isMobile = 'ontouchstart' in window;
 
@@ -20,8 +21,8 @@ const settings = {
   isDebug: true,
   lockCameraToTerrain: true,
   yCameraOffsetFromTerrain: 5,
-  gamepadLookSensitivityX: 2,
-  gamepadLookSensitivityY: 1,
+  gamepadLookSensitivityX: 1.2,
+  gamepadLookSensitivityY: 0.7,
   skyType: SkyType.Skybox,
   terrain: {
     mapWidth: 2500,
@@ -49,6 +50,12 @@ camera.position.set(0, 0, 0);
 camera.updateProjectionMatrix();
 const cameraRig = new CameraRig(camera);
 
+// movement
+const moveSpeed = 1;
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+let turboOn = false;
+
 const renderer = new THREE.WebGLRenderer({
   //antialias: true,
   //logarithmicDepthBuffer: true
@@ -63,112 +70,25 @@ const scene = new GameScene(cameraRig, renderer, settings);
 const stats = new Stats();
 document.body.appendChild(stats.dom)
 
- window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-// https://threejs.org/examples/#misc_controls_pointerlock
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
 const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-
-
 let touchScreenRequested = false;
 
-
-
-///////////////////////////////////////////////
-// on-screen joysticks
-///////////////////////////////////////////////
-///////////////////////////////////////////////
-// LEFT
-///////////////////////////////////////////////
-
-let leftJoystickManager : nipplejs.JoystickManager = nipplejs.create({
-    zone: document.getElementById('leftJoystickContainerDynamic')!,
-    mode: 'static',
-    dynamicPage: true,
-    position: { left: '20%', bottom: '20%' },
-    color: 'blue',
-    restOpacity: 0.25
-});
-leftJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
-
-  //document.exitPointerLock();
-  turboOn = true;
-  if(output.vector.y > 0.1) {
-      velocity.z = -moveSpeed * Math.abs(output.vector.y);
-  }
-  else if(output.vector.y < -0.1) {
-      velocity.z = moveSpeed* Math.abs(output.vector.y);
-  }
-  else {
-    velocity.z = 0;
-  }
-
-  if(output.vector.x > 0.1) {
-      velocity.x = moveSpeed * Math.abs(output.vector.x);
-  }
-  else if(output.vector.x < -0.1) {
-      velocity.x = -moveSpeed * Math.abs(output.vector.x);
-  }
-  else {
-    velocity.x = 0;
-  }
-  console.log('leftJoystickManager on move');
-});
-
-leftJoystickManager.on('end',  () => {
-  turboOn = false;
-  velocity.x = 0;
-  velocity.y = 0;
-  velocity.z = 0
-});
-
-const leftZone = document.getElementById('rightJoystickContainerDynamic');
-if (leftZone) {
-    leftZone.style.display = 'block';
-}
-
-///////////////////////////////////////////////
-// RIGHT
-///////////////////////////////////////////////
-let rightJoystickManager : nipplejs.JoystickManager = nipplejs.create({
-    zone: document.getElementById('rightJoystickContainerDynamic')!,
-    mode: 'static',
-    dynamicPage: true,
-    position: { right: '20%', bottom: '20%' },
-    color: 'blue',
-    restOpacity: 0.25
-});
-rightJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
-  
-  if(!output.vector)
-    return;
-
-   //document.exitPointerLock();
-
-   cameraRig.lookX = output.vector.x * settings.gamepadLookSensitivityX; // -1 to 1
-   cameraRig.lookY = output.vector.y * settings.gamepadLookSensitivityY; // -1 to 1
-});
-
-rightJoystickManager.on('end',  () => {
-  cameraRig.lookX = 0;
-  cameraRig.lookY = 0;
-});
-
-const rightZone = document.getElementById('rightJoystickContainerDynamic');
-if (rightZone) {
-    rightZone.style.display = 'block';
-}
-
+const touchScreenControlsManager = new TouchScreenControlsManager(cameraRig, settings,  turboOn, velocity, moveSpeed);
 const pointerLockControlManager = new PointerLockControlsManager();
 
 if(!isMobile) {
   let pointerLockControls = pointerLockControlManager.initializePointerLock(cameraRig, document);//canvas);
   if(pointerLockControls && !touchScreenRequested)
     scene.add(pointerLockControls?.object);
+}
+else {
+  
 }
 
 /*
@@ -204,11 +124,7 @@ blockerElement.addEventListener("touchmove", (touchEvent) => {
   //alert("touch move!")
 });
 
-// movement
-const moveSpeed = 1;
-const velocity = new THREE.Vector3();
-const direction = new THREE.Vector3();
-let turboOn = false;
+
 
 document.addEventListener('keydown', (event) => {
     switch (event.code) {
@@ -301,15 +217,17 @@ function updateCamera() {
 // https://lil-gui.georgealways.com/
 const gui = new GUI();
 gui.title('Debug');
+gui.add(document, 'title');
 if(!settings.isDebug || isMobile)
   gui.close();
-gui.add( document, 'title' );
-gui.add(settings, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
-gui.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
-gui.add(scene.children, 'length').name('Scene Children Count').listen();
-gui.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
-gui.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
-gui.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
+
+const generalFolder = gui.addFolder('General');
+generalFolder.add(settings, 'isDebug').listen().onChange((value: any) => scene.switchIsDebug(value));
+generalFolder.add(settings, 'skyType', { Skybox: 0, Shader: 1 } ).onChange((value: any) => switchSky(value));
+generalFolder.add(scene.children, 'length').name('Scene Children Count').listen();
+generalFolder.add(renderer.info.memory, 'geometries').name('Scene Geometry Count').listen();
+generalFolder.add(renderer.info.memory, 'textures').name('Scene Texture Count').listen();
+generalFolder.add(renderer.info?.programs!, 'length').name('Scene Program Count').listen();
 
 const cameraFolder = gui.addFolder('Camera');
 cameraFolder.add(settings, 'lockCameraToTerrain').name('Lock Camera To Terrain?').listen();

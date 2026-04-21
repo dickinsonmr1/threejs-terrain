@@ -1,6 +1,7 @@
-
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { CameraRig } from '../shared/cameraRig';
+
+// https://threejs.org/examples/#misc_controls_pointerlock
 
 export class PointerLockControlsManager {
 
