@@ -8,8 +8,11 @@ export class TouchScreenControlsManager {
      *
      */
     constructor(cameraRig: CameraRig, settings: any, turboOn: boolean, velocity: THREE.Vector3, moveSpeed: number) {
-        ///////////////////////////////////////////////
-        // LEFT       
+        this.initializeLeftJoystick(turboOn, velocity, moveSpeed);
+        this.initializeRightJoystick(cameraRig, settings);
+    }
+    
+    private initializeLeftJoystick(turboOn: boolean, velocity: THREE.Vector3, moveSpeed: number) {
         let leftJoystickManager : nipplejs.JoystickManager = nipplejs.create({
             zone: document.getElementById('leftJoystickContainerDynamic')!,
             mode: 'static',
@@ -18,8 +21,7 @@ export class TouchScreenControlsManager {
             color: 'blue',
             restOpacity: 0.25
         });
-        leftJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
-        
+        leftJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {        
             //document.exitPointerLock();
             turboOn = true;
             if(output.vector.y > 0.1) {
@@ -55,10 +57,9 @@ export class TouchScreenControlsManager {
         if (leftZone) {
             leftZone.style.display = 'block';
         }
-        
-        ///////////////////////////////////////////////
-        // RIGHT
-        ///////////////////////////////////////////////
+    }
+
+    private initializeRightJoystick(cameraRig: CameraRig, settings: any) {
         let rightJoystickManager : nipplejs.JoystickManager = nipplejs.create({
             zone: document.getElementById('rightJoystickContainerDynamic')!,
             mode: 'static',
@@ -67,20 +68,19 @@ export class TouchScreenControlsManager {
             color: 'blue',
             restOpacity: 0.25
         });
-        rightJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {
-        
-        if(!output.vector)
-            return;
-        
-        //document.exitPointerLock();
-        
-        cameraRig.lookX = output.vector.x * settings.gamepadLookSensitivityX; // -1 to 1
-        cameraRig.lookY = output.vector.y * settings.gamepadLookSensitivityY; // -1 to 1
+
+        rightJoystickManager.on('move',  (data : nipplejs.EventData, output : nipplejs.JoystickOutputData) => {        
+            if(!output.vector)
+                return;            
+            //document.exitPointerLock();
+            
+            cameraRig.lookX = output.vector.x * settings.gamepadLookSensitivityX; // -1 to 1
+            cameraRig.lookY = output.vector.y * settings.gamepadLookSensitivityY; // -1 to 1
         });
         
         rightJoystickManager.on('end',  () => {
-        cameraRig.lookX = 0;
-        cameraRig.lookY = 0;
+            cameraRig.lookX = 0;
+            cameraRig.lookY = 0;
         });
         
         const rightZone = document.getElementById('rightJoystickContainerDynamic');

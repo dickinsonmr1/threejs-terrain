@@ -79,7 +79,7 @@ window.addEventListener('resize', () => {
 const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 let touchScreenRequested = false;
 
-const touchScreenControlsManager = new TouchScreenControlsManager(cameraRig, settings,  turboOn, velocity, moveSpeed);
+const touchScreenControlsManager = new TouchScreenControlsManager(cameraRig, settings, turboOn, velocity, moveSpeed);
 const pointerLockControlManager = new PointerLockControlsManager();
 
 if(!isMobile) {
