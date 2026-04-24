@@ -9,12 +9,18 @@ import { PrecipitationSystem, PrecipitationType } from './weather/precipitationS
 import { FireParticleEmitter } from './fireParticleEmitter';
 import { GrassGenerator } from './terrain/grassGenerator';
 import { CameraRig } from '../shared/cameraRig';
+import { WaterLite } from './terrain/waterLite';
+import { WaterReflector } from './terrain/waterReflector';
 
 export default class GameScene extends THREE.Scene {
 
     skyTexture!: THREE.Texture;
     sky!: Sky;
+    
     water!: Water;
+    waterLite!: WaterLite;
+    waterReflector!: WaterReflector;
+
     quadTree!: QuadTree;
     totalNodes: number = 0;
     maxLOD: number = 0;
@@ -26,10 +32,8 @@ export default class GameScene extends THREE.Scene {
 
     precipitationSystem: PrecipitationSystem;
     fireParticleEmitter!: FireParticleEmitter;
-
-    clock: THREE.Clock = new THREE.Clock();
-   
-    constructor(public readonly cameraRig: CameraRig, public readonly renderer: THREE.WebGLRenderer, public settings: any) {
+ 
+    constructor(public readonly cameraRig: CameraRig, public readonly renderer: THREE.WebGLRenderer, public settings: any, public gameClock: THREE.Clock) {
         super();
 
         this.add(cameraRig.yawObject);
@@ -46,9 +50,11 @@ export default class GameScene extends THREE.Scene {
         this.treeGenerator = new TreeGenerator(this, this.simplexNoiseGenerator, 'assets/tree_outline_thin_128x128.png', 30, 40);
 
         this.addSkybox();
-        this.addShaderSky();
+        //this.addShaderSky();
         this.addTerrain();
-        this.addWater();
+        //this.addWater();
+        //this.addWaterLite();
+        this.addWaterReflector();
         this.addLights();
         
         //this.addVegetation();    
@@ -98,8 +104,7 @@ export default class GameScene extends THREE.Scene {
         
         this.sky.material.uniforms.sunPosition.value = sunPosition;
         
-        this.add( this.sky );
-        
+        this.add( this.sky );        
     }
 
     private addWater() {
@@ -108,8 +113,8 @@ export default class GameScene extends THREE.Scene {
         this.water = new Water(
             waterGeometry,
             {
-                textureWidth: 512,
-                textureHeight: 512,
+                textureWidth: 64,
+                textureHeight: 64,
                 waterNormals: new THREE.TextureLoader().load( 'assets/waternormals.jpg', function ( texture ) {
         
                     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -122,12 +127,20 @@ export default class GameScene extends THREE.Scene {
                 //fog: this.fog !== undefined
             }
         );
-        this. water.rotation.x = - Math.PI / 2;
+        this.water.rotation.x = - Math.PI / 2;
         this.water.position.y = 5.01;
         //water.material.polygonOffset = true;
         //water.material.polygonOffsetFactor = -1; // Push back slightly
         //water.material.polygonOffsetUnits = -1;
         this.add( this.water );
+    }
+
+    private addWaterLite() {
+        this.waterLite = new WaterLite(this);
+    }
+
+    private addWaterReflector() {
+        this.waterReflector = new WaterReflector(this, 5);
     }
 
     private addLights(): void {
@@ -182,13 +195,13 @@ export default class GameScene extends THREE.Scene {
             this.cameraRig.lockToTerrain(newCameraY);
         }
 
-        if(this.water !== null)    
+        if(this.water != null)    
             this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
 
-        this.precipitationSystem.update(this.clock, this.cameraRig);
+        this.precipitationSystem.update(this.gameClock, this.cameraRig);
 
         if(this.fireParticleEmitter != null)
-            this.fireParticleEmitter.update(this.clock);
+            this.fireParticleEmitter.update(this.gameClock);
 
         this.maxLOD = this.quadTree.getCurrentMaxLOD(this.quadTree.root);
     }

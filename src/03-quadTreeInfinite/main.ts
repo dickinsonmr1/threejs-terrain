@@ -7,18 +7,16 @@ import * as THREE from 'three'
 import GUI from 'lil-gui';
 import { SkyType } from '../shared/skyType';
 import Stats from 'three/addons/libs/stats.module.js';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import GameScene from './gameScene';
-import nipplejs from 'nipplejs';
-import { Console } from 'console';
 import { CameraRig } from '../shared/cameraRig';
 import { PointerLockControlsManager } from './pointerLockControlsManager';
 import { TouchScreenControlsManager } from '../shared/touchScreenControlsManager';
 
 //const isMobile = 'ontouchstart' in window;
+const clock = new THREE.Clock();
 
 const settings = {  
-  isDebug: true,
+  isDebug: false,
   lockCameraToTerrain: true,
   yCameraOffsetFromTerrain: 5,
   gamepadLookSensitivityX: 1.2,
@@ -64,7 +62,7 @@ renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild(renderer.domElement);
 
-const scene = new GameScene(cameraRig, renderer, settings);
+const scene = new GameScene(cameraRig, renderer, settings, clock);
 
 
 const stats = new Stats();
@@ -276,7 +274,8 @@ const onSunChange = () => {
   sunPosition.z = Math.sin(phi) * Math.cos(theta);
 
   scene.sky.material.uniforms['sunPosition'].value.copy(sunPosition);
-  scene.water.material.uniforms['sunDirection'].value.copy(sunPosition.normalize());
+  if(scene.water != null)
+    scene.water.material.uniforms['sunDirection'].value.copy(sunPosition.normalize());
 };
 
 
@@ -291,8 +290,10 @@ const sunFolder = gui.addFolder('Sun');
 sunFolder.add(settings.sun, "inclination", 0.0, 1.0).onChange(onSunChange);
 sunFolder.add(settings.sun, "azimuth", 0.0, 1.0).onChange(onSunChange);
 
-const otherFolder = gui.addFolder('Water');
-otherFolder.add(scene.water.position, 'y', -10, 100, 0.5).name('Elevation');
+if(scene.water != null) {
+  const otherFolder = gui.addFolder('Water');
+  otherFolder.add(scene.water.position, 'y', -10, 100, 0.5).name('Elevation');
+}
 
 function switchSky(skyType: SkyType) {
   scene.switchSky(skyType);
@@ -303,6 +304,27 @@ let lastTime = performance.now();
 function tick() {
 
   updateCamera();
+  const t = clock.getElapsedTime();
+
+  if(scene.waterLite != null) {
+
+    let shaderMaterial = scene.waterLite.mesh.material as THREE.ShaderMaterial;
+    shaderMaterial.uniforms.time.value = t;
+    scene.waterLite.mesh.visible = false;
+
+    scene.waterLite.update(camera, 25.01);
+    renderer.setRenderTarget(scene.waterLite.renderTarget);
+    renderer.render(scene, scene.waterLite.mirrorCamera);
+    renderer.setRenderTarget(null);
+
+    scene.waterLite.mesh.visible = true;
+  }
+
+  if(scene.waterReflector != null) {
+    let reflectorShaderMaterial = scene.waterReflector.waterOverlay.material as THREE.ShaderMaterial;
+    reflectorShaderMaterial.uniforms.time.value = t;
+    //console.log(reflectorShaderMaterial.uniforms.time.value);
+  }
 
   //renderer.clear();
   renderer.render(scene, camera);
