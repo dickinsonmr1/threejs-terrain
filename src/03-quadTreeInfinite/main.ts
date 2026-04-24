@@ -319,11 +319,22 @@ function tick() {
 
     scene.waterLite.mesh.visible = true;
   }
-
+  
   if(scene.waterReflector != null) {
-    let reflectorShaderMaterial = scene.waterReflector.waterOverlay.material as THREE.ShaderMaterial;
+
+    if(scene.waterReflector.waterOverlay != null) {
+      let reflectorOverlayShaderMaterial = scene.waterReflector.waterOverlay.material as THREE.ShaderMaterial;
+      reflectorOverlayShaderMaterial.uniforms.time.value = t;
+    }
+
+    let reflectorShaderMaterial = scene.waterReflector.reflector.material as THREE.ShaderMaterial;
     reflectorShaderMaterial.uniforms.time.value = t;
     //console.log(reflectorShaderMaterial.uniforms.time.value);
+  }
+
+  if(scene.waterSimplePlane != null) {
+    let simpleWaterShaderMaterial = scene.waterSimplePlane.mesh.material as THREE.ShaderMaterial;
+    simpleWaterShaderMaterial.uniforms.time.value = t;
   }
 
   //renderer.clear();

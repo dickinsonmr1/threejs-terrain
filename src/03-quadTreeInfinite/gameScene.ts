@@ -11,6 +11,7 @@ import { GrassGenerator } from './terrain/grassGenerator';
 import { CameraRig } from '../shared/cameraRig';
 import { WaterLite } from './terrain/waterLite';
 import { WaterReflector } from './terrain/waterReflector';
+import { WaterSimplePlane } from './terrain/waterSimplePlane';
 
 export default class GameScene extends THREE.Scene {
 
@@ -20,6 +21,7 @@ export default class GameScene extends THREE.Scene {
     water!: Water;
     waterLite!: WaterLite;
     waterReflector!: WaterReflector;
+    waterSimplePlane!: WaterSimplePlane;
 
     quadTree!: QuadTree;
     totalNodes: number = 0;
@@ -54,7 +56,8 @@ export default class GameScene extends THREE.Scene {
         this.addTerrain();
         //this.addWater();
         //this.addWaterLite();
-        this.addWaterReflector();
+        //this.addWaterReflector();
+        this.addWaterSimplePlane();
         this.addLights();
         
         //this.addVegetation();    
@@ -137,6 +140,10 @@ export default class GameScene extends THREE.Scene {
 
     private addWaterLite() {
         this.waterLite = new WaterLite(this);
+    }
+
+    private addWaterSimplePlane() {
+        this.waterSimplePlane = new WaterSimplePlane(this, this.cameraRig.getCamera());
     }
 
     private addWaterReflector() {
