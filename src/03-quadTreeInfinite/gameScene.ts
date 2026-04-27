@@ -16,6 +16,8 @@ import { WaterSimplePlane } from './terrain/waterSimplePlane';
 export default class GameScene extends THREE.Scene {
 
     skyTexture!: THREE.Texture;
+    skyTexture2!: THREE.Texture;
+
     sky!: Sky;
     
     water!: Water;
@@ -93,6 +95,22 @@ export default class GameScene extends THREE.Scene {
 
               let scene = this as THREE.Scene;
               scene.background = this.skyTexture;
+              scene.environment = this.skyTexture;
+              console.log(">>>>> " + scene.background);
+          }  
+        );
+        
+         this.skyTexture2 = textureLoader.load(
+          'assets/industrial_sunset_puresky.jpg',
+          () => {
+        
+              this.skyTexture.mapping = THREE.EquirectangularReflectionMapping;
+              this.skyTexture.colorSpace = THREE.SRGBColorSpace;
+
+              //let scene = this as THREE.Scene;
+              //scene.background = this.skyTexture;
+              //scene.environment = this.skyTexture;
+              //console.log(">>>>> " + scene.background);
           }  
         );
     }
@@ -143,7 +161,7 @@ export default class GameScene extends THREE.Scene {
     }
 
     private addWaterSimplePlane() {
-        this.waterSimplePlane = new WaterSimplePlane(this, this.cameraRig.getCamera());
+        this.waterSimplePlane = new WaterSimplePlane(this, this.cameraRig.getCamera(), this.skyTexture2);
     }
 
     private addWaterReflector() {

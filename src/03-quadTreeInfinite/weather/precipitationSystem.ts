@@ -49,7 +49,7 @@ export class PrecipitationSystem {
         //this.generateSpriteClouds(scene, mapSize);
         //this.generateMeshClouds(scene, mapSize);
         //this.generateInstancedMeshClouds(scene, mapSize);
-        this.generatePointsClouds(scene, mapSize, horizontalScale);
+        //this.generatePointsClouds(scene, mapSize, horizontalScale);
 
         // lightning
         this.flash = new THREE.PointLight(0x062d89, 30, 500, 1.7);

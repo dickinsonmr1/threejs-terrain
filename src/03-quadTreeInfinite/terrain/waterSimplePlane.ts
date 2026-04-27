@@ -1,12 +1,14 @@
 import * as THREE from 'three'
-
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+     
 export class WaterSimplePlane {
     /**
      *
      */
     public mesh: THREE.Mesh;
 
-    constructor(scene: THREE.Scene, camera: THREE.Camera) {
+    constructor(scene: THREE.Scene, camera: THREE.Camera, skyTexture: THREE.Texture) {
+
         const normalMap = new THREE.TextureLoader().load(
             "https://threejs.org/examples/textures/waternormals.jpg"
         );
@@ -15,6 +17,7 @@ export class WaterSimplePlane {
         const waterMaterial = new THREE.ShaderMaterial({
         uniforms: {
             normalMap: { value: normalMap },
+            envMap: { value : skyTexture },
             time: { value: 0 },
             cameraPosition: { value: camera.position }
         },
@@ -33,44 +36,101 @@ export class WaterSimplePlane {
         `,
         fragmentShader: `
             uniform sampler2D normalMap;
+            //uniform samplerCube envMap;
+            uniform sampler2D envMap;
+
             uniform float time;
             //uniform vec3 cameraPosition;
 
             varying vec2 vUv;
             varying vec3 vWorldPos;
 
+            vec2 sampleEquirectangular(vec3 dir) {
+                float phi = atan(dir.z, dir.x);
+                float theta = asin(dir.y);
+
+                return vec2(
+                    0.5 + phi / (2.0 * 3.14159265),
+                    0.5 - theta / 3.14159265
+                );
+            }            
+
             void main() {
 
-            // world-space UVs → stable waves
-            vec2 worldUv = vWorldPos.xz * 0.05;
+                // temporarily override for texture2d
+                gl_FragColor = texture2D(envMap, vUv);
+                return;
 
-            // scrolling normals (2 layers)
-            vec2 uv1 = worldUv + vec2(time * 0.03, time * 0.02);
-            vec2 uv2 = worldUv + vec2(-time * 0.02, time * 0.025);
+                // temporarily override for texturecube
+                //gl_FragColor = vec4(textureCube(envMap, vec3(0.0, 1.0, 0.0)).rgb, 1.0);
+                //return;
 
-            vec3 n1 = texture2D(normalMap, uv1).rgb;
-            vec3 n2 = texture2D(normalMap, uv2).rgb;
+                // -------------------------
+                // World-space UVs (stable)
+                // -------------------------
+                vec2 worldUv = vWorldPos.xz * 0.05;
 
-            vec3 normal = normalize(n1 * 2.0 - 1.0 + n2 * 2.0 - 1.0);
+                // -------------------------
+                // Animated normal map (2 layers)
+                // -------------------------
+                vec2 uv1 = worldUv + vec2(time * 0.03, time * 0.02);
+                vec2 uv2 = worldUv + vec2(-time * 0.02, time * 0.025);
 
-            // fake lighting (up vector)
-            float light = dot(normal, vec3(0.0, 1.0, 0.0));
+                vec3 n1 = texture2D(normalMap, uv1).rgb;
+                vec3 n2 = texture2D(normalMap, uv2).rgb;
 
-            // view direction
-            vec3 viewDir = normalize(cameraPosition - vWorldPos);
+                // combine + convert from [0,1] → [-1,1]
+                vec3 normal = normalize(n1 * 2.0 - 1.0 + n2 * 2.0 - 1.0);
 
-            // Fresnel effect
-            float fresnel = pow(1.0 - dot(viewDir, normal), 3.0);
+                // -------------------------
+                // View direction
+                // -------------------------
+                vec3 viewDir = normalize(cameraPosition - vWorldPos);
 
-            // base water color
-            vec3 waterColor = vec3(0.0, 0.3, 0.5);
+                // -------------------------
+                // Reflection vector (for skybox)
+                // -------------------------
+                vec3 reflectDir = reflect(-viewDir, normal);
 
-            // final color
-            vec3 color = waterColor;
-            color += fresnel * 0.5;     // edge reflection feel
-            color *= 0.5 + light * 0.5; // lighting
+                // sample environment (skybox)
+                //vec3 reflection = textureCube(envMap, reflectDir).rgb;
+                vec3 reflection = texture2D(envMap, sampleEquirectangular(reflectDir)).rgb;
 
-            gl_FragColor = vec4(color, 0.6); // semi-transparent
+                // -------------------------
+                // Fresnel (angle-based blend)
+                // -------------------------
+                
+                float fresnel = pow(1.0 - dot(viewDir, normal), 3.0);
+                fresnel = clamp(fresnel, 0.2, 0.8);
+
+                // -------------------------
+                // Base water color
+                // -------------------------
+                vec3 waterColor = vec3(0.0, 0.3, 0.5);
+
+                // -------------------------
+                // Simple lighting (fake diffuse)
+                // -------------------------
+                float light = dot(normal, vec3(0.0, 1.0, 0.0));
+
+                // -------------------------
+                // Final color
+                // -------------------------
+                vec3 color = mix(waterColor, reflection, fresnel);
+
+                // apply lighting
+                color *= 0.5 + light * 0.5;
+
+                // subtle blue tint
+                color = mix(color, waterColor, 0.2);
+
+                // -------------------------
+                // Output (semi-transparent)
+                // -------------------------
+                //gl_FragColor = vec4(color, 0.8);
+                float alpha = mix(0.4, 0.8, fresnel);
+                gl_FragColor = vec4(color, alpha);
+                
             }
         `,
         transparent: true,
@@ -84,7 +144,7 @@ export class WaterSimplePlane {
             //new THREE.MeshStandardMaterial({transparent: true, color: new THREE.Color('blue'), opacity: 0.7})
         );
 
-        this.mesh.position.y = 5.01;
+        this.mesh.position.y = 10.01;
         this.mesh.rotation.x = -Math.PI / 2;
         scene.add(this.mesh);                
     }
