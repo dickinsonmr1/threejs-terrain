@@ -58,8 +58,8 @@ export class WaterSimplePlane {
             void main() {
 
                 // temporarily override for texture2d
-                gl_FragColor = texture2D(envMap, vUv);
-                return;
+                //gl_FragColor = texture2D(envMap, vUv);
+                //return;
 
                 // temporarily override for texturecube
                 //gl_FragColor = vec4(textureCube(envMap, vec3(0.0, 1.0, 0.0)).rgb, 1.0);
@@ -91,6 +91,7 @@ export class WaterSimplePlane {
                 // Reflection vector (for skybox)
                 // -------------------------
                 vec3 reflectDir = reflect(-viewDir, normal);
+                reflectDir.z *= -1.0;
 
                 // sample environment (skybox)
                 //vec3 reflection = textureCube(envMap, reflectDir).rgb;
@@ -100,36 +101,42 @@ export class WaterSimplePlane {
                 // Fresnel (angle-based blend)
                 // -------------------------
                 
-                float fresnel = pow(1.0 - dot(viewDir, normal), 3.0);
-                fresnel = clamp(fresnel, 0.2, 0.8);
+                //float fresnel = pow(1.0 - dot(viewDir, normal), 3.0);
+                //fresnel = clamp(fresnel, 0.2, 0.8);
 
                 // -------------------------
                 // Base water color
                 // -------------------------
-                vec3 waterColor = vec3(0.0, 0.3, 0.5);
+                //vec3 waterColor = vec3(0.0, 0.3, 0.5);
 
                 // -------------------------
                 // Simple lighting (fake diffuse)
                 // -------------------------
-                float light = dot(normal, vec3(0.0, 1.0, 0.0));
+                //float light = dot(normal, vec3(0.0, 1.0, 0.0));
 
                 // -------------------------
                 // Final color
                 // -------------------------
-                vec3 color = mix(waterColor, reflection, fresnel);
+                //vec3 color = mix(waterColor, reflection, fresnel);
 
                 // apply lighting
-                color *= 0.5 + light * 0.5;
+                //color *= 0.5 + light * 0.5;
 
                 // subtle blue tint
-                color = mix(color, waterColor, 0.2);
+                //color = mix(color, waterColor, 0.2);
 
                 // -------------------------
                 // Output (semi-transparent)
                 // -------------------------
-                //gl_FragColor = vec4(color, 0.8);
-                float alpha = mix(0.4, 0.8, fresnel);
-                gl_FragColor = vec4(color, alpha);
+                
+                // temporary to only show reflection
+                gl_FragColor = vec4(reflection, 1.0);
+                
+                // solid color
+                //gl_FragColor = vec4(color, 1.0);
+
+                //float alpha = mix(0.4, 0.8, fresnel);
+                //gl_FragColor = vec4(color, alpha);
                 
             }
         `,
