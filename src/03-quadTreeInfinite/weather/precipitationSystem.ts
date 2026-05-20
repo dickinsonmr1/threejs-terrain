@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import vertexShader from './rain.vert?raw';
 import fragmentShader from './rain.frag?raw';
 import { InstancedMeshClouds } from './instancedMeshClouds';
-import { transcode } from 'buffer';
 import GameScene from '../gameScene';
 import { CameraRig } from '../../shared/cameraRig';
 

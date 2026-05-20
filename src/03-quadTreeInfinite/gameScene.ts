@@ -11,7 +11,7 @@ import { GrassGenerator } from './terrain/grassGenerator';
 import { CameraRig } from '../shared/cameraRig';
 import { WaterLite } from './terrain/waterLite';
 import { WaterReflector } from './terrain/waterReflector';
-import { WaterSimplePlane } from './terrain/waterSimplePlane';
+import { WaterSimplePlane } from './water/waterSimplePlane';
 
 export default class GameScene extends THREE.Scene {
 
