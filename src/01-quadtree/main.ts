@@ -15,6 +15,9 @@ import { TerrainSimplexNoiseGenerator } from '../shared/terrainSimplexNoiseGener
 import { VegetationGenerator } from '../02-chunk/vegetationGenerator';
 import { TerrainLodSettings } from '../02-chunk/terrainLodSettings';
 import { QuadTree } from '../03-quadTreeInfinite/terrain/quadtree';
+import { HeightMapArray } from '../shared/heightMapArray';
+import { PerlinTerrainGenerator } from '../shared/perlinTerrainGenerator';
+import { QuadtreeTerrainSystem } from './quadtreeTerrainSystem';
 
 const scene = new THREE.Scene();
 
@@ -90,13 +93,13 @@ let quadtreeTerrainSystem: any;
 
 const isWireFrame = true;
 
-//const maxLODLevel = 4;        
-//const heightScale = 25;
-//var array = new HeightMapArray();
-//let initialVertexCount = 8;
+const maxLODLevel = 4;        
+const heightScale = 25;
+var array = new HeightMapArray();
+let initialVertexCount = 8;
 
 // quadtree
-/*
+
 var perlin1 = new PerlinTerrainGenerator();
 //await perlin1.generateHeightmap(1024, 5).then((heightmap: number[][]) => {
 //await array.generateRandom(512, heightScale).then((heightmap) => {
@@ -115,9 +118,8 @@ await array.generateFromAsset('assets/mountain_circle_512x512.png').then((height
 .catch((error) => {
     console.error('Error loading heightmap:', error);
 });
-*/
 
-/*
+
 const perlinTerrainGenerator = new PerlinTerrainGenerator();
 
 var simpleTerrainMesh = perlinTerrainGenerator.generateSimpleTerrain(256, 20);
@@ -139,7 +141,6 @@ const filteredHeightmap = perlinTerrainGenerator.createFilteredHeightmapFromFull
 const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, terrainFullSize, material2);
 lodMesh.position.set(0, 0, -256);
 scene.add(lodMesh);
-*/
 
 
 let terrainGridParams = new TerrainGridParams(32, 64, 5, Math.PI * 0);
