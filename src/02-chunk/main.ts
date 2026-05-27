@@ -90,58 +90,6 @@ let quadtreeTerrainSystem: any;
 
 const isWireFrame = true;
 
-//const maxLODLevel = 4;        
-//const heightScale = 25;
-//var array = new HeightMapArray();
-//let initialVertexCount = 8;
-
-// quadtree
-/*
-var perlin1 = new PerlinTerrainGenerator();
-//await perlin1.generateHeightmap(1024, 5).then((heightmap: number[][]) => {
-//await array.generateRandom(512, heightScale).then((heightmap) => {
-await array.generateFromAsset('assets/mountain_circle_512x512.png').then((heightmap) => {
-    // Heightmap is fully loaded and ready to use
-    console.log('Heightmap loaded successfully:', heightmap);
-    
-    // You can now safely use the heightmap for further processing
-    // For example: generate terrain, visualize it, etc.
-            
-    var terrain = new QuadtreeTerrainSystem(scene, heightmap.length, maxLODLevel, heightmap, 1, initialVertexCount, isWireFrame);
-    //terrain.buildFullQuadtree(terrain.root, maxLODLevel);
-
-    quadtreeTerrainSystem = terrain;
-})
-.catch((error) => {
-    console.error('Error loading heightmap:', error);
-});
-*/
-
-/*
-const perlinTerrainGenerator = new PerlinTerrainGenerator();
-
-var simpleTerrainMesh = perlinTerrainGenerator.generateSimpleTerrain(256, 20);
-simpleTerrainMesh.position.set(256, 0, -256);
-//scene.add(simpleTerrainMesh);
-
-let terrainFullSize = 256;
-let terrainLodResolution = 64;
-let heightScale2 = 10;
-const material1 = new THREE.MeshStandardMaterial({ color: 'red', wireframe: isWireFrame });
-const baseHeightmap = await perlinTerrainGenerator.generateHeightmap(terrainFullSize, heightScale2); // full resolution
-const baseMesh = perlinTerrainGenerator.createMesh(baseHeightmap, terrainFullSize, material1);
-baseMesh.position.set(0, 0, 0);
-scene.add(baseMesh);
-
-// LOD test
-const material2 = new THREE.MeshStandardMaterial({ color: 'green', wireframe: isWireFrame });
-const filteredHeightmap = perlinTerrainGenerator.createFilteredHeightmapFromFullResolutionHeightMap(baseHeightmap, terrainLodResolution); // Lower resolution
-const lodMesh = perlinTerrainGenerator.createMesh(filteredHeightmap, terrainFullSize, material2);
-lodMesh.position.set(0, 0, -256);
-scene.add(lodMesh);
-*/
-
-
 let terrainGridParams = new TerrainGridParams(32, 64, 5, Math.PI * 0);
 let terrainGeneratorParams = new TerrainGeneratorParams(1100, 6, 1.8, 4.5, 300, 0.71);
 
@@ -149,8 +97,8 @@ let simplexNoiseGenerator = new TerrainSimplexNoiseGenerator(terrainGeneratorPar
 
 let vegetationGenerator = new VegetationGenerator(scene);
 
-let terrainChunkManager: any;
-//let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, terrainLodSettings, isWireFrame);
+//let terrainChunkManager: any;
+let terrainChunkManager = new TerrainChunkManager(scene, terrainGridParams, simplexNoiseGenerator, vegetationGenerator, terrainLodSettings, isWireFrame);
 
 let light2 = new THREE.DirectionalLight(0x808080, 0.8);
 light2.position.set(-100, 100, -100);

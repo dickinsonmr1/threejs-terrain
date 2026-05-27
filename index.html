@@ -5,64 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three.js Terrain Sandbox</title>
-    <style>
-			#blocker {
-				position: absolute;
-				width: 100%;
-				height: 100%;
-				background-color: rgba(0,0,0,0.5);
-			}
-
-			#instructions {
-				width: 100%;
-				height: 100%;
-
-				display: flex;
-				flex-direction: column;
-				justify-content: center;
-				align-items: center;
-
-				text-align: center;
-				font-size: 14px;
-				cursor: pointer;
-			}
-			#build-info {
-				position: absolute;
-				bottom: 10px;
-				left: 50%;
-				transform: translateX(-50%);
-				background-color: rgba(0, 0, 0, 0.8);
-				color: white;
-				padding: 5px 10px;
-				border-radius: 5px;
-				font-family: Arial, sans-serif;
-				font-size: 14px;
-			}
-		</style>
+	<link rel="stylesheet" href="styles.css">
   </head>
   <body>
-	<div id="canvas"></div>
-    <div id="build-info" ></div>
-	<div id="leftJoystickContainerDynamic"></div>
-	<div id="rightJoystickContainerDynamic"></div>
+	<div id="build-info"></div>
 	<div id="blocker">
 		<div id="instructions">
 			<p style="font-size:36px">
 				Choose demo to begin
 			</p>
 			<p>
-				<p><button id="demo1Button">Demo 1</button></p>			
-				<p><button id="demo2Button">Demo 2</button></p>			
-				<p><button id="demo3Button">Demo 3 - Quadtree with infinite terrain</button></p>			
+				<p><button class="button" id="demo1Button">Demo 1 - LOD test</button></p>			
+				<p><button class="button" id="demo2Button">Demo 2 - Chunk</button></p>			
+				<p><button class="button" id="demo3Button">Demo 3 - LOD Quadtree</button></p>			
 			</p>
 		</div>
 	</div>
 	
+	<script type="module" src="./src/global.ts"></script>
 	<script type="module" src="main.ts"></script>
-	<!--<script type="module" src="/src/01-quadtree/main.ts"></script>-->
-    <!--<script type="module" src="/src/02-chunk/main.ts"></script>
-	<script type="module" src="/src/03-quadTreeInfinite/global.ts"></script>
-    <script type="module" src="/src/03-quadTreeInfinite/main.ts"></script>	
-	-->
   </body>
 </html>
