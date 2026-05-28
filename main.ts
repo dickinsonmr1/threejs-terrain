@@ -12,3 +12,8 @@ const button3 = document.getElementById("demo3Button");
 button3?.addEventListener("click", () => {
     window.location.href = "demo3.html";
 });
+
+const landingPageButton = document.getElementById("landingPageButton");
+landingPageButton?.addEventListener("click", () => {
+    window.location.href = "index.html";
+});

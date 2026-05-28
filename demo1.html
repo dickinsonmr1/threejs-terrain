@@ -9,12 +9,11 @@
   </head>
   <body>
 	<div id="canvas"></div>
-    <div id="build-info" ></div>
 	<div id="leftJoystickContainerDynamic"></div>
 	<div id="rightJoystickContainerDynamic"></div>
 	<div id="blocker">
 		<div id="instructions">
-			<p style="font-size:36px">
+			<p id="instructionText">
 				Click or tap to start terrain sandbox
 			</p>
 			<p>
@@ -30,7 +29,10 @@
 			</p>
 		</div>
 	</div>
+	<div id="build-info"></div>
+	<div id="landingPageButton" class="button">Back</div>
+	<script type="module" src="main.ts"></script>
 	<script type="module" src="./src/global.ts"></script>
-	<script type="module" src="/src/01-quadtree/main.ts"></script>
+	<script type="module" src="./src/01-quadtree/main.ts"></script>
   </body>
 </html>
