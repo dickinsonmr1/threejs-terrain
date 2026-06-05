@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 
-import vertexShader from './rain.vert?raw';
-import fragmentShader from './rain.frag?raw';
+import rainVertexShader from './rain.vert?raw';
+import rainFragmentShader from './rain.frag?raw';
+
+import snowVertexShader from './snow.vert?raw';
+import snowFragmentShader from './snow.frag?raw';
+
 import { InstancedMeshClouds } from './instancedMeshClouds';
 import GameScene from '../gameScene';
 import { CameraRig } from '../../shared/cameraRig';
@@ -18,11 +22,10 @@ export class PrecipitationSystem {
 
     private static maxY: number = 500;
 
-    private static rainCount: number = 100000;
-    private rainGeometry?: THREE.BufferGeometry;
-    private rainUniforms: any;
-    private rainMaterial?: THREE.ShaderMaterial;
-
+    private static maxParticleCount: number = 100000;
+    private precipitationGeometry?: THREE.BufferGeometry;
+    private uniforms: any;
+    private precipitationMaterial?: THREE.ShaderMaterial;
 
     private static cloudCount: number = 10000;
     private cloudGeometry?: THREE.BufferGeometry;
@@ -62,25 +65,25 @@ export class PrecipitationSystem {
     
     private generateRain(scene: THREE.Scene, mapSize: number, precipitationType: PrecipitationType, horizontalScale: number): void {
         // Create an empty geometry
-        this.rainGeometry = new THREE.BufferGeometry();
+        this.precipitationGeometry = new THREE.BufferGeometry();
 
         // Define the number of raindrops
         
-        this.rainUniforms = {
+        this.uniforms = {
             uTime: { value: 0.0 },
-            uVelocity: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 50.0},
+            uVelocity: { value: precipitationType == PrecipitationType.Rain ? 250.0 : 75.0},
             blueColor: { value: precipitationType == PrecipitationType.Rain ? 0.8 : 0.6},
             uCameraPosition: { value: new THREE.Vector3(0, 0, 0) },
             uRainSpawnY: {value: PrecipitationSystem.maxY },
-            dropletSize: { value: precipitationType == PrecipitationType.Rain ? 50 : 6},
-            uLifetime: { value: 3000 },
+            dropletSize: { value: precipitationType == PrecipitationType.Rain ? 50 : 10},
+            uLifetime: { value: precipitationType == PrecipitationType.Rain ? 3000 : 15000 },
         };
 
         // Create an array to hold the positions of the raindrops
-        const positions = new Float32Array(PrecipitationSystem.rainCount * 3);
-        const velocities = new Float32Array(PrecipitationSystem.rainCount); // velocity for each raindrop
+        const positions = new Float32Array(PrecipitationSystem.maxParticleCount * 3);
+        const velocities = new Float32Array(PrecipitationSystem.maxParticleCount); // velocity for each raindrop
 
-        for (let i = 0; i < PrecipitationSystem.rainCount; i++) {
+        for (let i = 0; i < PrecipitationSystem.maxParticleCount; i++) {
             positions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
             positions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY + PrecipitationSystem.maxY; // y position
             positions[i * 3 + 2] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // z position
@@ -88,10 +91,13 @@ export class PrecipitationSystem {
         }
 
         // Set the positions as the attribute of the geometry
-        this.rainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        this.rainGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
+        this.precipitationGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        this.precipitationGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
 
-        var textureName = precipitationType == PrecipitationType.Rain ? 'assets/weather/rain_8x8.png' : 'assets/weather/snow.png';
+        var textureName =
+            precipitationType == PrecipitationType.Rain
+            ? 'assets/weather/rain_8x8.png'
+            : 'assets/weather/snow.png';
         var sprite = new THREE.TextureLoader().load( textureName );
         sprite.colorSpace = THREE.SRGBColorSpace;
 
@@ -112,21 +118,20 @@ export class PrecipitationSystem {
         });
         */
 
-        this.rainMaterial = new THREE.ShaderMaterial({
-            uniforms: this.rainUniforms,
+        this.precipitationMaterial = new THREE.ShaderMaterial({
+            uniforms: this.uniforms,
 
-            vertexShader: vertexShader,
-            fragmentShader: fragmentShader,
+            vertexShader: precipitationType == PrecipitationType.Rain ? rainVertexShader : snowVertexShader,
+            fragmentShader: precipitationType == PrecipitationType.Rain ? rainFragmentShader : snowFragmentShader,
             transparent: true,
-            blending: THREE.AdditiveBlending,
+            blending: precipitationType == PrecipitationType.Rain ? THREE.AdditiveBlending : THREE.AdditiveBlending,
             depthWrite: false
         });
         
-        const rain = new THREE.Points(this.rainGeometry, this.rainMaterial);
-        rain.frustumCulled = false;
-        rain.renderOrder = 2; // draw after clouds
-        scene.add(rain);   
-        
+        const points = new THREE.Points(this.precipitationGeometry, this.precipitationMaterial);
+        points.frustumCulled = false;
+        points.renderOrder = 2; // draw after clouds
+        scene.add(points);           
     }
     
     private generateSpriteClouds(scene: THREE.Scene, mapSize: number) {
@@ -230,7 +235,7 @@ export class PrecipitationSystem {
         let cloudPositions = new Float32Array(PrecipitationSystem.cloudCount * 3);
         const cloudSizes = new Float32Array(PrecipitationSystem.cloudCount); // random size for each cloud
 
-        for (let i = 0; i < PrecipitationSystem.rainCount; i++) {
+        for (let i = 0; i < PrecipitationSystem.maxParticleCount; i++) {
             cloudPositions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
             cloudPositions[i * 3 + 1] = Math.random() * PrecipitationSystem.maxY + PrecipitationSystem.maxY; // y position
             cloudPositions[i * 3 + 2] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // z position
@@ -331,11 +336,11 @@ export class PrecipitationSystem {
 
     update(clock: THREE.Clock, cameraRig: CameraRig): void {
 
-        if(this.rainMaterial) {
-            this.rainMaterial.uniforms['uCameraPosition'].value.copy(cameraRig.getPosition());
-            this.rainMaterial.uniforms['uTime'].value += 0.5 / 60.0;
-            if(this.rainMaterial.uniforms['uTime'].value >= 5)
-                this.rainMaterial.uniforms['uTime'].value = 0;
+        if(this.precipitationMaterial) {
+            this.precipitationMaterial.uniforms['uCameraPosition'].value.copy(cameraRig.getPosition());
+            this.precipitationMaterial.uniforms['uTime'].value += 0.5 / 60.0;
+            if(this.precipitationMaterial.uniforms['uTime'].value >= 5)
+                this.precipitationMaterial.uniforms['uTime'].value = 0;
         }
         /*
         const positions = this.rainGeometry.attributes.position.array as Float32Array;
